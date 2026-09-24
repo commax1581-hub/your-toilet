@@ -4,7 +4,7 @@
   python build_rail.py            역 목록 만들고 좌표 채우기 → data/rail_stations.csv
   python build_rail.py --report   지금 표의 상태만 보기
 
-좌표는 **카카오 장소검색(역명+노선, 지하철역·기차역 분류만)**으로 만든다.
+좌표는 **카카오 장소검색**으로 **노선마다 따로** 만든다(환승역은 노선별로 출입구가 떨어져 있다 — 서울역 1↔4호선 332m).
 파일 목록에는 **중복이 있다**(노선별 파일 ⊂ 기관 전체 파일). 칸이 모두 같은 행을 지우고, 역명은 **부기를 뗀 이름**으로 묶는다.
 서울교통공사 파일에도 위경도가 있지만 **248행 중 53행(21%)이 주소와 2km 넘게 어긋나** 쓰지 않는다
 (예: 송정 5호선 — 주소는 서울 강서구인데 좌표는 충남 부여 부근 135km 밖). 그 좌표는 `원본좌표`로 남겨 대조에만 쓴다.
@@ -44,6 +44,20 @@ def read(f):
 BARE = re.compile(r'[\(（].*?[\)）]')        # 역명 부기 — `강변(동서울터미널)` = `강변`
 
 
+# 개명된 역 — 출처(2025-06)는 옛 이름, 카카오·서울교통공사(2026-02)는 새 이름을 쓴다.
+# 셋 모두 **새 이름 역과 좌표가 0m**로 같은 자리임을 확인하고 넣었다(사례지식 6-29).
+RENAMED = {'당고개': '불암산', '뚝섬유원지': '자양', '가정': '가정중앙시장'}
+
+
+def norm(name):
+    """역명 조인 키 — 부기와 끝의 '역'을 뗀다.
+    출처마다 표기가 다르다: 국가철도공단 `서울역`·`하남검단산역` ↔ 서울교통공사 `서울`·`하남검단산`.
+    떼지 않으면 **같은 역이 두 줄**이 된다(보여 줄 때는 원래 이름을 쓴다)."""
+    s = BARE.sub('', str(name)).strip()
+    s = s[:-1] if len(s) > 2 and s.endswith('역') else s
+    return RENAMED.get(s, s)
+
+
 def stations():
     """24개 파일에서 역 목록을 뽑는다.
 
@@ -57,7 +71,7 @@ def stations():
     before = len(ks)
     ks = ks.drop_duplicates(subset=COLS)
     print(f'국가철도공단 {before:,}행 → 중복 제거 {len(ks):,}행(파일끼리 겹친 {before - len(ks):,}행)')
-    ks['역명정규'] = ks['역명'].str.strip().map(lambda s: BARE.sub('', s).strip())
+    ks['역명정규'] = ks['역명'].map(norm)
     rows = []
     for (op, ln, nm), g in ks.groupby(['철도운영기관명', '선명', '역명정규']):
         rows.append({'운영기관': op.strip(), '노선': ln.strip(), '역명': nm, '화장실행': len(g), '출처': '국가철도공단',
@@ -67,7 +81,7 @@ def stations():
     s = s[s['역명'].str.strip() != '']                     # 빈 행 10개
     s['위도'] = pd.to_numeric(s['위도'], errors='coerce')
     s['경도'] = pd.to_numeric(s['경도'], errors='coerce')
-    s['역명정규'] = s['역명'].str.strip().map(lambda x: BARE.sub('', x).strip())
+    s['역명정규'] = s['역명'].map(norm)
     for (ln, nm), g in s.groupby(['운영노선명', '역명정규']):
         ok = g.dropna(subset=['위도', '경도'])
         ok = ok[(ok['위도'] > 33) & (ok['위도'] < 39) & (ok['경도'] > 124) & (ok['경도'] < 132)]
@@ -110,15 +124,76 @@ def ask(q, key, cache):
     return hit
 
 
-def kakao_xy(name, region, key, cache):
-    """역명 그대로 → 괄호 부기 제거 → 지역 없이, 순서대로 물어본다.
-    (역명에 부기가 흔하다: `아신(아세아연합신학대)`·`가평(자라섬.남이섬)` — 붙은 채로는 못 찾는다)"""
-    bare = re.sub(r'[\(（].*?[\)）]', '', name).strip()
-    for q in [f'{region} {name}역'.strip(), f'{region} {bare}역'.strip(), f'{bare}역']:
-        hit = ask(q, key, cache)
-        if hit:
-            return hit
+def line_q(line):
+    """선명을 검색어로 — `수인분당` → `수인분당선`, `1호선`·`부산김해경전철`은 그대로"""
+    s = str(line).strip()
+    return s if (s.endswith('호선') or s.endswith('선') or '경전철' in s) else s + '선'
+
+
+def kakao_xy(name, line, region, key, cache, taken=None):
+    """**노선별로** 좌표를 찾는다 — 환승역은 노선마다 출입구가 떨어져 있다(서울역 1↔4호선 332m).
+
+    순서: `지역 + 노선 + 역명` → (실패·오답이면) `지역 + 역명` → 괄호 부기 제거 → 지역 없이.
+    **카카오가 그 노선에 그 역이 없으면 이웃 역을 준다**(을지로3가 3호선 → 충무로역, 명덕 3호선 → 남산역).
+    그래서 돌아온 이름이 **역명을 품고 있는지 반드시 확인하고**, 아니면 노선 없는 질의로 되돌린다.
+    노선 표기까지 맞으면 `노선확인=Y`(태릉입구 6호선 질의에 7호선 자리가 오는 일이 있어 구분해 둔다).
+    """
+    bare = BARE.sub('', name).strip()
+    base = name if name.endswith('역') else name + '역'          # 대구역·동대구역·서울역은 '역역'이 되지 않게
+    barebase = bare if bare.endswith('역') else bare + '역'
+    hit = ask(f'{region} {line_q(line)} {base}'.strip(), key, cache)
+    if hit and norm(bare) in hit['place']:
+        hit['by'] = '노선'
+        hit['line_ok'] = 'Y' if line_q(line).replace('선', '') in hit['place'].replace('선', '') else 'N'
+        return hit
+    # 이름이 다른 결과는 **버린다.** 카카오는 그 노선에 그 역이 없으면 **이웃 역**을 준다
+    # (을지로3가 3호선 → 충무로역 · 동구청 → 동대구역 · 수성못 → 황금역). "빈자리면 개명으로 보자"를
+    # 시험했더니 이웃 역 10곳을 같은 자리로 붙여 버렸다 → 개명은 **RENAMED 표로만** 다룬다.
+    for q in [f'{region} {base}'.strip(), f'{region} {barebase}'.strip(), barebase]:
+        h = ask(q, key, cache)
+        if h and norm(bare) in h['place']:
+            h['by'], h['line_ok'] = '역', '-'
+            return h
     return ''
+
+
+def merge_same_spot(df):
+    """같은 기관·같은 노선에서 **좌표가 300m 안이면 같은 역**으로 보고 한 줄로 합친다.
+
+    **기준을 수치로 정했다.** 같은 노선에서 이름이 다른 역끼리의 거리를 전부 재 보니
+    500m 안에 붙은 쌍은 **총신대입구 ↔ 이수(175m) 하나뿐**이고, 그다음이 동대신 ↔ 서대신 514m다.
+    즉 300m는 **진짜 다른 역을 붙일 위험이 없는** 자리다(이웃 역은 500m 이상 떨어져 있다).
+
+    이름이 달라도 자리가 같으면 같은 역이다 — **개명**(당고개→불암산 · 뚝섬유원지→자양 · 가정→가정중앙시장)과
+    **표기 차이**(서울역↔서울 · 하남검단산역↔하남검단산 · 암사역사공원↔암사역사공원역)를 여기서 흡수한다.
+    보여 줄 이름은 **카카오가 준 현재 이름**을 쓰고, 원본 이름은 `역명원본`에 남긴다(출처 대조용).
+    """
+    from geocode_toilets import dist_m
+    ok = df[pd.to_numeric(df.get('위도', ''), errors='coerce').notna()].copy()
+    drop, moved, pairs = [], 0, []
+    for _, g in ok.groupby(['운영기관', '노선']):
+        rows = list(g.iterrows())
+        for i, (ia, a) in enumerate(rows):
+            if ia in drop:
+                continue
+            for ib, b in rows[i + 1:]:
+                if ib in drop or a['역명'] == b['역명']:
+                    continue
+                if dist_m((float(a['위도']), float(a['경도'])), (float(b['위도']), float(b['경도']))) < 300:
+                    df.at[ia, '화장실행'] = int(a['화장실행'] or 0) + int(b['화장실행'] or 0)
+                    df.at[ia, '화장실행_서울'] = int(a.get('화장실행_서울') or 0) + int(b.get('화장실행_서울') or 0)
+                    df.at[ia, '역명원본'] = ' / '.join(x for x in [str(a.get('역명원본') or a['역명']), str(b.get('역명원본') or b['역명'])] if x)
+                    df.at[ia, '출처'] = ' + '.join(sorted(set(str(a['출처']).split(' + ')) | set(str(b['출처']).split(' + '))))
+                    for c in ('원본위도', '원본경도', '주소'):
+                        if not str(a.get(c, '')) and str(b.get(c, '')):
+                            df.at[ia, c] = b[c]
+                    pairs.append(f"{a['역명']}={b['역명']}({a['노선']})")
+                    drop.append(ib)
+                    moved += 1
+    if drop:
+        print(f'자리가 같아 합친 역 {moved}개(이름이 다르던 것): ' + ', '.join(pairs[:12]))
+        df = df.drop(index=drop)
+    return df
 
 
 def main():
@@ -134,11 +209,16 @@ def main():
         need = df                                            # 모든 역을 카카오로(원본 좌표는 쓰지 않는다)
         print(f'카카오에 물어볼 역 {len(need):,}')
         got = 0
+        taken = {}                                           # (기관,노선) → 이미 쓴 카카오 장소 이름
         for i, (idx, r) in enumerate(need.iterrows(), 1):
-            hit = kakao_xy(r['역명'], REGION.get(r['운영기관'], ''), key, cache)
+            k2 = (r['운영기관'], r['노선'])
+            hit = kakao_xy(r['역명'], r['노선'], REGION.get(r['운영기관'], ''), key, cache, taken.setdefault(k2, set()))
+            if hit:
+                taken[k2].add(hit['place'])
             if hit:
                 df.at[idx, '위도'], df.at[idx, '경도'] = hit['la'], hit['lo']
                 df.at[idx, '좌표출처'], df.at[idx, '카카오장소'] = '카카오', hit['place']
+                df.at[idx, '좌표단위'], df.at[idx, '노선확인'] = hit['by'], hit['line_ok']
                 got += 1
             if i % 100 == 0:
                 print(f'  {i:,}/{len(need):,} …')
@@ -147,6 +227,7 @@ def main():
         CACHE.parent.mkdir(parents=True, exist_ok=True)
         CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding='utf-8')
         print(f'카카오로 찾음 {got:,} · 못 찾음 {len(need) - got:,}')
+        df = merge_same_spot(df)
         df.drop(columns=['키']).to_csv(OUT, index=False, encoding='utf-8-sig')
         print(f'저장: {OUT.relative_to(ROOT)}')
 

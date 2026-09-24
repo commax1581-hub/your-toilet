@@ -66,7 +66,7 @@ svg.ic{width:1em;height:1em;vertical-align:-.13em;flex:none}
   border:1px solid var(--src-line);font-size:13.5px;line-height:1.5}
 .where b{color:var(--src-ink)}
 .line{display:inline-block;font-size:11.5px;font-weight:800;color:var(--src-ink);
-  background:var(--src-soft);border-radius:5px;padding:1px 6px;margin-right:5px}
+  background:var(--src-soft);border-radius:5px;padding:2px 7px;margin-right:6px;vertical-align:2px}
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}
 .tsub{font-size:12.5px;color:var(--sub);margin-top:7px}
 .none{margin-top:9px;padding:9px 10px;border-radius:9px;background:var(--paper);
@@ -136,11 +136,11 @@ th{background:var(--bg);font-size:12.5px;color:var(--sub)}
     <div class="srcB">
       <div class="head"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실 · 운영기관 제공<span class="who">국가철도공단</span></div>
       <div class="body">
-        <div class="ch"><b>중앙로역</b><span class="dist">140m · 걸어서 2분</span></div>
+        <div class="ch"><b><span class="line">대구 1호선</span>중앙로역</b><span class="dist">140m · 걸어서 2분</span></div>
         <div class="row"><span class="floor">B1</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>4번 출구</span></div>
-        <div class="where"><span class="line">1호선</span>4번 출입구 방향 · 남 · 여</div>
+        <div class="where">4번 출입구 방향 · 남 · 여</div>
         <div class="row"><span class="floor">B2</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span></div>
-        <div class="where"><span class="line">1호선</span>역무실 반대측 표내는 곳 옆 · 남 · 여</div>
+        <div class="where">역무실 반대측 표내는 곳 옆 · 남 · 여</div>
         <div class="meta"><span class="pill gr"><svg class="ic"><use href="#i-clock"/></svg>보통 첫차~막차</span></div>
         <div class="none"><svg class="ic"><use href="#i-info"/></svg> 이 출처는 <b>여는 시간과 변기 수를 제공하지 않습니다.</b> 없다는 뜻이 아닙니다.</div>
       </div>
@@ -155,13 +155,22 @@ th{background:var(--bg);font-size:12.5px;color:var(--sub)}
     <div class="srcB">
       <div class="head"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실 · 운영기관 제공<span class="who">국가철도공단</span></div>
       <div class="body">
-        <div class="ch"><b>반월당역</b><span class="dist">310m · 걸어서 5분</span></div>
+        <div class="ch"><b><span class="line">대구 1호선</span>반월당역</b><span class="dist">310m · 걸어서 5분</span></div>
         <div class="row"><span class="floor">B2</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>3번 출구</span></div>
-        <div class="where"><span class="line">1호선</span>3번 출입구 방향 · 남 · 여</div>
-        <div class="row"><span class="floor">B3</span><span class="gate in"><svg class="ic"><use href="#i-gate"/></svg>개찰구 안</span></div>
-        <div class="where"><span class="line">2호선</span>설화명곡 방면 표내는곳 내 맞은편 상가 앞 · 남 · 여</div>
-        <div class="where"><span class="line">2호선</span>안심 방면 승강장 내려가는 엘리베이터 옆 · 남 · 여</div>
+        <div class="where">3번 출입구 방향 · 남 · 여</div>
         <div class="meta"><span class="pill gr"><svg class="ic"><use href="#i-clock"/></svg>보통 첫차~막차</span></div>
+      </div>
+    </div>
+
+    <div class="srcB">
+      <div class="head"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실 · 운영기관 제공<span class="who">국가철도공단</span></div>
+      <div class="body">
+        <div class="ch"><b><span class="line">대구 2호선</span>반월당역</b><span class="dist">350m · 걸어서 5분</span></div>
+        <div class="row"><span class="floor">B3</span><span class="gate in"><svg class="ic"><use href="#i-gate"/></svg>개찰구 안</span></div>
+        <div class="where">설화명곡 방면 표내는곳 내 맞은편 상가 앞 · 남 · 여</div>
+        <div class="where">안심 방면 승강장 내려가는 엘리베이터 옆 · 남 · 여</div>
+        <div class="meta"><span class="pill gr"><svg class="ic"><use href="#i-clock"/></svg>보통 첫차~막차</span></div>
+        <div class="tsub">같은 반월당이지만 <b>노선이 다르면 다른 카드</b>입니다 — 좌표도 노선별로 따로 찾습니다.</div>
       </div>
     </div>
   </div>
@@ -179,9 +188,9 @@ th{background:var(--bg);font-size:12.5px;color:var(--sub)}
     <div class="srcB">
       <div class="head"><svg class="ic"><use href="#i-train"/></svg>후 · 파스텔 청록<span class="who">국가철도공단</span></div>
       <div class="body">
-        <div class="ch"><b>상인역</b><span class="dist">190m</span></div>
+        <div class="ch"><b><span class="line">대구 1호선</span>상인역</b><span class="dist">190m</span></div>
         <div class="row"><span class="floor">B1</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>7·8번 출구</span></div>
-        <div class="where"><span class="line">1호선</span>매표실 뒤 · 7번/8번 출입구 방향 · 남 · 여</div>
+        <div class="where">매표실 뒤 · 7번/8번 출입구 방향 · 남 · 여</div>
         <div class="xref">이 역은 <b>대구 달서구 대장</b>에도 올라 있습니다 → <a href="#">달서구 제공 정보 보기(변기 수·전화)</a><br>
           <span class="mini">두 출처의 값을 섞지 않습니다. 틀린 정보는 <b>그 출처</b>에 알려야 고쳐집니다.</span></div>
       </div>
@@ -189,17 +198,27 @@ th{background:var(--bg);font-size:12.5px;color:var(--sub)}
   </div>
 </div>
 
-<h2>2 · 교차역 — 물어보신 것 (확인 결과)</h2>
+<h2>2 · 교차역 — 노선별로 좌표를 따로 찾았습니다</h2>
 <div class="note">
-<p><span class="ok">✔ 말씀하신 대로 되어 있습니다.</span> 좌표표는 <b>운영기관 → 노선 → 역명</b> 단위이고, 중복 제거 기준에도 <b>선명이 들어 있습니다.</b> 노선이 다르면 절대 합쳐지지 않습니다.</p>
+<p><span class="ok">✔ 말씀이 맞았습니다.</span> 카카오에 <b>「지역 + 노선 + 역명」</b>으로 물어보니(예: `서울 4호선 서울역`) 노선마다 다른 자리를 줍니다. 환승역 45곳을 재어 보니 <b>100m 넘게 벌어진 곳이 32곳, 300m 넘는 곳이 3곳</b>이었습니다.</p>
 <table>
-<tr><th>역</th><th>행</th><th>화장실</th></tr>
-<tr><td><b>반월당</b></td><td>대구 <b>1호선</b> / 대구 <b>2호선</b> — 두 줄</td><td>1호선 2 · 2호선 4 (<b>따로</b>)</td></tr>
-<tr><td><b>서울역</b></td><td>코레일 경의중앙 / 서울교통공사 1호선 / 4호선 — 세 줄</td><td>각 2</td></tr>
+<tr><th>역</th><th>노선</th><th>노선 사이 거리</th></tr>
+<tr><td><b>서울역</b></td><td>1호선 ↔ 4호선</td><td><b>332m</b></td></tr>
+<tr><td><b>노원</b></td><td>4호선 ↔ 7호선</td><td><b>326m</b></td></tr>
+<tr><td><b>동대문역사문화공원</b></td><td>2·4·5호선</td><td><b>306m</b></td></tr>
+<tr><td><b>고속터미널</b></td><td>7호선 ↔ 9호선</td><td>297m</td></tr>
+<tr><td>청라언덕(대구)</td><td>2호선 ↔ 3호선</td><td>77m</td></tr>
+<tr><td>태릉입구</td><td>6호선 ↔ 7호선</td><td>0m (같은 자리)</td></tr>
 </table>
-<p class="mini" style="margin:8px 0 0">같은 기관 안에서 <b>노선이 둘 이상인 역은 45개</b>입니다(반월당·명덕·청라언덕·서면·수영·연산·가락시장 …).</p>
-<p style="margin:10px 0 0"><b>다만 반대 경우를 하나 찾았습니다</b> — 노선만 다르고 <b>자리(층·개찰구·출구·상세위치)가 완전히 같은</b> 행이 <b>3곳(6행)</b> 있습니다: <b>안산·정왕·중앙</b>(수인분당선 ↔ 4호선, 모두 코레일). 한 역사를 두 노선이 함께 쓰는 곳이라 <b>같은 화장실이 두 번</b> 올라온 것입니다.</p>
-<p style="margin:6px 0 0">→ 제안: <b>자리가 완전히 같으면 한 번만 보여 주고 노선을 함께 적습니다</b> — <span class="line">수인분당</span><span class="line">4호선</span> 1층 자유통로 1번 출입구 방향. 기본은 <b>노선별로 따로</b>, 예외는 이 규칙 하나입니다.</p>
+<p class="mini" style="margin:8px 0 0">역 단위 한 점만 썼다면 <b>서울역에서 300m 떨어진 곳</b>으로 안내할 뻔했습니다. 그래서 좌표를 <b>노선마다 따로</b> 만듭니다.</p>
+<p style="margin:10px 0 0"><b>조심할 것 하나</b> — 카카오는 <b>그 노선에 그 역이 없으면 이웃 역을 줍니다</b>(을지로3가 3호선 → <b>충무로역</b>, 명덕 3호선 → <b>남산역</b>, 증산 부산2호선 → <b>부산대양산캠퍼스역</b>). 그래서 돌아온 이름이 <b>역명을 품고 있는지 반드시 확인</b>하고, 아니면 노선 없는 질의로 되돌립니다(10건에서 걸렸습니다).</p>
+</div>
+<div class="note">
+<b>그래서 카드도 노선별로 나뉩니다</b> — 제안하신 <b>「○○선 ○○○역」</b> 표기를 카드 제목에 넣었습니다(위 목록의 <span class="line">대구 1호선</span>반월당역 / <span class="line">대구 2호선</span>반월당역).
+<table>
+<tr><th>기본</th><td><b>노선이 다르면 다른 화장실</b> — 좌표도 카드도 따로. 노선이 둘 이상인 역 <b>45개</b></td></tr>
+<tr><th>예외</th><td>노선만 다르고 <b>자리(층·개찰구·출구·상세위치)까지 완전히 같은</b> 3곳 — <b>안산·정왕·중앙</b>(수인분당 ↔ 4호선, 코레일). 한 역사를 두 노선이 함께 쓰는 곳이라 <b>한 번만</b> 보여 주고 노선을 함께 적습니다</td></tr>
+</table>
 </div>
 
 <h2>3 · 하단 메뉴 — 안</h2>
