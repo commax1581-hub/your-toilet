@@ -64,6 +64,7 @@ button{font-family:inherit}
 .search{display:flex;gap:6px;align-items:center;border:1.5px solid var(--brand);border-radius:12px;padding:9px 11px;background:#fff}
 .search svg{width:18px;height:18px;color:var(--sub);flex:none}
 .search input{border:0;outline:0;font:inherit;font-size:15px;width:100%;background:transparent}
+.search .go{flex:none;border:0;background:var(--brand-grad);color:#fff;font-weight:800;font-size:13px;border-radius:9px;padding:7px 12px;cursor:pointer}
 .sug{border-bottom:1px solid var(--line);padding:11px 2px;cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left}
 .sug b{display:block;font-size:15px}
 .sug span{font-size:12px;color:var(--sub)}

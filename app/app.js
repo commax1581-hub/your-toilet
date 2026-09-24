@@ -205,41 +205,70 @@ $('#pin-radius').onclick = (e) => {
 };
 $('#b-here').onclick = () => { S.openOnly = true; showList(); };
 
-/* ── 다른 곳 찾기 ────────────────────────── */
-$('#f-search').onsubmit = async (e) => {
-  e.preventDefault();
-  const q = $('#q').value.trim();
-  if (!q) return;
+/* ── 다른 곳 찾기 ──────────────────────────
+   한글은 입력기가 글자를 조립하는 동안 Enter가 먹히지 않는다(조립 확정으로 쓰임) → Enter만 두면
+   "아무 반응이 없는" 화면이 된다. 그래서 ① 검색 버튼 ② 글자를 멈추면 자동 검색 ③ Enter, 셋 다 받는다. */
+let searchJob = 0, searchTimer = null, lastQuery = '';
+
+function pickPlace(p) {
+  S.base = { la: p.la, lo: p.lo, addr: p.name, sub: p.addr };
+  openPin('other', p);
+}
+
+function showSug(list, q) {
   const box = $('#sug');
+  if (!list.length) {
+    box.innerHTML = `<div class="note"><b>'${esc(q)}'로 찾은 곳이 없어요</b><br>
+      건물·역·공원 이름이나 <b>도로명 주소</b>로 찾아 보세요. 예) 서울역, 여의도 한강공원, 세종대로 110</div>`;
+    return;
+  }
+  box.innerHTML = list.map((p, i) => `<button class="sug" data-i="${i}"><b>${esc(p.name)}</b><span>${esc(p.addr)}</span></button>`).join('');
+  box.querySelectorAll('.sug').forEach((b) => (b.onclick = () => pickPlace(list[+b.dataset.i])));
+}
+
+async function doSearch(q, auto) {
+  q = (q || '').trim();
+  const box = $('#sug');
+  if (q.length < 2) {                                          // 한 글자로는 결과가 너무 많다
+    if (!auto) box.innerHTML = '<div class="note">두 글자 이상 넣어 주세요.</div>';
+    return;
+  }
+  if (auto && q === lastQuery) return;
+  lastQuery = q;
+  const job = ++searchJob;
   box.innerHTML = '<div class="loading">찾는 중…</div>';
   try {
     await kakaoReady();
   } catch (err) {
-    box.innerHTML = '<div class="note"><b>장소 검색을 쓸 수 없어요</b><br>지도 기능을 불러오지 못했습니다. 잠시 뒤 다시 시도해 주세요.</div>';
+    box.innerHTML = `<div class="note"><b>장소 검색을 쓸 수 없어요</b><br>지도 기능을 불러오지 못했습니다.
+      주소창이 <b>localhost:8000</b>인지, 인터넷이 연결돼 있는지 확인해 주세요.</div>`;
     return;
   }
-  const show = (list) => {
-    if (!list.length) { box.innerHTML = '<div class="note">찾은 곳이 없어요. 다른 이름이나 주소로 찾아 보세요.</div>'; return; }
-    box.innerHTML = list.map((p, i) =>
-      `<button class="sug" data-i="${i}"><b>${esc(p.name)}</b><span>${esc(p.addr)}</span></button>`).join('');
-    box.querySelectorAll('.sug').forEach((b) => (b.onclick = () => {
-      const p = list[+b.dataset.i];
-      S.base = { la: p.la, lo: p.lo, addr: p.name, sub: p.addr };
-      openPin('other', p);
-    }));
-  };
+  const done = (list) => { if (job === searchJob) showSug(list, q); };
   places.keywordSearch(q, (data, st) => {
     if (st === kakao.maps.services.Status.OK && data.length) {
-      show(data.slice(0, 12).map((d) => ({ name: d.place_name, addr: d.road_address_name || d.address_name, la: +d.y, lo: +d.x })));
+      done(data.slice(0, 12).map((d) => ({ name: d.place_name, addr: d.road_address_name || d.address_name, la: +d.y, lo: +d.x })));
       return;
     }
-    geocoder.addressSearch(q, (ad, st2) => {
-      show(st2 === kakao.maps.services.Status.OK
+    geocoder.addressSearch(q, (ad, st2) => {                    // 이름으로 못 찾으면 주소로(도로명·지번)
+      done(st2 === kakao.maps.services.Status.OK
         ? ad.slice(0, 12).map((d) => ({ name: d.address_name, addr: (d.road_address && d.road_address.address_name) || d.address_name, la: +d.y, lo: +d.x }))
         : []);
     });
   }, { size: 12 });
+}
+
+$('#f-search').onsubmit = (e) => { e.preventDefault(); $('#q').blur(); doSearch($('#q').value); };
+$('#q').oninput = (e) => {                                     // 글자를 멈추면 자동으로 찾는다(조립 중에는 기다린다)
+  clearTimeout(searchTimer);
+  if (e.isComposing) return;
+  const q = e.target.value;
+  searchTimer = setTimeout(() => doSearch(q, true), 350);
 };
+$('#q').addEventListener('compositionend', (e) => {            // 한글 한 글자가 완성된 순간도 검색 대상
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => doSearch(e.target.value, true), 350);
+});
 
 /* ── 카드 내용 ─────────────────────────── */
 const ymdStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
