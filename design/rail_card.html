@@ -3,19 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>역사 화장실 — 다른 출처를 어떻게 보여줄까</title>
+<title>역사 화장실 — 결정 반영본</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --brand:#4338ca; --ink:#15202b; --sub:#5b6875; --line:#e3e8ee; --paper:#fff; --bg:#eef1f5;
   --pub:#0f766e; --open:#15803d; --shut:#b91c1c; --warn:#b45309;
   --male:#1d4ed8; --female:#be185d; --acc:#0369a1; --baby:#7c3aed;
-  --src:#0e5f73; --src-bg:#e6f4f7; --src-line:#bcdfe7; --src-strong:#0b4a5a;
+  /* 출처가 다른 정보 — 파스텔 청록 */
+  --src-bg:#f0fafc;        /* 아주 연한 바탕 */
+  --src-soft:#d8eef4;      /* 배지·층 배경 */
+  --src-line:#c2e3ec;      /* 테두리 */
+  --src:#14788f;           /* 아이콘·강조 글자 */
+  --src-ink:#0a4f60;       /* 배지 글자(대비 확보) */
 }
 .dk{--ink:#e8edf3;--sub:#9aa7b5;--line:#2a3644;--paper:#161d26;--bg:#0f141b;
   --pub:#5eead4;--open:#86efac;--shut:#fca5a5;--warn:#fcd34d;
   --male:#93b4ff;--female:#f9a8d4;--acc:#7dd3fc;--baby:#c4b5fd;
-  --src:#67d3e8;--src-bg:#12313a;--src-line:#1d4f5d;--src-strong:#a5e8f5}
+  --src-bg:#12272e; --src-soft:#1b3d47; --src-line:#25545f; --src:#7fd9ea; --src-ink:#bdeef8}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;
   font-size:15px;line-height:1.55;word-break:keep-all;overflow-wrap:break-word}
@@ -24,7 +29,7 @@ h2{font-size:16px;margin:26px 16px 8px;padding-top:14px;border-top:1px solid var
 h3{font-size:14px;margin:16px 16px 6px;color:var(--sub)}
 .lead{margin:0 16px 14px;color:var(--sub);font-size:13.5px}
 .wrap{padding:0 16px 40px;max-width:1180px}
-.phones{display:flex;gap:16px;flex-wrap:wrap}
+.phones{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
 .ph{width:352px;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:12px;
   box-shadow:0 6px 18px rgba(15,32,43,.08)}
 .cap{font-size:12.5px;color:var(--sub);margin:0 0 8px}
@@ -34,7 +39,7 @@ svg.ic{width:1em;height:1em;vertical-align:-.13em;flex:none}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
 .ch{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .ch b{font-size:16px;font-weight:800}
-.dist{color:var(--sub);font-size:13px;white-space:nowrap}
+.dist{color:var(--sub);font-size:13px;white-space:nowrap;font-weight:700}
 .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
 .pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;
   padding:3px 8px;border-radius:999px;border:1px solid currentColor}
@@ -43,36 +48,33 @@ svg.ic{width:1em;height:1em;vertical-align:-.13em;flex:none}
 .fac{display:flex;gap:10px;margin-top:8px;font-size:12.5px;color:var(--sub);flex-wrap:wrap}
 .fac span{display:inline-flex;align-items:center;gap:3px}
 
-.srcA{background:var(--src-bg);border:1px solid var(--src-line);border-left:5px solid var(--src);
-  border-radius:12px;padding:12px 12px 12px 13px;margin-bottom:10px}
-.srcB{background:var(--paper);border:1.5px solid var(--src-line);border-radius:14px;overflow:hidden;margin-bottom:10px}
-.srcB>.head{background:var(--src-bg);border-bottom:1px solid var(--src-line);padding:9px 12px;
-  display:flex;align-items:center;gap:7px;color:var(--src-strong);font-size:12.5px;font-weight:700}
-.srcB>.head .who{margin-left:auto;font-weight:800;color:var(--src)}
+/* 안 B — 역 하나를 묶은 상자 + 머리띠 (파스텔) */
+.srcB{background:var(--src-bg);border:1px solid var(--src-line);border-radius:14px;overflow:hidden;margin-bottom:10px}
+.srcB>.head{background:var(--src-soft);padding:8px 12px;display:flex;align-items:center;gap:7px;
+  color:var(--src-ink);font-size:12.5px;font-weight:700}
+.srcB>.head .who{margin-left:auto;font-weight:800}
 .srcB .body{padding:12px}
-.srcC{background:var(--paper);border:1.5px dashed var(--src-line);border-radius:14px;padding:12px;margin-bottom:10px}
-
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:800;
-  color:#fff;background:var(--src);padding:3px 8px;border-radius:6px;white-space:nowrap}
-.dk .badge{color:#06232b}
-.badge.out{background:transparent;color:var(--src);border:1.5px solid var(--src)}
+  color:var(--src-ink);background:var(--src-soft);padding:3px 8px;border-radius:6px;white-space:nowrap}
 .floor{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:24px;
-  font-weight:800;font-size:13px;border-radius:7px;background:var(--src);color:#fff;padding:0 6px}
-.dk .floor{color:#06232b}
+  font-weight:800;font-size:13px;border-radius:7px;background:var(--src-soft);color:var(--src-ink);padding:0 6px}
 .gate{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 8px;
   border-radius:999px;border:1px solid currentColor}
 .gate.out{color:var(--open)} .gate.in{color:var(--warn)}
 .exit{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:var(--sub);font-weight:700}
-.where{margin-top:8px;padding:9px 10px;border-radius:9px;background:rgba(14,95,115,.07);font-size:13.5px;line-height:1.5}
-.dk .where{background:rgba(103,211,232,.1)}
-.where b{color:var(--src-strong)}
+.where{margin-top:7px;padding:8px 10px;border-radius:9px;background:var(--paper);
+  border:1px solid var(--src-line);font-size:13.5px;line-height:1.5}
+.where b{color:var(--src-ink)}
+.line{display:inline-block;font-size:11.5px;font-weight:800;color:var(--src-ink);
+  background:var(--src-soft);border-radius:5px;padding:1px 6px;margin-right:5px}
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}
 .tsub{font-size:12.5px;color:var(--sub);margin-top:7px}
-.none{margin-top:9px;padding:9px 10px;border-radius:9px;border:1px dashed var(--line);font-size:12.5px;color:var(--sub)}
-.xref{margin-top:9px;font-size:12.5px;color:var(--sub);border-top:1px dashed var(--line);padding-top:8px}
+.none{margin-top:9px;padding:9px 10px;border-radius:9px;background:var(--paper);
+  border:1px dashed var(--src-line);font-size:12.5px;color:var(--sub)}
+.xref{margin-top:9px;font-size:12.5px;color:var(--sub);border-top:1px dashed var(--src-line);padding-top:8px}
 .xref a{color:var(--brand);font-weight:700;text-decoration:none}
 .dk .xref a{color:#a5b4fc}
-hr.sp{border:0;border-top:1px dashed var(--line);margin:11px 0}
+hr.sp{border:0;border-top:1px dashed var(--src-line);margin:11px 0}
 
 table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0 4px}
 th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
@@ -81,18 +83,18 @@ th{background:var(--bg);font-size:12.5px;color:var(--sub)}
 .q{color:var(--brand);font-weight:800}
 .dk .q{color:#a5b4fc}
 .mini{font-size:12.5px;color:var(--sub)}
-.sbar{display:flex;gap:6px;margin-bottom:10px}
-.sbar input{flex:1;font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);
-  border-radius:10px;background:var(--paper);color:var(--ink)}
-.sbar button{font:inherit;font-weight:700;font-size:14px;padding:9px 14px;border:0;border-radius:10px;
-  background:var(--brand);color:#fff}
-.sres{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.sres .it{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-bottom:1px solid var(--line)}
-.sres .it:last-child{border-bottom:0}
-.sres .it.st{background:var(--src-bg)}
-.sres .nm{font-weight:700;font-size:14px}
-.sres .ad{font-size:12.5px;color:var(--sub)}
-.sres .cnt{margin-left:auto;font-size:12px;color:var(--src);font-weight:800;white-space:nowrap}
+.ok{color:var(--open);font-weight:800}
+
+/* 하단 탭바 */
+.screen{position:relative;height:520px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--bg)}
+.screen .inner{padding:10px;height:452px;overflow:auto}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:68px;display:flex;background:var(--paper);
+  border-top:1px solid var(--line);padding-bottom:6px}
+.tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-height:44px;text-decoration:none;color:var(--sub);font-size:11.5px;font-weight:700}
+.tabbar a.on{color:var(--brand)} .dk .tabbar a.on{color:#a5b4fc}
+.tabbar a svg{width:22px;height:22px}
+.empty{text-align:center;color:var(--sub);font-size:13.5px;padding:40px 16px}
 .toggle{position:fixed;right:14px;top:14px;z-index:9;font:inherit;font-size:13px;font-weight:700;
   padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
 </style>
@@ -104,171 +106,82 @@ th{background:var(--bg);font-size:12.5px;color:var(--sub)}
   <symbol id="i-train" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="13" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 8.5h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="12.5" r="1.2" fill="currentColor"/><circle cx="15" cy="12.5" r="1.2" fill="currentColor"/><path d="M8 16l-2 4M16 16l2 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="i-gate" viewBox="0 0 24 24"><rect x="3" y="6" width="4" height="13" rx="1.4" fill="none" stroke="currentColor" stroke-width="2"/><rect x="17" y="6" width="4" height="13" rx="1.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 11h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 11v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
   <symbol id="i-exit" viewBox="0 0 24 24"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 12h9M17.5 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-  <symbol id="i-floor" viewBox="0 0 24 24"><path d="M3 19h6v-4h6v-4h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
   <symbol id="i-toilet" viewBox="0 0 24 24"><path d="M16.4 3h4.1a1 1 0 0 1 1 1v5.6a1 1 0 0 1-1 1h-4.1z" fill="currentColor"/><ellipse cx="11.8" cy="6" rx="4.2" ry="2.7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.6 11.6h14.8a1 1 0 0 1 1 1.1c-.3 3.2-2.3 5.6-5.2 6.4l.8 2.9H7l.8-2.9c-2.9-.8-4.9-3.2-5.2-6.4a1 1 0 0 1 1-1.1z" fill="currentColor"/></symbol>
   <symbol id="i-male" viewBox="0 0 24 24"><circle cx="12" cy="4.2" r="2.4" fill="currentColor"/><path d="M12 7.5c-2.2 0-3.4 1.3-3.4 3.2V15h1.6l.5 6h2.6l.5-6h1.6v-4.3c0-1.9-1.2-3.2-3.4-3.2z" fill="currentColor"/></symbol>
   <symbol id="i-female" viewBox="0 0 24 24"><circle cx="12" cy="4.2" r="2.4" fill="currentColor"/><path d="M12 7.4c-2 0-3.1 1.2-3.6 3L7 15.4h2.2L9 21h6l-.2-5.6H17l-1.4-5c-.5-1.8-1.6-3-3.6-3z" fill="currentColor"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-near" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.6" fill="currentColor"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.8L12 16.9 6.7 19.6l1.1-5.8L3.5 9.7l5.9-.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5.3l3.4 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4.5h6a2.5 2.5 0 0 1 2 1 2.5 2.5 0 0 1 2-1h6v14h-6a2.5 2.5 0 0 0-2 1 2.5 2.5 0 0 0-2-1H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 5.5v14" stroke="currentColor" stroke-width="1.6" opacity=".6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3.5v12M7.5 11l4.5 4.5 4.5-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 </defs></svg>
 
-<h1>역사 화장실 — 다른 출처를 어떻게 보여줄까</h1>
-<p class="lead">실제 데이터로 그렸습니다(국가철도공단 2025-06-30 · 서울교통공사 2026-02-12). <b>지자체 정보가 아니라는 것이 한눈에 보이도록</b> 세 가지 안을 만들고, 층 정렬 규칙과 역명 검색 화면을 함께 넣었습니다. 오른쪽 위 버튼으로 어두운 모드를 확인하세요.</p>
+<h1>역사 화장실 — 결정 반영본</h1>
+<p class="lead">정하신 대로 <b>안 B(묶음 상자)</b> · <b>파스텔 청록</b> · <b>층 정렬 규칙</b> · <b>시간 1안</b> · <b>거리순에 그대로 섞기</b>로 그렸습니다. 아래에 교차역 처리 확인과 하단 메뉴 안이 이어집니다.</p>
 
 <div class="wrap">
 
-<h2>1 · 출처 구분 — 세 가지 안</h2>
-<p class="mini" style="margin:0 0 10px">색은 <b>청록</b>을 골랐습니다. 기존 구분 색(공중=teal, 열림=초록, 닫힘=빨강)과 겹치지 않고 브랜드색(인디고)과도 갈립니다. <b>색만으로 구분하지 않습니다</b> — 어떤 안이든 <span class="badge"><svg class="ic"><use href="#i-train"/></svg>국가철도공단</span> 배지를 같이 붙입니다(색맹·어두운 모드·큰 글씨에서도 읽히게).</p>
-
+<h2>1 · 거리순 목록에 섞인 모습 (대구 중구에서)</h2>
+<p class="mini" style="margin:0 0 10px">거리가 먼저, 성격은 그다음. 내려가면서 <b>연한 청록 상자</b>가 보이면 "아, 이건 역에서 준 정보구나"로 읽힙니다.</p>
 <div class="phones">
   <div class="ph">
-    <p class="cap"><b>안 A · 왼쪽 색띠 + 연한 배경</b>목록을 스쳐 봐도 다른 줄임이 보인다. 가장 가볍다.</p>
     <div class="card">
-      <div class="ch"><b>동대구역치안센터</b><span class="dist">120m</span></div>
-      <div class="meta"><span class="pill pub"><svg class="ic"><use href="#i-toilet"/></svg>개방화장실</span><span class="pill op">지금 열림 · 18시까지</span></div>
-      <div class="addr">대구 동구 신암동 …</div>
-      <div class="fac"><span><svg class="ic" style="color:var(--male)"><use href="#i-male"/></svg>대2·소2</span><span><svg class="ic" style="color:var(--female)"><use href="#i-female"/></svg>2칸</span></div>
+      <div class="ch"><b>중앙로역 공영주차장</b><span class="dist">80m</span></div>
+      <div class="meta"><span class="pill pub"><svg class="ic"><use href="#i-toilet"/></svg>개방화장실</span><span class="pill op">지금 열림 · 22시까지</span></div>
+      <div class="addr">대구 중구 남일동</div>
+      <div class="fac"><span><svg class="ic" style="color:var(--male)"><use href="#i-male"/></svg>대1·소2</span><span><svg class="ic" style="color:var(--female)"><use href="#i-female"/></svg>2칸</span></div>
     </div>
-    <div class="srcA">
-      <div class="ch"><b>동대구역 <span class="badge"><svg class="ic"><use href="#i-train"/></svg>국가철도공단</span></b><span class="dist">240m</span></div>
-      <div class="row"><span class="floor">B1</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>3번 출구</span></div>
-      <div class="where">3번 출입구 방향 · <b>지하 1층</b></div>
-      <div class="tsub">남 · 여 각 1곳 · 대구교통공사 1호선</div>
-    </div>
-  </div>
 
-  <div class="ph">
-    <p class="cap"><b>안 B · 역 하나를 묶은 상자 + 머리띠 (추천)</b>한 역에 화장실이 여러 개인 데이터 모양에 맞다. 출처를 <b>한 번만</b> 말하고 안에서 층·개찰구로 나눈다.</p>
-    <div class="card">
-      <div class="ch"><b>동대구역치안센터</b><span class="dist">120m</span></div>
-      <div class="meta"><span class="pill pub"><svg class="ic"><use href="#i-toilet"/></svg>개방화장실</span><span class="pill op">지금 열림 · 18시까지</span></div>
-      <div class="addr">대구 동구 신암동 …</div>
-    </div>
     <div class="srcB">
       <div class="head"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실 · 운영기관 제공<span class="who">국가철도공단</span></div>
       <div class="body">
-        <div class="ch"><b>동대구역</b><span class="dist">240m · 걸어서 4분</span></div>
-        <div class="tsub">대구교통공사 1호선</div>
-        <div class="row"><span class="floor">B1</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>3번 출구</span></div>
-        <div class="where">3번 출입구 방향 · <b>지하 1층</b> · 남 · 여</div>
-        <div class="none"><svg class="ic"><use href="#i-info"/></svg> 이 출처는 <b>변기 수·기저귀교환대·비상벨을 제공하지 않습니다.</b> 없다는 뜻이 아닙니다.</div>
+        <div class="ch"><b>중앙로역</b><span class="dist">140m · 걸어서 2분</span></div>
+        <div class="row"><span class="floor">B1</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>4번 출구</span></div>
+        <div class="where"><span class="line">1호선</span>4번 출입구 방향 · 남 · 여</div>
+        <div class="row"><span class="floor">B2</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span></div>
+        <div class="where"><span class="line">1호선</span>역무실 반대측 표내는 곳 옆 · 남 · 여</div>
+        <div class="meta"><span class="pill gr"><svg class="ic"><use href="#i-clock"/></svg>보통 첫차~막차</span></div>
+        <div class="none"><svg class="ic"><use href="#i-info"/></svg> 이 출처는 <b>여는 시간과 변기 수를 제공하지 않습니다.</b> 없다는 뜻이 아닙니다.</div>
       </div>
     </div>
-  </div>
 
-  <div class="ph">
-    <p class="cap"><b>안 C · 점선 테두리만</b>가장 절제. 목록이 조용하지만 <b>빨리 훑을 때 놓칠 수 있다.</b></p>
     <div class="card">
-      <div class="ch"><b>동대구역치안센터</b><span class="dist">120m</span></div>
-      <div class="meta"><span class="pill pub"><svg class="ic"><use href="#i-toilet"/></svg>개방화장실</span><span class="pill op">지금 열림 · 18시까지</span></div>
+      <div class="ch"><b>대구백화점 앞 공중화장실</b><span class="dist">210m</span></div>
+      <div class="meta"><span class="pill pub"><svg class="ic"><use href="#i-toilet"/></svg>공중화장실</span><span class="pill op">24시간</span></div>
+      <div class="addr">대구 중구 동성로</div>
     </div>
-    <div class="srcC">
-      <div class="ch"><b>동대구역 <span class="badge out"><svg class="ic"><use href="#i-train"/></svg>국가철도공단</span></b><span class="dist">240m</span></div>
-      <div class="row"><span class="floor">B1</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>3번 출구</span></div>
-      <div class="where">3번 출입구 방향</div>
-    </div>
-  </div>
-</div>
 
-<h2>2 · 층 정렬 규칙</h2>
-<p class="lead" style="margin-left:0">말씀하신 <b>1층 → B1 → B2</b> 순서를 규칙으로 옮기면 이렇습니다.</p>
-<div class="note">
-<b>규칙: 지면에서 가까운 순. 같은 거리면 지상이 먼저.</b>
-<table>
-<tr><th>순서</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td></tr>
-<tr><th>층</th><td><b>1F</b></td><td>2F</td><td><b>B1</b></td><td>3F</td><td><b>B2</b></td><td>4F</td><td>B3</td><td>B4</td></tr>
-<tr><th>지면과 거리</th><td>0</td><td>1</td><td>1</td><td>2</td><td>2</td><td>3</td><td>3</td><td>4</td></tr>
-</table>
-<p class="mini" style="margin:6px 0 0">같은 층에 여러 곳이면 ① <b>개찰구 밖이 먼저</b>(표 없이 쓸 수 있으니) ② 출구 번호 작은 순.<br>
-실제 분포: B1 1,166 · 2F 360 · 1F 330 · B2 218 · 3F 80 · B3 40 · 4F 14 · B4 2. 층이 둘 이상인 역은 <b>60개</b>(B1+B2 20 · 1F+2F 10 · 1F+B1 6 · 2F+B1 5 …).</p>
-</div>
-
-<h3>실제 데이터로 맞춰 본 결과</h3>
-<div class="phones">
-  <div class="ph">
-    <p class="cap"><b>반월당역</b> — 노선이 둘, 층이 둘, 개찰구 안/밖이 섞인 곳</p>
     <div class="srcB">
       <div class="head"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실 · 운영기관 제공<span class="who">국가철도공단</span></div>
       <div class="body">
-        <div class="ch"><b>반월당역</b><span class="dist">310m</span></div>
+        <div class="ch"><b>반월당역</b><span class="dist">310m · 걸어서 5분</span></div>
         <div class="row"><span class="floor">B2</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>3번 출구</span></div>
-        <div class="where">3번 출입구 방향 · 남 · 여 <span class="mini">(1호선)</span></div>
-        <hr class="sp">
+        <div class="where"><span class="line">1호선</span>3번 출입구 방향 · 남 · 여</div>
         <div class="row"><span class="floor">B3</span><span class="gate in"><svg class="ic"><use href="#i-gate"/></svg>개찰구 안</span></div>
-        <div class="where">설화명곡 방면 표내는곳 내 맞은편 상가 앞 · 남 · 여 <span class="mini">(2호선)</span></div>
-        <div class="row"><span class="floor">B3</span><span class="gate in"><svg class="ic"><use href="#i-gate"/></svg>개찰구 안</span></div>
-        <div class="where">안심 방면 승강장 내려가는 엘리베이터 옆 · 남 · 여 <span class="mini">(2호선)</span></div>
-        <div class="tsub">B2 → B3 순 · 개찰구 <b>밖이 먼저</b> 규칙이 여기서 유용하다(밖 B2가 위로 온다)</div>
+        <div class="where"><span class="line">2호선</span>설화명곡 방면 표내는곳 내 맞은편 상가 앞 · 남 · 여</div>
+        <div class="where"><span class="line">2호선</span>안심 방면 승강장 내려가는 엘리베이터 옆 · 남 · 여</div>
+        <div class="meta"><span class="pill gr"><svg class="ic"><use href="#i-clock"/></svg>보통 첫차~막차</span></div>
       </div>
     </div>
   </div>
 
   <div class="ph">
-    <p class="cap"><b>서울역</b> — 운영기관이 셋(코레일 1F · 서울교통공사 B1 둘)</p>
-    <div class="srcB">
-      <div class="head"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실 · 운영기관 제공<span class="who">국가철도공단</span></div>
-      <div class="body">
-        <div class="ch"><b>서울역</b><span class="dist">150m</span></div>
-        <div class="row"><span class="floor">1F</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>1번 출구</span></div>
-        <div class="where">자동발매기 옆 맞이방 내 <span class="mini">(코레일 경의중앙선)</span></div>
-        <hr class="sp">
-        <div class="row"><span class="floor">B1</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>2번 출구</span></div>
-        <div class="where">지하 1층 2번 출입구 부근 <span class="mini">(서울교통공사 1호선)</span></div>
-        <div class="row"><span class="floor">B1</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>11번 출구</span></div>
-        <div class="where">14번 출입구 옆, 11번 출입구 물품보관함 건너편 <span class="mini">(서울교통공사 4호선)</span></div>
-        <div class="tsub">1F → B1(출구 2) → B1(출구 11) 순</div>
+    <p class="cap"><b>파스텔 전후</b>진한 청록(전) → 연한 청록(후). 배지·층도 <b>채움 대신 연한 바탕 + 진한 글자</b>로 바꿔 큰 글씨·어두운 모드에서 덜 튀게 했습니다.</p>
+    <div style="background:#e6f4f7;border:1.5px solid #bcdfe7;border-radius:14px;overflow:hidden;margin-bottom:12px">
+      <div style="background:#e6f4f7;border-bottom:1px solid #bcdfe7;padding:8px 12px;color:#0b4a5a;font-size:12.5px;font-weight:700;display:flex">전 · 진한 청록<span style="margin-left:auto;color:#0e5f73;font-weight:800">국가철도공단</span></div>
+      <div style="padding:12px;background:#fff">
+        <div class="ch" style="color:#15202b"><b>상인역</b><span class="dist" style="color:#5b6875">190m</span></div>
+        <div class="row"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:24px;font-weight:800;font-size:13px;border-radius:7px;background:#0e5f73;color:#fff;padding:0 6px">B1</span>
+          <span class="gate out">개찰구 밖</span></div>
       </div>
     </div>
-  </div>
-
-  <div class="ph">
-    <p class="cap"><b>강남역</b> — 서울교통공사 출처는 <b>변기 수까지</b> 있다(칸 36개)</p>
     <div class="srcB">
-      <div class="head"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실 · 운영기관 제공<span class="who">서울교통공사</span></div>
-      <div class="body">
-        <div class="ch"><b>강남역</b><span class="dist">80m</span></div>
-        <div class="row"><span class="floor">B1</span><span class="gate in"><svg class="ic"><use href="#i-gate"/></svg>개찰구 안</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>12번 출구</span></div>
-        <div class="where">대합실 1층 역무실쪽(1·12번 출구쪽) <b>표 내는 곳 내부</b></div>
-        <div class="fac"><span><svg class="ic" style="color:var(--male)"><use href="#i-male"/></svg>대5·소4</span><span><svg class="ic" style="color:var(--female)"><use href="#i-female"/></svg>9칸</span><span><svg class="ic" style="color:var(--acc)"><use href="#i-toilet"/></svg>장애인 남1·여1</span><span><svg class="ic" style="color:var(--baby)"><use href="#i-toilet"/></svg>기저귀 <b>여자만</b></span></div>
-        <div class="meta"><span class="pill op">05:00~24:00</span><span class="pill gr">2009년 리모델링</span></div>
-        <div class="tsub">전화 02-6110-2221 · 2호선</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<h2>3 · 역명으로 검색하기</h2>
-<p class="lead" style="margin-left:0">말씀대로 <b>역명으로 찾는 사람은 그 역에서 화장실을 찾는 사람</b>입니다. 검색줄이 먼저 답해야 합니다.</p>
-<div class="phones">
-  <div class="ph">
-    <p class="cap"><b>지금</b> — 역을 검색해도 역 화장실이 없다</p>
-    <div class="sbar"><input value="동대구역" readonly><button>검색</button></div>
-    <div class="sres">
-      <div class="it"><div><div class="nm">동대구역</div><div class="ad">대구 동구 신암동 · 지하철역</div></div><span class="cnt" style="color:var(--shut)">화장실 없음</span></div>
-      <div class="it"><div><div class="nm">동대구역치안센터</div><div class="ad">대구 동구 신암동</div></div><span class="cnt" style="color:var(--sub)">다른 시설</span></div>
-    </div>
-    <p class="tsub">→ "역인데 화장실이 없다"로 보였습니다.</p>
-  </div>
-
-  <div class="ph">
-    <p class="cap"><b>바뀐 뒤</b> — 역은 <b>맨 위에, 색 있는 줄</b>로</p>
-    <div class="sbar"><input value="동대구역" readonly><button>검색</button></div>
-    <div class="sres">
-      <div class="it st"><svg class="ic" style="color:var(--src);font-size:20px;margin-top:2px"><use href="#i-train"/></svg>
-        <div><div class="nm">동대구역 <span class="badge"><svg class="ic"><use href="#i-train"/></svg>국가철도공단</span></div>
-        <div class="ad">대구교통공사 1호선 · B1 개찰구 밖 · 3번 출구</div></div><span class="cnt">역 안 2곳</span></div>
-      <div class="it"><div><div class="nm">동대구역치안센터</div><div class="ad">대구 동구 신암동 · 120m</div></div><span class="cnt" style="color:var(--sub)">2곳</span></div>
-    </div>
-    <p class="tsub">역명만 쳐도(<b>반월당</b>·<b>상인</b>) 역으로 알아봅니다. <b>대구역·동대구역·서울역·하남검단산역</b>처럼 이름에 이미 '역'이 붙은 12행은 '역역'이 되지 않게 정규화합니다.</p>
-  </div>
-
-  <div class="ph">
-    <p class="cap"><b>겹칠 때</b> — 지자체 대장에도 같은 역이 있으면 서로 가리킨다</p>
-    <div class="srcB">
-      <div class="head"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실 · 운영기관 제공<span class="who">국가철도공단</span></div>
+      <div class="head"><svg class="ic"><use href="#i-train"/></svg>후 · 파스텔 청록<span class="who">국가철도공단</span></div>
       <div class="body">
         <div class="ch"><b>상인역</b><span class="dist">190m</span></div>
         <div class="row"><span class="floor">B1</span><span class="gate out"><svg class="ic"><use href="#i-gate"/></svg>개찰구 밖</span><span class="exit"><svg class="ic"><use href="#i-exit"/></svg>7·8번 출구</span></div>
-        <div class="where">매표실 뒤 · 7번/8번 출입구 방향 · 남 · 여</div>
+        <div class="where"><span class="line">1호선</span>매표실 뒤 · 7번/8번 출입구 방향 · 남 · 여</div>
         <div class="xref">이 역은 <b>대구 달서구 대장</b>에도 올라 있습니다 → <a href="#">달서구 제공 정보 보기(변기 수·전화)</a><br>
           <span class="mini">두 출처의 값을 섞지 않습니다. 틀린 정보는 <b>그 출처</b>에 알려야 고쳐집니다.</span></div>
       </div>
@@ -276,24 +189,93 @@ th{background:var(--bg);font-size:12.5px;color:var(--sub)}
   </div>
 </div>
 
-<h2>4 · 시간을 어떻게 말할까 (결정 필요)</h2>
+<h2>2 · 교차역 — 물어보신 것 (확인 결과)</h2>
 <div class="note">
-서울교통공사는 302곳 전부 <b>05:00~24:00</b>로 적혀 있지만, <b>국가철도공단에는 개방시간 칸이 아예 없습니다</b>(역 514개).
+<p><span class="ok">✔ 말씀하신 대로 되어 있습니다.</span> 좌표표는 <b>운영기관 → 노선 → 역명</b> 단위이고, 중복 제거 기준에도 <b>선명이 들어 있습니다.</b> 노선이 다르면 절대 합쳐지지 않습니다.</p>
 <table>
-<tr><th>안</th><th>화면</th><th>장점 / 걱정</th></tr>
-<tr><td><b>1안</b> 첫차~막차로 안내 <span class="q">(추천)</span></td><td><span class="pill gr">보통 첫차~막차</span><br><span class="mini">이 출처는 시간을 제공하지 않습니다</span></td><td>역 화장실의 상식과 맞고 514역이 살아난다 / 단정이 아니므로 <b>초록이 아닌 회색</b>으로 쓴다</td></tr>
-<tr><td><b>2안</b> 시간 확인 필요</td><td><span class="pill un">시간 확인</span></td><td>가장 정직 / 역 514개가 전부 회색 — 6-4에서 겪은 "지역이 비어 보임"의 반복</td></tr>
-<tr><td><b>3안</b> 05:00~24:00으로 채움</td><td><span class="pill op">지금 열림</span></td><td>깔끔 / <b>없는 정보를 만든 것</b> — 우리 원칙에 어긋난다</td></tr>
+<tr><th>역</th><th>행</th><th>화장실</th></tr>
+<tr><td><b>반월당</b></td><td>대구 <b>1호선</b> / 대구 <b>2호선</b> — 두 줄</td><td>1호선 2 · 2호선 4 (<b>따로</b>)</td></tr>
+<tr><td><b>서울역</b></td><td>코레일 경의중앙 / 서울교통공사 1호선 / 4호선 — 세 줄</td><td>각 2</td></tr>
 </table>
+<p class="mini" style="margin:8px 0 0">같은 기관 안에서 <b>노선이 둘 이상인 역은 45개</b>입니다(반월당·명덕·청라언덕·서면·수영·연산·가락시장 …).</p>
+<p style="margin:10px 0 0"><b>다만 반대 경우를 하나 찾았습니다</b> — 노선만 다르고 <b>자리(층·개찰구·출구·상세위치)가 완전히 같은</b> 행이 <b>3곳(6행)</b> 있습니다: <b>안산·정왕·중앙</b>(수인분당선 ↔ 4호선, 모두 코레일). 한 역사를 두 노선이 함께 쓰는 곳이라 <b>같은 화장실이 두 번</b> 올라온 것입니다.</p>
+<p style="margin:6px 0 0">→ 제안: <b>자리가 완전히 같으면 한 번만 보여 주고 노선을 함께 적습니다</b> — <span class="line">수인분당</span><span class="line">4호선</span> 1층 자유통로 1번 출입구 방향. 기본은 <b>노선별로 따로</b>, 예외는 이 규칙 하나입니다.</p>
 </div>
 
-<h2>5 · 결정해 주실 것</h2>
+<h2>3 · 하단 메뉴 — 안</h2>
+<p class="lead" style="margin-left:0">급할 때 쓰는 앱이라 <b>탭은 넷</b>을 넘기지 않는 쪽을 권합니다. 첫 화면(인트로)에는 탭바를 두지 않습니다.</p>
+<div class="phones">
+  <div class="ph">
+    <p class="cap"><b>탭 4개 안 (추천)</b>가까운 곳 · 저장한 곳 · 최근 본 곳 · 알아보기</p>
+    <div class="screen">
+      <div class="inner">
+        <div class="card"><div class="ch"><b>중앙로역 공영주차장</b><span class="dist">80m</span></div>
+          <div class="meta"><span class="pill pub">개방화장실</span><span class="pill op">지금 열림</span></div></div>
+        <div class="srcB"><div class="head"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실<span class="who">국가철도공단</span></div>
+          <div class="body"><div class="ch"><b>중앙로역</b><span class="dist">140m</span></div>
+            <div class="row"><span class="floor">B1</span><span class="gate out">개찰구 밖</span></div></div></div>
+        <div class="card"><div class="ch"><b>대구백화점 앞</b><span class="dist">210m</span></div>
+          <div class="meta"><span class="pill pub">공중화장실</span><span class="pill op">24시간</span></div></div>
+      </div>
+      <nav class="tabbar">
+        <a class="on" href="#"><svg><use href="#i-near"/></svg>가까운 곳</a>
+        <a href="#"><svg><use href="#i-star"/></svg>저장한 곳</a>
+        <a href="#"><svg><use href="#i-clock"/></svg>최근 본 곳</a>
+        <a href="#"><svg><use href="#i-book"/></svg>알아보기</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="ph">
+    <p class="cap"><b>저장한 곳</b>집·회사처럼 <b>자주 가는 자리</b>를 눌러 바로 그 주변을 본다</p>
+    <div class="screen">
+      <div class="inner">
+        <div class="card"><div class="ch"><b>집</b><span class="dist">대구 달서구 …</span></div>
+          <div class="tsub">주변 화장실 12곳 · 지금 열림 8곳</div></div>
+        <div class="card"><div class="ch"><b>회사</b><span class="dist">대구 중구 …</span></div>
+          <div class="tsub">주변 화장실 31곳 · 지금 열림 19곳</div></div>
+        <div class="card"><div class="ch"><b>중앙로역</b><span class="dist">즐겨찾는 화장실</span></div>
+          <div class="meta"><span class="badge"><svg class="ic"><use href="#i-train"/></svg>국가철도공단</span><span class="pill gr">B1 · 개찰구 밖</span></div></div>
+        <div class="empty">저장은 <b>이 휴대폰 안에만</b> 남습니다.<br>서버로 보내지 않습니다.</div>
+      </div>
+      <nav class="tabbar">
+        <a href="#"><svg><use href="#i-near"/></svg>가까운 곳</a>
+        <a class="on" href="#"><svg><use href="#i-star"/></svg>저장한 곳</a>
+        <a href="#"><svg><use href="#i-clock"/></svg>최근 본 곳</a>
+        <a href="#"><svg><use href="#i-book"/></svg>알아보기</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="ph">
+    <p class="cap"><b>알아보기</b>앱 이야기 + 설정 + <b>미리 받아 두기</b>를 한곳에</p>
+    <div class="screen">
+      <div class="inner">
+        <div class="card"><b>이 앱 이야기</b><div class="tsub">왜 만들었는지 · 데이터는 어디서 오는지 · 무엇을 못 하는지</div></div>
+        <div class="card"><b>데이터와 한계</b><div class="tsub">역 화장실은 운영기관이 관리합니다 · 대전·광주 도시철도는 아직 없습니다</div></div>
+        <div class="card"><b>보기 설정</b><div class="tsub">어둡게 / 글씨 크기(보통·크게·아주 크게)</div></div>
+        <div class="card"><b><svg class="ic"><use href="#i-down"/></svg> 미리 받아 두기</b>
+          <div class="tsub"><b>지하에서는 인터넷이 잘 안 됩니다.</b> 자주 가는 지역을 미리 받아 두면 신호가 없어도 목록이 보입니다.</div></div>
+        <div class="card"><b>틀린 정보 신고</b><div class="tsub">출처별 창구로 안내합니다</div></div>
+      </div>
+      <nav class="tabbar">
+        <a href="#"><svg><use href="#i-near"/></svg>가까운 곳</a>
+        <a href="#"><svg><use href="#i-star"/></svg>저장한 곳</a>
+        <a href="#"><svg><use href="#i-clock"/></svg>최근 본 곳</a>
+        <a class="on" href="#"><svg><use href="#i-book"/></svg>알아보기</a>
+      </nav>
+    </div>
+  </div>
+</div>
+
 <div class="note">
-<p><span class="q">①</span> 출처 구분 — <b>안 A</b>(색띠) / <b>안 B</b>(묶음 상자, 추천) / <b>안 C</b>(점선)</p>
-<p><span class="q">②</span> 구분 색 — 이 <b>청록</b>으로 괜찮은지(기존 색과 안 겹치게 고름)</p>
-<p><span class="q">③</span> 층 정렬 — <b>지면에서 가까운 순, 같으면 지상 먼저</b>(1F·2F·B1·3F·B2…)로 확정할지</p>
-<p><span class="q">④</span> 시간 표시 — 위 <b>1·2·3안</b> 중</p>
-<p><span class="q">⑤</span> 목록에서 역 카드의 자리 — <b>거리순에 그대로 섞기</b> / <b>역명으로 검색했을 때만 맨 위</b>(추천)</p>
+<b>추천 — 넣을 것 / 넣지 말 것</b>
+<table>
+<tr><th>넣자</th><td><b>저장한 곳</b>(집·회사 자리 + 즐겨찾는 화장실) · <b>최근 본 곳</b>(최근 검색한 주소도 함께 — 다시 치지 않게) · <b>알아보기</b>(앱 이야기·설정·신고)</td></tr>
+<tr><th>특히 추천</th><td><b>미리 받아 두기(오프라인)</b> — 역 화장실을 넣는 지금 가장 값이 큽니다. <b>지하 B1~B3에서 신호가 약한데</b> 정작 그때 이 앱이 필요합니다. 탭으로 빼지 말고 <b>알아보기 안</b>에 두기를 권합니다.</td></tr>
+<tr><th>넣지 말자</th><td><b>지도</b>는 탭으로 빼지 않기 — 이미 목록 위 토글이라 두 곳에 생깁니다. <b>공유·평점·후기</b>는 사람이 적을 때 오히려 빈 화면을 보여 줍니다.</td></tr>
+</table>
+<p style="margin:10px 0 0"><span class="q">결정 필요</span> — 지금까지 규칙은 <b>"위치는 저장하지 않는다"</b>였습니다. 저장한 곳·최근 본 곳은 이 규칙의 예외가 됩니다. <b>기기 안에만 저장하고 서버로 보내지 않으며, 한 번에 지울 수 있게</b> 하는 조건으로 여시겠습니까?</p>
 </div>
 
 </div>
