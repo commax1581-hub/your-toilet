@@ -1,0 +1,26 @@
+# ── 비밀 정보 ──
+.env
+.env.*
+*.key
+
+# ── 원본·중간 데이터 (공개 저장소 제외, 별도 백업) ──
+data/raw/
+data/processed/
+
+# ── 개발 환경 ──
+__pycache__/
+*.pyc
+.claude/settings.local.json
+*.log
+
+# 기준본(원본 사본) — 대장(data/id_registry.json)은 올린다
+data/snapshots/
+
+# 정부 원문 자료(참고용 — 공개 저장소에는 요약과 원문 링크만)
+정부자료/
+
+# 배경 원본(각 5~6MB)·시험 조각 — 앱에는 WebP만 쓴다
+design/Gemini_Generated_Image_*.png
+design/gemini_4panel.png
+design/panel_*.png
+design/bg_dusk_candidate.png

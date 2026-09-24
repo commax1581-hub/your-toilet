@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>화장실 찾기 목업 v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1f5; --paper:#fff; --ink:#15202b; --sub:#5b6875; --line:#e3e8ee; --soft:#f5f7fa;
+  --brand:#4338ca; --brand2:#6d28d9; --brand-grad:linear-gradient(135deg,#4338ca,#6d28d9); --brand-soft:#eef0fe; --gps:#2563eb;
+  --open:#15803d; --open-soft:#e7f6ec; --warn:#b45309; --warn-soft:#fdf3e2; --shut-soft:#f1f3f5;
+  --male:#1d4ed8; --female:#dc2626; --acc:#0369a1; --baby:#c2410c; --pub:#0f766e; --opn:#0f766e;
+}
+*{box-sizing:border-box}
+/* 한국어는 단어 단위로만 줄바꿈 — "장애인|용"처럼 글자 중간에서 끊기지 않게 */
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;font-size:14px;line-height:1.45;word-break:keep-all;overflow-wrap:anywhere}
+header.top{max-width:1560px;margin:0 auto;padding:24px 16px 4px}
+header.top h1{margin:0 0 4px;font-size:20px} header.top p{margin:0;color:var(--sub);font-size:13px}
+.flow{max-width:1560px;margin:0 auto;padding:6px 16px 0;font-size:13px;color:var(--sub)}
+.row{max-width:1560px;margin:0 auto;padding:14px 16px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.col{width:340px;max-width:100%}
+.cap{font-weight:700;margin:0 0 8px;font-size:13px;color:var(--sub);min-height:38px} .cap b{color:var(--ink)}
+.phone{background:var(--paper);border-radius:28px;box-shadow:0 10px 30px rgba(15,32,43,.12);overflow:hidden;height:700px;display:flex;flex-direction:column;border:1px solid var(--line);position:relative}
+.bar{padding:12px 14px 10px;border-bottom:1px solid var(--line);background:#fff;position:relative;z-index:2}
+.bar .t{font-weight:800;font-size:16px} .bar .s{color:var(--sub);font-size:12px}
+.body{flex:1;overflow:auto;padding:12px}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;border-radius:14px;padding:12px 10px;font-weight:800;border:0;width:100%;font-family:inherit;font-size:15px;white-space:nowrap}
+.btn.main{background:var(--brand-grad);color:#fff;box-shadow:0 4px 12px rgba(67,56,202,.28)} .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)} .btn.nv{background:#03a94d;color:#fff}
+.btn svg{width:20px;height:20px}
+.note{font-size:12px;color:var(--sub);background:var(--soft);border-radius:10px;padding:8px 10px;margin:8px 0}
+/* ① 첫 화면 */
+.hero{position:absolute;inset:0;background:#1e4f96 center/cover no-repeat}
+.hero .scrim{position:absolute;left:0;right:0;top:0;height:42%;background:linear-gradient(180deg,rgba(15,25,70,.45),rgba(15,25,70,0))}
+.h-title{position:absolute;left:0;right:0;top:78px;text-align:center;color:#fff;opacity:.85;z-index:2}
+.h-title .ko{font-family:'Song Myung',serif;font-size:36px;white-space:nowrap;letter-spacing:.02em;text-shadow:0 2px 12px rgba(20,20,60,.35)}
+.h-title .sub{margin-top:8px;font-size:12px;letter-spacing:.08em}
+.h-card{position:absolute;left:14px;right:14px;bottom:16px;background:rgba(255,255,255,.95);border-radius:18px;padding:12px;z-index:2}
+.h-card b{display:block;text-align:center;font-size:16px;margin-bottom:8px}
+.h-card .grid{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.timechip{position:absolute;top:12px;right:12px;display:flex;gap:4px;z-index:3}
+.timechip span{background:rgba(255,255,255,.3);color:#fff;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer}
+.timechip span.on{background:#fff;color:var(--ink)}
+/* 지도 */
+.map{position:absolute;inset:0;background:#e8eef0;overflow:hidden}
+.map svg.streets{position:absolute;inset:0;width:100%;height:100%}
+.centerpin{position:absolute;left:50%;top:44%;transform:translate(-50%,-100%);color:var(--brand);filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))}
+.centerpin svg{width:44px;height:44px}
+.acc{position:absolute;left:50%;top:44%;border-radius:50%;transform:translate(-50%,-50%);background:rgba(37,99,235,.12);border:1.5px solid rgba(37,99,235,.45)}
+.gpsdot{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--gps);border:3px solid #fff;box-shadow:0 0 0 6px rgba(37,99,235,.2);transform:translate(-50%,-50%)}
+.addrbox{position:absolute;left:12px;right:12px;bottom:14px;background:#fff;border-radius:18px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.14)}
+.addrbox .a{font-weight:800;font-size:16px} .addrbox .h{font-size:12px;color:var(--sub);margin:2px 0 10px}
+.warn{position:absolute;left:12px;right:12px;top:66px;background:var(--warn-soft);border:1px solid #f3d7a8;color:#7c4a03;border-radius:12px;padding:9px 11px;font-size:13px;z-index:2}
+.search{display:flex;gap:6px;align-items:center;border:1.5px solid var(--brand);border-radius:12px;padding:9px 11px;font-size:15px;background:#fff}
+.search svg{width:18px;height:18px;color:var(--sub)}
+.sug{border-bottom:1px solid var(--line);padding:10px 2px} .sug b{display:block} .sug span{font-size:12px;color:var(--sub)}
+.radius{display:flex;gap:6px;margin:0 0 10px}
+.radius span{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:7px 0;font-weight:700;font-size:13px}
+.radius .on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.ring{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);border-radius:50%;border:2px dashed var(--brand);background:rgba(67,56,202,.07)}
+/* 결과 */
+.basebar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--soft);border-radius:12px;padding:8px 10px;margin-bottom:8px;font-size:13px}
+.basebar b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .basebar em{font-style:normal;color:var(--brand);font-weight:800;white-space:nowrap}
+.chips{display:flex;gap:6px;overflow:auto;padding:2px 0 8px}
+.chip{flex:none;border:1px solid var(--line);border-radius:999px;padding:6px 11px;font-size:13px;background:#fff;white-space:nowrap}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:700}
+.card2{border:1px solid var(--line);border-radius:16px;padding:11px 12px;margin-bottom:8px;background:#fff}
+.card2 .h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.card2 .n{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.dist{font-weight:800;white-space:nowrap;font-size:16px;text-align:right} .dist small{font-weight:500;color:var(--sub);display:block;font-size:11px}
+.meta{display:flex;gap:6px;margin:6px 0;align-items:center;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px 3px 7px;font-size:12px;font-weight:800;white-space:nowrap}
+.pill svg{width:14px;height:14px}
+.pill.pub{background:var(--pub);color:#fff} .pill.opn{background:#fff;color:var(--opn);border:1.6px solid var(--opn)}
+.st{font-size:13px;font-weight:800;border-radius:8px;padding:3px 8px;white-space:nowrap}
+.st.fac{background:#eef0fe;color:#4338ca} .st.guess{background:var(--warn-soft);color:var(--warn)}
+/* 위치 정확도 뱃지 */
+.acc2{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px 3px 6px;font-size:12px;font-weight:800;white-space:nowrap;background:#fff;border:1px solid transparent}
+.acc2 svg{width:14px;height:14px}
+.acc2.lv3{border-color:#b9dcf1;color:#0369a1} .acc2.lv4{border-color:#f2d7ad;color:var(--warn)}
+.legend2{max-width:1560px;margin:0 auto;padding:0 16px 30px}
+.legend2 table{border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;font-size:13px;width:100%;max-width:980px}
+.legend2 td,.legend2 th{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left} .legend2 th{background:var(--soft)}
+.st.open{background:var(--open-soft);color:var(--open)} .st.soon{background:var(--warn-soft);color:var(--warn)} .st.shut{background:var(--shut-soft);color:#6b7280} .st.ask{background:#eef2f7;color:#475569}
+.fac{display:flex;gap:14px;align-items:center}
+.fac span{display:inline-flex;align-items:center;gap:3px;font-size:16px;font-weight:800}
+.fac svg{width:28px;height:28px;flex:none} .fac .no{opacity:.35}
+.fac .more{margin-left:auto;font-size:12px;color:var(--sub);font-weight:700}
+.group{border-left:5px solid var(--brand)}
+.empty{text-align:center;padding:26px 10px}
+.empty b{display:block;font-size:17px;margin:8px 0 4px}
+.cmp{max-width:1560px;margin:0 auto;padding:0 16px 32px}
+.cmp table{border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;font-size:13px;width:100%;max-width:900px}
+.cmp td,.cmp th{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left} .cmp th{background:var(--soft)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-male" viewBox="0 0 24 24"><circle cx="12" cy="4" r="2.6" fill="currentColor"/><path d="M8.2 8h7.6a1.6 1.6 0 0 1 1.6 1.6V15h-2.2v7h-2.4v-6h-1.6v6H8.8v-7H6.6V9.6A1.6 1.6 0 0 1 8.2 8z" fill="currentColor"/></symbol>
+    <symbol id="i-female" viewBox="0 0 24 24"><circle cx="12" cy="4" r="2.6" fill="currentColor"/><path d="M9.6 8h4.8l3.6 9h-3.2v5h-2.2v-5h-1.2v5H9.2v-5H6z" fill="currentColor"/></symbol>
+    <symbol id="i-acc" viewBox="0 0 24 24"><circle cx="10" cy="3.6" r="2.3" fill="currentColor"/><path d="M8.6 7.4h2.6l.4 4.6H16l2.6 6.4-2 .8-2-5H9.6z" fill="currentColor"/><path d="M7.6 10.2a6 6 0 1 0 7.9 8.6" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-diaper" viewBox="0 0 24 24"><rect x="3" y="12" width="18" height="3" rx="1.2" fill="currentColor"/><path d="M5 15v6M19 15v6" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="8.6" r="2.4" fill="currentColor"/><path d="M11 10.2h7a1.8 1.8 0 0 1 0 1.8h-7z" fill="currentColor"/></symbol>
+    <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2" fill="currentColor"/><path d="M11 8l-3 4 2 1 2-2 1 4-3 7h2.4l2.6-6 2 3v3h2v-4l-3-4-1-4 3 2h2v-2h-1.4L14 8z" fill="currentColor"/></symbol>
+    <symbol id="i-build" viewBox="0 0 24 24"><path d="M4 21V6l8-3 8 3v15z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 21v-5h6v5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-q" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.6 2.6 0 1 1 3.4 2.5c-.6.2-.9.8-.9 1.5v.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" fill="currentColor"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></symbol>
+    <symbol id="i-gps" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2.4"/></symbol>
+    <symbol id="i-public" viewBox="0 0 24 24"><path d="M12 2l10 5v2H2V7z" fill="currentColor"/><path d="M4 10h3v8H4zM10.5 10h3v8h-3zM17 10h3v8h-3zM2 19h20v3H2z" fill="currentColor"/></symbol>
+    <symbol id="i-opendoor" viewBox="0 0 24 24"><path d="M4 3h9v18H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 3l7 2v16l-7-2z" fill="currentColor"/><circle cx="15.5" cy="12" r="1" fill="#fff"/></symbol>
+    <!-- 지도 바탕(임시 그림, 실제는 카카오 지도) -->
+    <symbol id="streets" viewBox="0 0 340 700" preserveAspectRatio="none">
+      <rect width="340" height="700" fill="#eaf0ee"/>
+      <path d="M0 290 H340 M0 450 H340 M110 0 V700 M236 0 V700" stroke="#fff" stroke-width="18"/>
+      <path d="M0 150 L340 205 M30 700 L190 360" stroke="#fff" stroke-width="10"/>
+      <rect x="130" y="306" width="90" height="124" rx="8" fill="#cfe6d3"/>
+      <rect x="20" y="170" width="70" height="100" rx="6" fill="#dde3ea"/><rect x="254" y="310" width="70" height="120" rx="6" fill="#dde3ea"/>
+      <text x="175" y="372" font-size="11" text-anchor="middle" fill="#4b6b55">서울광장</text>
+      <text x="55" y="224" font-size="10" text-anchor="middle" fill="#64748b">서울시청</text>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <h1>가장 가까운 화장실 — 모바일 목업 v3</h1>
+  <p><b>주 색: 인디고→바이올렛</b>(버튼 그라데이션, 핀·칩·반경은 #4338CA) · 공중·개방 알약은 청록(채움/테두리) · 시설 위치 기준·이름으로 찾은 위치 표시 추가 · v2 → v3: <b>시간대 배경 첫 화면</b> · <b>핀으로 위치 확정</b>(배달앱 방식) · <b>다른 곳 + 반경</b> · 결과 위 <b>기준 위치 표시</b> · 글자 줄임(단어 단위 줄바꿈, 이름 한 줄)</p>
+</header>
+<p class="flow">흐름: ① 지금 어디세요? → ② 핀 확정("여기 맞아요") → ⑤ 결과. 위치를 못 믿을 때 ③, 다른 곳은 ④ → ⑤. 처음 한 번 위치를 허용한 뒤에는 <b>두 번 누르면 결과</b>.</p>
+
+<div class="row">
+
+<!-- ① 첫 화면 -->
+<div class="col">
+  <p class="cap"><b>① 첫 화면 · 지금 어디세요?</b><br>배경은 지금 시각에 따라 자동(눌러서 미리보기)</p>
+  <div class="phone">
+    <div class="hero" id="hero"><div class="scrim"></div></div>
+    <div class="timechip" id="tc"><span data-k="day">낮</span><span data-k="evening">저녁</span><span data-k="night">밤</span></div>
+    <div class="h-title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
+    <div class="h-card">
+      <b>지금 어디세요?</b>
+      <div class="grid"><button class="btn main"><svg><use href="#i-gps"/></svg>내 위치로</button><button class="btn ghost"><svg><use href="#i-search"/></svg>다른 곳</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ② 핀 확정 -->
+<div class="col">
+  <p class="cap"><b>② 핀으로 위치 확정</b><br>GPS가 정확할 때 — 핀이 이미 내 자리, 한 번 누르면 끝</p>
+  <div class="phone">
+    <div class="bar"><div class="t">여기가 맞나요?</div><div class="s">지도를 움직여 핀을 정확한 자리에 맞춰 주세요</div></div>
+    <div style="position:relative;flex:1">
+      <div class="map"><svg class="streets"><use href="#streets"/></svg></div>
+      <div class="acc" style="width:46px;height:46px"></div>
+      <div class="gpsdot" style="left:52%;top:45%"></div>
+      <div class="centerpin"><svg><use href="#i-pin"/></svg></div>
+      <div class="addrbox">
+        <div class="a">서울 중구 세종대로 110 근처</div>
+        <div class="h">서울시청 앞 · 위치 오차 약 15m</div>
+        <button class="btn main">여기 맞아요</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ③ GPS 부정확 -->
+<div class="col">
+  <p class="cap"><b>③ 위치가 부정확할 때</b><br>건물 안·지하 — 오차 원을 보여 주고 핀을 옮기게</p>
+  <div class="phone">
+    <div class="bar"><div class="t">여기가 맞나요?</div><div class="s">지도를 움직여 핀을 정확한 자리에 맞춰 주세요</div></div>
+    <div style="position:relative;flex:1">
+      <div class="map"><svg class="streets"><use href="#streets"/></svg></div>
+      <div class="warn"><b>위치가 정확하지 않아요</b> (오차 약 180m)<br>핀을 지금 계신 곳으로 옮겨 주세요</div>
+      <div class="acc" style="width:230px;height:230px"></div>
+      <div class="centerpin"><svg><use href="#i-pin"/></svg></div>
+      <div class="addrbox">
+        <div class="a">서울 중구 태평로1가 근처</div>
+        <div class="h">핀을 옮기면 주소가 바뀌어요</div>
+        <button class="btn main">여기 맞아요</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ④ 다른 곳 -->
+<div class="col">
+  <p class="cap"><b>④ 다른 곳에서 찾기</b><br>주소·역·건물·공원 이름 → 핀 → 반경</p>
+  <div class="phone">
+    <div class="bar">
+      <div class="search"><svg><use href="#i-search"/></svg>여의도 한강공원</div>
+    </div>
+    <div style="position:relative;flex:1">
+      <div class="map"><svg class="streets"><use href="#streets"/></svg></div>
+      <div class="ring" style="width:210px;height:210px"></div>
+      <div class="centerpin"><svg><use href="#i-pin"/></svg></div>
+      <div class="addrbox">
+        <div class="a">여의도 한강공원 물빛광장</div>
+        <div class="h">서울 영등포구 여의동로 330 근처</div>
+        <div class="radius"><span>300m</span><span class="on">500m</span><span>1km</span></div>
+        <button class="btn main">이 위치에서 찾기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ⑤ 결과 -->
+<div class="col">
+  <p class="cap"><b>⑤ 결과</b><br>맨 위에 기준 위치 — 누르면 ②로 돌아가 다시 맞춤</p>
+  <div class="phone">
+    <div class="bar"><div class="t">가까운 화장실</div><div class="s">19:30 기준 · 공공데이터 2026-09-22</div></div>
+    <div class="body">
+      <div class="basebar"><b>📍 세종대로 110 근처 · 500m</b><em>바꾸기</em></div>
+      <div class="chips"><span class="chip on">지금 열림</span><span class="chip">안심(비상벨)</span><span class="chip">장애인</span><span class="chip">기저귀</span><span class="chip">어린이</span></div>
+      <div class="chips" style="padding-top:0"><span class="chip">전체 종류</span><span class="chip">공원</span><span class="chip">역·터미널</span><span class="chip">관공서</span><span class="chip">주유소</span><span class="chip">시장·상가</span><span class="chip">산·바다</span></div>
+      <div class="card2">
+        <div class="h"><div class="n">서울시청 본관 B1층 시민청 외부</div><div class="dist">8m<small>1분</small></div></div>
+        <div class="meta"><span class="pill opn"><svg><use href="#i-opendoor"/></svg>개방</span><span class="st open">22시까지</span></div>
+        <div class="fac"><span style="color:var(--male)"><svg><use href="#i-male"/></svg>6</span><span style="color:var(--female)"><svg><use href="#i-female"/></svg>10</span><span style="color:var(--acc)"><svg><use href="#i-acc"/></svg>2</span><span style="color:var(--baby)"><svg><use href="#i-diaper"/></svg></span></div>
+      </div>
+      <div class="card2 group">
+        <div class="h"><div class="n">시청광장 지하상가 · 2곳</div><div class="dist">90m<small>2분</small></div></div>
+        <div class="meta"><span class="pill pub"><svg><use href="#i-public"/></svg>공중</span><span class="st open">2곳 열림</span></div>
+        <div class="fac"><span style="color:var(--male)"><svg><use href="#i-male"/></svg>9</span><span style="color:var(--female)"><svg><use href="#i-female"/></svg>6</span><span class="no"><svg><use href="#i-acc"/></svg></span><span style="color:var(--baby)"><svg><use href="#i-diaper"/></svg></span><span class="more">목록 ›</span></div>
+      </div>
+      <div class="card2 group">
+        <div class="h"><div class="n">소공지하상가 · 3곳</div><div class="dist">244m<small>4분</small></div></div>
+        <div class="meta"><span class="pill pub"><svg><use href="#i-public"/></svg>공중</span><span class="st soon">곧 닫힘 1</span></div>
+        <div class="fac"><span style="color:var(--male)"><svg><use href="#i-male"/></svg>19</span><span style="color:var(--female)"><svg><use href="#i-female"/></svg>20</span><span style="color:var(--acc)"><svg><use href="#i-acc"/></svg>3</span><span style="color:var(--baby)"><svg><use href="#i-diaper"/></svg></span><span class="more">목록 ›</span></div>
+      </div>
+      <div class="card2">
+        <div class="h"><div class="n">공촌유수지 체육시설 화장실</div><div class="dist">380m<small>6분</small></div></div>
+        <div class="meta"><span class="pill pub"><svg><use href="#i-public"/></svg>공중</span><span class="st open">상시</span><span class="acc2 lv3"><svg><use href="#i-build"/></svg>시설 위치</span></div>
+        <div class="note" style="margin:6px 0 0">시설 위치 기준 · <b>입구·안내판 확인</b></div>
+      </div>
+      <div class="card2">
+        <div class="h"><div class="n">○○천 공중화장실1</div><div class="dist">520m<small>8분</small></div></div>
+        <div class="meta"><span class="pill pub"><svg><use href="#i-public"/></svg>공중</span><span class="st open">상시</span><span class="acc2 lv4"><svg><use href="#i-q"/></svg>추정</span></div>
+        <div class="note" style="margin:6px 0 0">이름으로 찾은 위치 · <b>정확하지 않을 수 있어요</b> · 네이버에서 보기</div>
+      </div>
+      <div class="card2">
+        <div class="h"><div class="n">○○구청 민원실</div><div class="dist">410m<small>6분</small></div></div>
+        <div class="meta"><span class="pill opn"><svg><use href="#i-opendoor"/></svg>개방</span><span class="st ask">시간 확인</span></div>
+        <div class="fac"><span style="color:var(--male)"><svg><use href="#i-male"/></svg>3</span><span style="color:var(--female)"><svg><use href="#i-female"/></svg>3</span><span class="no"><svg><use href="#i-acc"/></svg></span><span class="no"><svg><use href="#i-diaper"/></svg></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ⑥ 없을 때 -->
+<div class="col">
+  <p class="cap"><b>⑥ 반경 안에 없을 때</b><br>막다른 길 대신 넓히기 제안(착한가격 0곳 완화)</p>
+  <div class="phone">
+    <div class="bar"><div class="t">가까운 화장실</div><div class="s">02:10 기준</div></div>
+    <div class="body">
+      <div class="basebar"><b>📍 ○○읍 ○○리 근처 · 500m</b><em>바꾸기</em></div>
+      <div class="empty">
+        <svg style="width:46px;height:46px;color:var(--sub)"><use href="#i-pin"/></svg>
+        <b>500m 안에 지금 열린 곳이 없어요</b>
+        <div style="color:var(--sub);font-size:13px">1km 안에 2곳 · 시간 확인 필요 1곳</div>
+      </div>
+      <button class="btn main">1km까지 넓혀 보기</button>
+      <button class="btn ghost" style="margin-top:8px">닫힌 곳·시간 확인 필요 포함</button>
+      <div class="note">순서: 반경 넓히기 → "지금 열림" 끄기. 어느 쪽이든 무엇을 바꿨는지 목록 위에 표시.</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="legend2">
+  <p class="cap" style="min-height:0"><b>위치 정확도 뱃지(C안 · 아이콘 알약)</b> — 가장 정확한 곳은 뱃지 없이, 우리가 매칭·추정한 곳만 표시</p>
+  <table>
+    <tr><th>뱃지</th><th>뜻</th><th>곳 수</th><th>카드 안내</th></tr>
+    <tr><td></td><td>주소로 찾은 <b>건물 좌표</b></td><td>약 45,000</td><td>없음</td></tr>
+    <tr><td></td><td>건물이 없는 <b>번지(공원·야외)</b> 좌표</td><td>약 4,900</td><td>넓은 곳이면 "주차장·입구 쪽 확인"</td></tr>
+    <tr><td><span class="acc2 lv3"><svg><use href="#i-build"/></svg>시설 위치</span></td><td>주소로 못 찾아 <b>시설 이름</b>으로 찾음 — 카카오·네이버 <b>둘 다 일치</b></td><td>636</td><td>"시설 위치 기준 · 입구·안내판 확인"</td></tr>
+    <tr><td><span class="acc2 lv4"><svg><use href="#i-q"/></svg>추정</span></td><td>시설 이름을 <b>한 곳에서만</b> 찾음</td><td>375</td><td>"이름으로 찾은 위치 · 정확하지 않을 수 있어요"</td></tr>
+  </table>
+  <p class="cap" style="min-height:0;margin-top:8px">정렬·필터에 "정확한 곳 먼저"를 두면 뱃지 없는 곳이 위로 온다. 숨긴 것: 좌표 없음 247 · 동·면 중심점 440 · 미개방 608 · 학교 430 · 폐쇄 41.</p>
+</div>
+<div class="legend2">
+  <p class="cap" style="min-height:0"><b>안내 문구</b> — 우리가 매칭·추정한 위치는 반드시 고지한다(카드는 짧게, 상세는 자세히)</p>
+  <table>
+    <tr><th>상황</th><th>카드(한 줄)</th><th>상세(자세히)</th></tr>
+    <tr><td><span class="acc2 lv3"><svg><use href="#i-build"/></svg>시설 위치</span><br><small>주소로 못 찾아 시설 이름으로 찾음<br>(카카오·네이버 일치) 636곳</small></td>
+        <td>시설 위치 기준 · <b>입구·안내판 확인</b></td>
+        <td>공공데이터에 정확한 도로명·지번 주소가 없어 <b>시설 이름을 기준</b>으로 안내합니다. 시설 안 어디인지는 알 수 없어요.<br>도착하면 <b>안내판·안내소</b>를 확인하거나 시설 관계자에게 물어보세요.</td></tr>
+    <tr><td><span class="acc2 lv4"><svg><use href="#i-q"/></svg>추정</span><br><small>시설 이름을 한 곳에서만 찾음 375곳</small></td>
+        <td>이름으로 찾은 위치 · <b>정확하지 않을 수 있어요</b></td>
+        <td>공공데이터에 정확한 주소가 없어 <b>시설 이름으로 찾은 위치</b>입니다. <b>실제 위치와 다를 수 있어요.</b><br>도착하면 안내판·안내소를 확인하거나 시설 관계자에게 물어보세요.</td></tr>
+    <tr><td><span class="st wide">넓은 곳</span><br><small>공원·산지 등 5,779곳</small></td>
+        <td>범위가 넓어요 · <b>주차장·입구 쪽</b></td>
+        <td>공원·산지처럼 <b>넓은 곳</b>이라 지도의 점이 화장실 자리와 다를 수 있어요. 보통 주차장이나 입구 쪽에 있습니다. 안내판을 확인하세요.</td></tr>
+    <tr><td><b>주유소·충전소</b><br><small>5,826곳</small></td>
+        <td>주유소 · <b>직원에게 문의</b></td>
+        <td>주유소·충전소 화장실은 사무실 안쪽이나 건물 뒤편에 있을 수 있어요. 직원에게 물어보고 이용하세요.</td></tr>
+    <tr><td><span class="st ask">시간 확인</span><br><small>3,781곳</small></td>
+        <td>시간 확인 필요</td>
+        <td>공공데이터에 여는 시간이 "근무시간"처럼 적혀 있어 지금 열려 있는지 알 수 없어요. 관리기관에 전화로 확인할 수 있습니다.</td></tr>
+  </table>
+  <p class="cap" style="min-height:0;margin-top:8px">원칙: 주소로 건물이 확정된 곳(●●●)에는 아무 안내도 붙이지 않는다 — 안내가 흔해지면 진짜 주의가 묻힌다.</p>
+</div>
+<div class="cmp">
+  <p class="cap" style="min-height:0"><b>글자 줄임 적용 (v2 → v3)</b></p>
+  <table>
+    <tr><th>위치</th><th>v2</th><th>v3</th></tr>
+    <tr><td>상태 알약</td><td>열림 · 22:00까지 / 시간 확인 필요 · "근무시간" / 1곳 20:00 닫힘</td><td>22시까지 / 시간 확인 / 곧 닫힘 1</td></tr>
+    <tr><td>필터 칩</td><td>장애인용 · 어린이용</td><td>장애인 · 어린이</td></tr>
+    <tr><td>거리 아래</td><td>도보 1분</td><td>1분 (걷는 사람 아이콘은 상세·버튼에)</td></tr>
+    <tr><td>화장실 이름</td><td>길면 두 줄</td><td>한 줄 + 말줄임(…), 상세에서 전체</td></tr>
+    <tr><td>줄바꿈</td><td>글자 단위(장애인|용)</td><td>단어 단위(<code>word-break: keep-all</code>)</td></tr>
+  </table>
+</div>
+
+<script>
+// 지금 시각으로 배경 고르기: 낮 06~17, 저녁 17~20, 밤 20~06 (낮은 B 결정)
+const BG={day:'bg_day_blue_1080.webp',evening:'bg_evening_1080.webp',night:'bg_night_1080.webp'};
+const h=new Date().getHours(), now=h>=6&&h<17?'day':h>=17&&h<20?'evening':'night';
+function setBg(k){document.getElementById('hero').style.backgroundImage=`url(${BG[k]})`;
+  document.querySelectorAll('#tc span').forEach(s=>s.classList.toggle('on',s.dataset.k===k));}
+document.querySelectorAll('#tc span').forEach(s=>s.onclick=()=>setBg(s.dataset.k));
+setBg(now);
+</script>
+</body>
+</html>

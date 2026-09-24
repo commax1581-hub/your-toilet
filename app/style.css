@@ -1,0 +1,115 @@
+/* 가장 가까운 화장실 — 화면 규칙은 docs/앱구현-시작점.md 4장(목업 design/mockup_mobile_v3.html)
+   주 색 인디고→바이올렛(버튼만 그라데이션) · 공중=청록 채움, 개방=청록 테두리 · 한국어는 단어 단위로만 줄바꿈 */
+:root{
+  --bg:#eef1f5; --paper:#fff; --ink:#15202b; --sub:#5b6875; --line:#e3e8ee; --soft:#f5f7fa;
+  --brand:#4338ca; --brand2:#6d28d9; --brand-grad:linear-gradient(135deg,#4338ca,#6d28d9); --brand-soft:#eef0fe; --gps:#2563eb;
+  --open:#15803d; --open-soft:#e7f6ec; --warn:#b45309; --warn-soft:#fdf3e2; --shut-soft:#f1f3f5;
+  --male:#1d4ed8; --female:#dc2626; --acc:#0369a1; --baby:#c2410c; --pub:#0f766e; --opn:#0f766e;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;font-size:14px;line-height:1.45;
+  word-break:keep-all;overflow-wrap:anywhere;-webkit-tap-highlight-color:transparent}
+#app{position:fixed;inset:0;max-width:480px;margin:0 auto;background:var(--paper);overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+.screen{position:absolute;inset:0;display:none;flex-direction:column}
+.screen.on{display:flex}
+button{font-family:inherit}
+
+/* 공통 부품 */
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;border-radius:14px;padding:13px 10px;font-weight:800;border:0;width:100%;font-size:15px;white-space:nowrap;cursor:pointer}
+.btn.main{background:var(--brand-grad);color:#fff;box-shadow:0 4px 12px rgba(67,56,202,.28)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn[disabled]{opacity:.5}
+.btn svg{width:20px;height:20px}
+.bar{padding:12px 14px 10px;border-bottom:1px solid var(--line);background:#fff;position:relative;z-index:2;display:flex;align-items:center;gap:10px}
+.bar .grow{min-width:0;flex:1}
+.bar .t{font-weight:800;font-size:16px}
+.bar .s{color:var(--sub);font-size:12px}
+.bar .back{border:0;background:transparent;padding:6px;margin-left:-6px;color:var(--ink);cursor:pointer}
+.bar .back svg{width:22px;height:22px;display:block}
+.body{flex:1;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+.note{font-size:12px;color:var(--sub);background:var(--soft);border-radius:10px;padding:8px 10px;margin:8px 0}
+.note b{color:var(--ink)}
+.spin{width:22px;height:22px;border:3px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ① 첫 화면 */
+#s-home{background:#1e4f96 center/cover no-repeat}
+#s-home .scrim{position:absolute;left:0;right:0;top:0;height:42%;background:linear-gradient(180deg,rgba(15,25,70,.45),rgba(15,25,70,0))}
+.h-title{position:absolute;left:0;right:0;top:12vh;text-align:center;color:#fff;opacity:.85;z-index:2}
+.h-title .ko{font-family:'Song Myung',serif;font-size:36px;white-space:nowrap;letter-spacing:.02em;text-shadow:0 2px 12px rgba(20,20,60,.35)}
+.h-title .sub{margin-top:8px;font-size:12px;letter-spacing:.08em}
+.h-card{position:absolute;left:14px;right:14px;bottom:calc(16px + var(--safe-b));background:rgba(255,255,255,.95);border-radius:18px;padding:12px;z-index:2}
+.h-card b{display:block;text-align:center;font-size:16px;margin-bottom:8px}
+.h-card .grid{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.h-card .msg{font-size:12px;color:var(--warn);text-align:center;margin-top:8px;display:none}
+.h-card .msg.on{display:block}
+
+/* ②③④ 지도·핀 */
+.mapwrap{position:relative;flex:1;background:#e8eef0}
+#map{position:absolute;inset:0}
+.centerpin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);color:var(--brand);filter:drop-shadow(0 3px 4px rgba(0,0,0,.25));pointer-events:none;z-index:3}
+.centerpin svg{width:44px;height:44px;display:block}
+.addrbox{position:absolute;left:12px;right:12px;bottom:calc(14px + var(--safe-b));background:#fff;border-radius:18px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.14);z-index:4}
+.addrbox .a{font-weight:800;font-size:16px}
+.addrbox .h{font-size:12px;color:var(--sub);margin:2px 0 10px}
+.warn{position:absolute;left:12px;right:12px;top:12px;background:var(--warn-soft);border:1px solid #f3d7a8;color:#7c4a03;border-radius:12px;padding:9px 11px;font-size:13px;z-index:4;display:none}
+.warn.on{display:block}
+.radius{display:flex;gap:6px;margin:0 0 10px}
+.radius span{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 0;font-weight:700;font-size:13px;cursor:pointer}
+.radius .on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+
+/* ④ 다른 곳 찾기 */
+.search{display:flex;gap:6px;align-items:center;border:1.5px solid var(--brand);border-radius:12px;padding:9px 11px;background:#fff}
+.search svg{width:18px;height:18px;color:var(--sub);flex:none}
+.search input{border:0;outline:0;font:inherit;font-size:15px;width:100%;background:transparent}
+.sug{border-bottom:1px solid var(--line);padding:11px 2px;cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left}
+.sug b{display:block;font-size:15px}
+.sug span{font-size:12px;color:var(--sub)}
+
+/* ⑤ 목록 */
+.basebar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--soft);border-radius:12px;padding:8px 10px;margin-bottom:8px;font-size:13px}
+.basebar b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.basebar button{border:0;background:transparent;color:var(--brand);font-weight:800;white-space:nowrap;font-size:13px;cursor:pointer}
+.chips{display:flex;gap:6px;overflow:auto;padding:2px 0 8px}
+.chip{flex:none;border:1px solid var(--line);border-radius:999px;padding:6px 11px;font-size:13px;background:#fff;white-space:nowrap;cursor:pointer}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:700}
+.card{border:1px solid var(--line);border-radius:16px;padding:11px 12px;margin-bottom:8px;background:#fff;width:100%;text-align:left;cursor:pointer;display:block}
+.card.group{border-left:5px solid var(--brand)}
+.card.shut{background:#fbfcfd}
+.card .h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.card .n{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.card .adr{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dist{font-weight:800;white-space:nowrap;font-size:16px;text-align:right}
+.dist small{font-weight:500;color:var(--sub);display:block;font-size:11px}
+.meta{display:flex;gap:6px;margin:6px 0 0;align-items:center;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px 3px 7px;font-size:12px;font-weight:800;white-space:nowrap}
+.pill svg{width:14px;height:14px}
+.pill.pub{background:var(--pub);color:#fff}
+.pill.opn{background:#fff;color:var(--opn);border:1.6px solid var(--opn)}
+.st{font-size:13px;font-weight:800;border-radius:8px;padding:3px 8px;white-space:nowrap}
+.st.open{background:var(--open-soft);color:var(--open)}
+.st.soon{background:var(--warn-soft);color:var(--warn)}
+.st.shut{background:var(--shut-soft);color:#6b7280}
+.st.ask{background:#eef2f7;color:#475569}
+.acc2{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px 3px 6px;font-size:12px;font-weight:800;white-space:nowrap;background:#fff;border:1px solid transparent}
+.acc2 svg{width:14px;height:14px}
+.acc2.lv3{border-color:#b9dcf1;color:#0369a1}
+.acc2.lv4{border-color:#f2d7ad;color:var(--warn)}
+.fac{display:flex;gap:14px;align-items:center;margin-top:7px}
+.fac span{display:inline-flex;align-items:center;gap:3px;font-size:16px;font-weight:800}
+.fac svg{width:28px;height:28px;flex:none}
+.fac .no{opacity:.35}
+.fac .more{margin-left:auto;font-size:12px;color:var(--sub);font-weight:700}
+.fac .none{font-size:12px;color:var(--sub);font-weight:500}
+.kids{margin:0 0 8px;padding:0 0 0 10px;border-left:3px solid var(--brand-soft);display:none}
+.kids.on{display:block}
+.empty{text-align:center;padding:26px 10px}
+.empty b{display:block;font-size:17px;margin:8px 0 4px}
+.empty .sub{color:var(--sub);font-size:13px}
+.empty svg{width:46px;height:46px;color:var(--sub)}
+.foot{font-size:11px;color:var(--sub);padding:14px 2px calc(20px + var(--safe-b));line-height:1.6}
+.foot a{color:var(--sub)}
+.loading{text-align:center;color:var(--sub);padding:30px 0}
+.radius[hidden]{display:none}

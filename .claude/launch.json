@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "app",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8000",
+        "--directory",
+        "app"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "design",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "design"
+      ],
+      "port": 8765
+    }
+  ]
+}

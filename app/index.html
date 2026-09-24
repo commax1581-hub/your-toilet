@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4338ca">
+<title>너의 화장실은. — 가장 가까운 공중·개방화장실</title>
+<meta name="description" content="지금 위치에서 가장 가까운 공중·개방화장실을 찾습니다. 출처: 행정안전부 공중화장실정보(공공데이터포털).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 픽토그램(목업 v3와 같은 모양) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-male" viewBox="0 0 24 24"><circle cx="12" cy="4" r="2.6" fill="currentColor"/><path d="M8.2 8h7.6a1.6 1.6 0 0 1 1.6 1.6V15h-2.2v7h-2.4v-6h-1.6v6H8.8v-7H6.6V9.6A1.6 1.6 0 0 1 8.2 8z" fill="currentColor"/></symbol>
+  <symbol id="i-female" viewBox="0 0 24 24"><circle cx="12" cy="4" r="2.6" fill="currentColor"/><path d="M9.6 8h4.8l3.6 9h-3.2v5h-2.2v-5h-1.2v5H9.2v-5H6z" fill="currentColor"/></symbol>
+  <symbol id="i-acc" viewBox="0 0 24 24"><circle cx="10" cy="3.6" r="2.3" fill="currentColor"/><path d="M8.6 7.4h2.6l.4 4.6H16l2.6 6.4-2 .8-2-5H9.6z" fill="currentColor"/><path d="M7.6 10.2a6 6 0 1 0 7.9 8.6" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-diaper" viewBox="0 0 24 24"><rect x="3" y="12" width="18" height="3" rx="1.2" fill="currentColor"/><path d="M5 15v6M19 15v6" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="8.6" r="2.4" fill="currentColor"/><path d="M11 10.2h7a1.8 1.8 0 0 1 0 1.8h-7z" fill="currentColor"/></symbol>
+  <symbol id="i-child" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3" fill="currentColor"/><path d="M9.4 10h5.2a1.4 1.4 0 0 1 1.4 1.4V16h-2v6h-2v-5h-1v5h-2v-6H7v-4.6A1.4 1.4 0 0 1 8.4 10z" fill="currentColor"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 1 6 6v4l2 3H4l2-3V9a6 6 0 0 1 6-6z" fill="currentColor"/><path d="M10 19a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-build" viewBox="0 0 24 24"><path d="M4 21V6l8-3 8 3v15z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 21v-5h6v5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-q" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.6 2.6 0 1 1 3.4 2.5c-.6.2-.9.8-.9 1.5v.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" fill="currentColor"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></symbol>
+  <symbol id="i-gps" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="i-public" viewBox="0 0 24 24"><path d="M12 2l10 5v2H2V7z" fill="currentColor"/><path d="M4 10h3v8H4zM10.5 10h3v8h-3zM17 10h3v8h-3zM2 19h20v3H2z" fill="currentColor"/></symbol>
+  <symbol id="i-opendoor" viewBox="0 0 24 24"><path d="M4 3h9v18H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 3l7 2v16l-7-2z" fill="currentColor"/><circle cx="15.5" cy="12" r="1" fill="#fff"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<div id="app">
+
+  <!-- ① 첫 화면 — 지금 어디세요? -->
+  <section class="screen on" id="s-home">
+    <div class="scrim"></div>
+    <div class="h-title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
+    <div class="h-card">
+      <b>지금 어디세요?</b>
+      <div class="grid">
+        <button class="btn main" id="b-gps"><svg><use href="#i-gps"/></svg>내 위치로</button>
+        <button class="btn ghost" id="b-other"><svg><use href="#i-search"/></svg>다른 곳</button>
+      </div>
+      <div class="msg" id="home-msg"></div>
+    </div>
+  </section>
+
+  <!-- ②③ 핀으로 위치 확정 / ④ 다른 곳의 핀 -->
+  <section class="screen" id="s-pin">
+    <div class="bar">
+      <button class="back" data-go="home" aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+      <div class="grow"><div class="t" id="pin-t">여기가 맞나요?</div><div class="s" id="pin-s">지도를 움직여 핀을 정확한 자리에 맞춰 주세요</div></div>
+    </div>
+    <div class="mapwrap">
+      <div id="map"></div>
+      <div class="warn" id="pin-warn"></div>
+      <div class="centerpin"><svg><use href="#i-pin"/></svg></div>
+      <div class="addrbox">
+        <div class="a" id="pin-addr">위치를 확인하는 중…</div>
+        <div class="h" id="pin-sub">&nbsp;</div>
+        <div class="radius" id="pin-radius" hidden>
+          <span data-r="300">300m</span><span data-r="500" class="on">500m</span><span data-r="1000">1km</span>
+        </div>
+        <button class="btn main" id="b-here">여기 맞아요</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ④ 다른 곳 찾기 -->
+  <section class="screen" id="s-search">
+    <div class="bar">
+      <button class="back" data-go="home" aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+      <div class="grow">
+        <form class="search" id="f-search" autocomplete="off">
+          <svg><use href="#i-search"/></svg>
+          <input id="q" placeholder="주소 · 역 · 건물 · 공원 이름" enterkeyhint="search">
+        </form>
+      </div>
+    </div>
+    <div class="body" id="sug"><div class="note">예: <b>여의도 한강공원</b>, <b>서울역</b>, <b>세종대로 110</b>. 찾은 곳에 핀을 놓고 반경을 고를 수 있어요.</div></div>
+  </section>
+
+  <!-- ⑤ 목록 -->
+  <section class="screen" id="s-list">
+    <div class="bar">
+      <button class="back" data-go="pin" aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+      <div class="grow"><div class="t">가까운 화장실</div><div class="s" id="list-s"></div></div>
+    </div>
+    <div class="body" id="list-body"></div>
+  </section>
+
+</div>
+
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6516210bcdd3c0a50b562ea3dedda4a3&libraries=services&autoload=false" onerror="window.__kakaoFail=true"></script>
+<script src="hours.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

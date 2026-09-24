@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>화장실 찾기 목업</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1f5; --paper:#fff; --ink:#15202b; --sub:#5b6875; --line:#e3e8ee; --soft:#f5f7fa;
+  --brand:#0f766e; --brand-soft:#e6f4f2;
+  --open:#15803d; --open-soft:#e7f6ec; --warn:#b45309; --warn-soft:#fdf3e2; --shut:#9ca3af; --shut-soft:#f1f3f5;
+  --male:#1d4ed8; --female:#dc2626; --acc:#0369a1; --baby:#c2410c;
+  --pub:#334155; --opn:#7c3aed;
+}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;font-size:14px;line-height:1.45}
+header.top{max-width:1500px;margin:0 auto;padding:24px 16px 8px}
+header.top h1{margin:0 0 4px;font-size:20px} header.top p{margin:0;color:var(--sub)}
+.row{max-width:1500px;margin:0 auto;padding:16px;display:flex;gap:24px;flex-wrap:wrap;justify-content:center}
+.col{width:360px;max-width:100%}
+.cap{font-weight:700;margin:0 0 8px;font-size:13px;color:var(--sub)} .cap b{color:var(--ink)}
+.phone{background:var(--paper);border-radius:28px;box-shadow:0 10px 30px rgba(15,32,43,.12);overflow:hidden;height:720px;display:flex;flex-direction:column;border:1px solid var(--line)}
+.bar{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.bar .t{font-weight:800;font-size:16px} .bar .s{color:var(--sub);font-size:12px}
+.body{flex:1;overflow:auto;padding:12px}
+.note{font-size:12px;color:var(--sub);background:var(--soft);border-radius:10px;padding:8px 10px;margin:8px 0}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;padding:13px 14px;font-weight:700;border:0;width:100%;font-family:inherit;font-size:15px}
+.btn.main{background:var(--brand);color:#fff} .btn.line{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn.sm{font-size:13px;padding:10px 8px;border-radius:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+input.addr{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-family:inherit;font-size:14px}
+.err{color:var(--female);font-size:12px;margin-top:6px}
+.chips{display:flex;gap:6px;overflow:auto;padding:2px 0 8px}
+.chip{flex:none;border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:12px;background:#fff}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:700}
+.card{border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px;background:#fff}
+.card .h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.card .n{font-weight:700} .dist{font-weight:800;white-space:nowrap} .dist small{font-weight:500;color:var(--sub);display:block;text-align:right;font-size:11px}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.tag{font-size:11px;border-radius:6px;padding:2px 6px;font-weight:700}
+.tag.pub{background:#eef2f7;color:var(--pub)} .tag.opn{background:#f1ebfd;color:var(--opn)}
+.st{font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px}
+.st.open{background:var(--open-soft);color:var(--open)} .st.soon{background:var(--warn-soft);color:var(--warn)} .st.shut{background:var(--shut-soft);color:#6b7280}
+.st.wide{background:var(--warn-soft);color:var(--warn)}
+.fac{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px}
+.fac span{display:inline-flex;align-items:center;gap:3px}
+.fac .no{opacity:.28}
+svg.ic{width:18px;height:18px;flex:none}
+.group{border-left:4px solid var(--brand)}
+.sheet-h{background:var(--soft);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;text-align:center}
+.sum div{background:#fff;border-radius:10px;padding:6px 2px;font-size:11px;color:var(--sub)} .sum b{display:block;font-size:15px;color:var(--ink)}
+.floor{font-size:12px;font-weight:800;color:var(--sub);margin:10px 2px 4px}
+.line{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 2px;gap:8px}
+.line:last-child{border-bottom:0}
+.pic{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.pic div{border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center;font-size:11px;color:var(--sub)}
+.pic svg{width:30px;height:30px;display:block;margin:0 auto 4px} .pic b{display:block;color:var(--ink);font-size:13px}
+.pic .off{opacity:.3}
+dl{display:grid;grid-template-columns:84px 1fr;gap:4px 8px;font-size:12px;margin:8px 0} dt{color:var(--sub)} dd{margin:0}
+.warnbox{background:var(--warn-soft);border:1px solid #f3d7a8;border-radius:12px;padding:10px 12px;font-size:13px;margin:8px 0}
+.legend{max-width:1500px;margin:0 auto;padding:0 16px 32px}
+.legend .box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;gap:24px;flex-wrap:wrap}
+.legend .it{display:flex;gap:10px;align-items:center;min-width:220px} .legend svg{width:40px;height:40px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- 픽토그램(공공 안내 표지 계열의 단순 형태) -->
+    <symbol id="i-male" viewBox="0 0 24 24"><circle cx="12" cy="4" r="2.6" fill="currentColor"/><path d="M8.2 8h7.6a1.6 1.6 0 0 1 1.6 1.6V15h-2.2v7h-2.4v-6h-1.6v6H8.8v-7H6.6V9.6A1.6 1.6 0 0 1 8.2 8z" fill="currentColor"/></symbol>
+    <symbol id="i-female" viewBox="0 0 24 24"><circle cx="12" cy="4" r="2.6" fill="currentColor"/><path d="M9.6 8h4.8l3.6 9h-3.2v5h-2.2v-5h-1.2v5H9.2v-5H6z" fill="currentColor"/></symbol>
+    <symbol id="i-acc" viewBox="0 0 24 24"><circle cx="10" cy="3.6" r="2.3" fill="currentColor"/><path d="M8.6 7.4h2.6l.4 4.6H16l2.6 6.4-2 .8-2-5H9.6z" fill="currentColor"/><path d="M7.6 10.2a6 6 0 1 0 7.9 8.6" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-baby" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10.2" cy="7.6" r=".9" fill="currentColor"/><circle cx="13.8" cy="7.6" r=".9" fill="currentColor"/><path d="M10.4 10.2q1.6 1.3 3.2 0" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5 22c0-4 3-7 7-7s7 3 7 7z" fill="currentColor"/></symbol>
+    <symbol id="i-diaper" viewBox="0 0 24 24"><rect x="3" y="12" width="18" height="3" rx="1.2" fill="currentColor"/><path d="M5 15v6M19 15v6" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="8.6" r="2.4" fill="currentColor"/><path d="M11 10.2h7a1.8 1.8 0 0 1 0 1.8h-7z" fill="currentColor"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 1 6 6v5l2 3H4l2-3V9a6 6 0 0 1 6-6z" fill="currentColor"/><circle cx="12" cy="20" r="2" fill="currentColor"/></symbol>
+    <symbol id="i-cctv" viewBox="0 0 24 24"><path d="M3 7l12-3 2 6-12 3z" fill="currentColor"/><path d="M8 13l1 3h5M14 16v4" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
+    <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2" fill="currentColor"/><path d="M11 8l-3 4 2 1 2-2 1 4-3 7h2.4l2.6-6 2 3v3h2v-4l-3-4-1-4 3 2h2v-2h-1.4L14 8z" fill="currentColor"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" fill="currentColor"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <h1>가장 가까운 화장실 — 모바일 목업 v1</h1>
+  <p>실제 데이터(2026-09-22 기준) 표본. 가정: 현재 시각 <b>19:30</b>, 사용자 위치 서울시청 앞. 시설은 <b>픽토그램 + 숫자</b>로 표시(제안).</p>
+</header>
+
+<div class="row">
+
+<!-- ① 시작 -->
+<div class="col">
+  <p class="cap"><b>① 시작</b> — 내 위치 먼저, 거부하면 주소(번지까지)</p>
+  <div class="phone">
+    <div class="bar"><div class="t">가장 가까운 화장실</div><div class="s">공중·개방화장실 51,000여 곳 · 공공데이터</div></div>
+    <div class="body" style="display:flex;flex-direction:column;gap:10px;padding-top:40px">
+      <div style="text-align:center;color:var(--brand)"><svg class="ic" style="width:56px;height:56px"><use href="#i-pin"/></svg></div>
+      <div style="text-align:center;font-weight:800;font-size:18px">지금 있는 곳에서<br>가장 가까운 화장실</div>
+      <button class="btn main" style="margin-top:12px">내 위치로 찾기</button>
+      <div class="note">위치는 이 휴대폰 안에서만 거리 계산에 쓰고, 어디에도 저장하지 않아요.</div>
+      <div style="margin-top:14px;font-weight:700">위치를 허용하지 않았다면</div>
+      <input class="addr" value="세종대로" aria-label="주소 입력">
+      <div class="err">번지나 건물번호까지 입력해 주세요 (예: 세종대로 110, 태평로1가 31)</div>
+      <button class="btn line">이 주소에서 찾기</button>
+      <div class="note">동·도로명만으로는 기준점이 넓어서 받지 않아요. 입력 주소도 화장실과 같은 정확도 기준.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ② 목록 -->
+<div class="col">
+  <p class="cap"><b>② 가까운 순 목록</b> — 지금 열린 곳 먼저, 몰린 곳은 한 장</p>
+  <div class="phone">
+    <div class="bar"><div class="t">내 주변 · 서울 중구 세종대로</div><div class="s">19:30 기준 · 반경 500m 12곳</div></div>
+    <div class="body">
+      <div class="chips"><span class="chip on">지금 열림</span><span class="chip">장애인용</span><span class="chip">기저귀교환대</span><span class="chip">어린이용</span><span class="chip">공중만</span></div>
+
+      <div class="card">
+        <div class="h"><div class="n">서울시청 본관 B1층 시민청 외부</div><div class="dist">8m<small>도보 1분</small></div></div>
+        <div class="meta"><span class="tag opn">개방화장실</span><span class="st open">열림 · 22:00까지</span></div>
+        <div class="fac">
+          <span style="color:var(--male)"><svg class="ic"><use href="#i-male"/></svg>3·3</span>
+          <span style="color:var(--female)"><svg class="ic"><use href="#i-female"/></svg>10</span>
+          <span style="color:var(--acc)"><svg class="ic"><use href="#i-acc"/></svg>2</span>
+          <span style="color:var(--baby)"><svg class="ic"><use href="#i-baby"/></svg>2</span>
+          <span style="color:var(--baby)"><svg class="ic"><use href="#i-diaper"/></svg></span>
+        </div>
+      </div>
+
+      <div class="card group">
+        <div class="h"><div class="n">시청광장 지하상가 · 2곳</div><div class="dist">90m<small>도보 2분</small></div></div>
+        <div class="meta"><span class="tag pub">공중화장실</span><span class="st open">2곳 열림</span></div>
+        <div class="fac"><span style="color:var(--male)"><svg class="ic"><use href="#i-male"/></svg>있음</span><span style="color:var(--female)"><svg class="ic"><use href="#i-female"/></svg>있음</span><span class="no"><svg class="ic"><use href="#i-acc"/></svg></span><span style="color:var(--baby)"><svg class="ic"><use href="#i-diaper"/></svg></span><span style="color:var(--sub)">› 목록</span></div>
+      </div>
+
+      <div class="card">
+        <div class="h"><div class="n">시청역(1) 화장실</div><div class="dist">125m<small>도보 2분</small></div></div>
+        <div class="meta"><span class="tag pub">공중화장실</span><span class="st open">열림 · 24:00까지</span></div>
+        <div class="fac">
+          <span style="color:var(--male)"><svg class="ic"><use href="#i-male"/></svg>6·5</span>
+          <span style="color:var(--female)"><svg class="ic"><use href="#i-female"/></svg>15</span>
+          <span style="color:var(--acc)"><svg class="ic"><use href="#i-acc"/></svg>2</span>
+          <span style="color:var(--baby)"><svg class="ic"><use href="#i-baby"/></svg>4</span>
+          <span style="color:var(--baby)"><svg class="ic"><use href="#i-diaper"/></svg></span>
+        </div>
+      </div>
+
+      <div class="card group">
+        <div class="h"><div class="n">소공지하상가 · 3곳</div><div class="dist">244m<small>도보 4분</small></div></div>
+        <div class="meta"><span class="tag pub">공중화장실</span><span class="st soon">A 20:00 닫힘 · B·C 23:30까지</span></div>
+        <div class="fac"><span style="color:var(--male)"><svg class="ic"><use href="#i-male"/></svg>있음</span><span style="color:var(--female)"><svg class="ic"><use href="#i-female"/></svg>있음</span><span style="color:var(--acc)"><svg class="ic"><use href="#i-acc"/></svg>B</span><span style="color:var(--baby)"><svg class="ic"><use href="#i-diaper"/></svg>A·B</span><span style="color:var(--sub)">› 목록</span></div>
+      </div>
+
+      <div class="card" style="opacity:.7">
+        <div class="h"><div class="n">태평로파출소</div><div class="dist">264m<small>도보 4분</small></div></div>
+        <div class="meta"><span class="tag opn">개방화장실</span><span class="st shut">닫힘 · 내일 09:00</span></div>
+        <div class="fac"><span style="color:var(--male)"><svg class="ic"><use href="#i-male"/></svg>1</span><span class="no"><svg class="ic"><use href="#i-female"/></svg></span><span class="no"><svg class="ic"><use href="#i-acc"/></svg></span></div>
+      </div>
+      <div class="note">닫힌 곳은 아래로, 흐리게. "지금 열림"을 끄면 거리순만.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ③ 몰린 곳 시트 -->
+<div class="col">
+  <p class="cap"><b>③ 같은 건물 여러 곳</b> — 한 핀, 누르면 층별 목록</p>
+  <div class="phone">
+    <div class="bar"><div class="t">스타필드 하남 · 44곳</div><div class="s">경기 하남시 미사대로 750 · 개방화장실</div></div>
+    <div class="body">
+      <div class="sheet-h">
+        <div style="font-size:12px">건물 운영시간 안에만 이용 · <b>10:00~22:00</b></div>
+        <div class="sum"><div><b>44</b>지금 열림</div><div><b>26</b>장애인용</div><div><b>—</b>기저귀</div><div><b>18</b>어린이용</div></div>
+      </div>
+      <div class="chips"><span class="chip on">전체</span><span class="chip">장애인용</span><span class="chip">어린이용</span></div>
+      <div class="floor">3층</div>
+      <div class="line"><div><b>동측</b><div class="fac"><span style="color:var(--male)"><svg class="ic"><use href="#i-male"/></svg>3·4</span><span style="color:var(--female)"><svg class="ic"><use href="#i-female"/></svg>8</span><span style="color:var(--acc)"><svg class="ic"><use href="#i-acc"/></svg>2</span></div></div><span class="st open">열림</span></div>
+      <div class="line"><div><b>서측</b><div class="fac"><span style="color:var(--male)"><svg class="ic"><use href="#i-male"/></svg>5·6</span><span style="color:var(--female)"><svg class="ic"><use href="#i-female"/></svg>14</span><span style="color:var(--acc)"><svg class="ic"><use href="#i-acc"/></svg>2</span><span style="color:var(--baby)"><svg class="ic"><use href="#i-baby"/></svg>2</span></div></div><span class="st open">열림</span></div>
+      <div class="floor">2층</div>
+      <div class="line"><div><b>동측</b><div class="fac"><span style="color:var(--male)"><svg class="ic"><use href="#i-male"/></svg>5·6</span><span style="color:var(--female)"><svg class="ic"><use href="#i-female"/></svg>14</span><span style="color:var(--acc)"><svg class="ic"><use href="#i-acc"/></svg>2</span><span style="color:var(--baby)"><svg class="ic"><use href="#i-baby"/></svg>2</span></div></div><span class="st open">열림</span></div>
+      <div class="line"><div><b>서측</b><div class="fac"><span style="color:var(--male)"><svg class="ic"><use href="#i-male"/></svg>5·6</span><span style="color:var(--female)"><svg class="ic"><use href="#i-female"/></svg>14</span><span style="color:var(--acc)"><svg class="ic"><use href="#i-acc"/></svg>2</span><span style="color:var(--baby)"><svg class="ic"><use href="#i-baby"/></svg>2</span></div></div><span class="st open">열림</span></div>
+      <div class="floor">1층 · B1 · B2 …</div>
+      <div class="note">이름에서 공통 부분("스타필드하남 화장실")을 빼고 층·위치만. 층은 이름에서 읽어 정렬.<br>캠퍼스·단지는 건물 좌표를 찾은 곳(1,023곳)은 건물별 핀, 못 찾은 곳은 "단지 안 N곳" + 넓은 곳 안내.</div>
+      <div class="grid2" style="margin-top:8px"><button class="btn line sm">카카오맵 도보</button><button class="btn line sm">네이버 도보</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ④ 상세 + 이동 -->
+<div class="col">
+  <p class="cap"><b>④ 상세와 이동</b> — 길찾기 · 입구 로드뷰 · 장소 확인</p>
+  <div class="phone">
+    <div class="bar"><div class="t">시청역(1) 화장실</div><div class="s">서울 중구 세종대로 지하 101 · 125m</div></div>
+    <div class="body">
+      <div class="meta"><span class="tag pub">공중화장실</span><span class="st open">열림 · 05:00~24:00</span></div>
+      <div class="pic">
+        <div style="color:var(--male)"><svg><use href="#i-male"/></svg><b>6 · 5</b>남 대·소</div>
+        <div style="color:var(--female)"><svg><use href="#i-female"/></svg><b>15</b>여</div>
+        <div style="color:var(--acc)"><svg><use href="#i-acc"/></svg><b>남1 여1</b>장애인용</div>
+        <div style="color:var(--baby)"><svg><use href="#i-baby"/></svg><b>2 · 2</b>어린이용</div>
+        <div style="color:var(--baby)"><svg><use href="#i-diaper"/></svg><b>있음</b>기저귀</div>
+        <div style="color:var(--ink)"><svg><use href="#i-bell"/></svg><b>있음</b>비상벨</div>
+        <div style="color:var(--ink)"><svg><use href="#i-cctv"/></svg><b>있음</b>입구 CCTV</div>
+        <div class="off"><svg><use href="#i-acc"/></svg><b>—</b>(없으면 흐리게)</div>
+      </div>
+      <div class="grid2">
+        <button class="btn main sm"><svg class="ic"><use href="#i-walk"/></svg>카카오맵 도보</button>
+        <button class="btn main sm" style="background:#03a94d"><svg class="ic"><use href="#i-walk"/></svg>네이버 도보</button>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn line sm">입구 로드뷰</button>
+        <button class="btn line sm">장소 확인</button>
+      </div>
+      <div class="note">로드뷰는 근처(50m)에 사진이 있을 때만 버튼 표시 · 거리 사진이라 <b>입구 확인용</b>(촬영 1~3년 전일 수 있음). 구글 도보는 국내 지원 확인 후 추가.</div>
+      <dl>
+        <dt>개방시간</dt><dd>정시 · 05:00~24:00 (원문)</dd>
+        <dt>관리기관</dt><dd>서울교통공사 · 전화 버튼</dd>
+        <dt>기준일</dt><dd>데이터 기준 2025-… · 좌표 건물(A)</dd>
+        <dt>틀렸나요?</dt><dd>공식 오류 신고 링크</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<!-- ⑤ 넓은 곳 -->
+<div class="col">
+  <p class="cap"><b>⑤ 넓은 곳(공원·산지)</b> — 숨기지 않고 확인할 곳을 알려 줌</p>
+  <div class="phone">
+    <div class="bar"><div class="t">암남공원 (풍차)</div><div class="s">부산 서구 암남동 산 193 · 1.2km</div></div>
+    <div class="body">
+      <div class="meta"><span class="tag pub">공중화장실</span><span class="st open">열림 · 상시</span><span class="st wide">산지 · 넓은 곳</span></div>
+      <div class="warnbox"><b>범위가 넓은 곳이에요.</b><br>화장실은 보통 주차장·입구 쪽에 있어요. 도착하면 안내센터나 안내판을 확인하세요.</div>
+      <div class="grid2">
+        <button class="btn line sm">카카오에서 보기</button>
+        <button class="btn line sm">네이버에서 보기</button>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn line sm">입구 로드뷰</button>
+        <button class="btn line sm"><svg class="ic"><use href="#i-walk"/></svg>도보 길찾기</button>
+      </div>
+      <div class="note">장소 확인: 이름이 거의 같은 카카오 장소가 있으면 그 장소 페이지(사진·지도), 없으면 "시군구 + 이름" 검색 링크.<br>핀은 필지 위치 그대로(교차 확인에서 300m 안에 같은 장소가 있으면 그 좌표).</div>
+      <div class="card" style="margin-top:10px">
+        <div class="h"><div class="n">목록에서는 이렇게</div></div>
+        <div class="meta"><span class="st wide">넓은 곳</span><span style="font-size:12px;color:var(--sub)">"주차장·입구 쪽 확인" 한 줄</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="legend">
+  <p class="cap"><b>픽토그램 제안</b> — 글자보다 먼저 눈에 들어오게, 색은 관례(남 파랑 · 여 빨강), 숫자는 옆에. 없으면 흐리게.</p>
+  <div class="box">
+    <div class="it" style="color:var(--male)"><svg><use href="#i-male"/></svg><div><b>남성</b><br><small>대변기·소변기 수</small></div></div>
+    <div class="it" style="color:var(--female)"><svg><use href="#i-female"/></svg><div><b>여성</b><br><small>대변기 수</small></div></div>
+    <div class="it" style="color:var(--acc)"><svg><use href="#i-acc"/></svg><div><b>장애인용</b><br><small>남·여 합계</small></div></div>
+    <div class="it" style="color:var(--baby)"><svg><use href="#i-baby"/></svg><div><b>어린이용</b><br><small>변기 수</small></div></div>
+    <div class="it" style="color:var(--baby)"><svg><use href="#i-diaper"/></svg><div><b>기저귀교환대</b><br><small>있음/없음</small></div></div>
+    <div class="it"><svg><use href="#i-bell"/></svg><div><b>비상벨 · CCTV</b><br><small>상세에서만</small></div></div>
+  </div>
+</div>
+</body>
+</html>

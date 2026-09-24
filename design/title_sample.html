@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>제목 글꼴 샘플</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Nanum+Myeongjo:wght@400;700&family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@200;300;500&family=Hahmlet:wght@200;300&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#15202b;--sub:#5b6875;--bg:#eef1f5;--brand:#0f766e}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--ink)}
+header{max-width:1400px;margin:0 auto;padding:22px 16px 6px} h1{margin:0 0 4px;font-size:19px} header p{margin:0;color:var(--sub);font-size:13px}
+.row{max-width:1400px;margin:0 auto;padding:14px 16px;display:flex;flex-wrap:wrap;gap:18px;justify-content:center}
+.cell{width:260px} .cap{min-height:32px}
+.cap{font-size:12px;color:var(--sub);margin:0 0 6px} .cap b{color:var(--ink)}
+.phone{position:relative;height:500px;border-radius:24px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+/* 배경 자리: 제미나이 그림이 들어갈 곳 — 지금은 하늘·구름·도시 실루엣 임시 */
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,#2f7fe0 0%,#5aa2ee 38%,#a9d3f7 70%,#dff0fb 100%)}
+.sky.night{background:linear-gradient(180deg,#0b1633 0%,#1c2d5c 45%,#3b4f86 80%,#55679a 100%)}
+.cloud{position:absolute;background:#fff;border-radius:50px;opacity:.85;filter:blur(1px)}
+.city{position:absolute;left:0;right:0;bottom:0;height:120px}
+.title{position:absolute;left:0;right:0;top:54px;text-align:center;color:#fff;letter-spacing:.06em;line-height:1.1}
+.title .ko{font-size:36px;white-space:nowrap;letter-spacing:.02em;text-shadow:0 2px 10px rgba(10,40,90,.25)}
+.title .en{margin-top:10px;font-family:'Noto Sans KR';font-weight:700;font-size:11px;letter-spacing:.5em;opacity:.95}
+.cta{position:absolute;left:16px;right:16px;bottom:22px;background:rgba(255,255,255,.94);border-radius:16px;padding:12px;text-align:center}
+.cta b{display:block;font-size:15px;margin-bottom:8px} .cta span{display:block;background:var(--brand);color:#fff;border-radius:12px;padding:10px;font-weight:700;font-size:14px}
+.f1 .ko{font-family:'Song Myung'} .f2 .ko{font-family:'Nanum Myeongjo';font-weight:400}
+.f3 .ko{font-family:'Gowun Batang'} .f4 .ko{font-family:'Noto Serif KR';font-weight:200} .f5 .ko{font-family:'Hahmlet';font-weight:200}
+.note{max-width:1400px;margin:0 auto;padding:6px 16px 30px;font-size:13px;color:var(--sub)}
+</style>
+</head>
+<body>
+<header>
+  <h1>"너의 화장실은." — 제목 글꼴·투명도 샘플</h1>
+  <p>배경은 임시(하늘 그라데이션 + 구름 + 도시 실루엣). 실제로는 제미나이 그림이 들어갈 자리. 글꼴은 모두 무료(OFL) 구글 폰트.</p>
+</header>
+
+<div class="row" id="fonts"></div>
+<p class="note">위 줄: 글꼴 5종 비교(불투명도 90%). 아래 줄: 추천 글꼴로 투명도 비교 + 밤(다크) 버전.</p>
+<div class="row" id="opacity"></div>
+
+<script>
+const fonts=[['f1','송명(Song Myung)','붓으로 쓴 명조 — 포스터 느낌에 가장 가까움'],['f2','나눔명조','단정한 명조'],['f3','고운바탕','부드러운 명조'],['f4','본명조 ExtraLight','가늘고 세련됨'],['f5','함렛 ExtraLight','가늘고 현대적']];
+function phone(cls,op,night,label,desc){
+  const clouds=[[18,190,120,34],[150,240,90,26],[60,290,150,40],[180,160,60,20]].map(([x,y,w,h])=>`<div class="cloud" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;${night?'opacity:.18':''}"></div>`).join('');
+  const city=`<svg class="city" viewBox="0 0 260 120" preserveAspectRatio="none"><path d="M0 120V70h18V52h14v18h10V40h20v30h12V58h16v12h14V30h8V18h8v12h10v40h14V48h18v22h12V60h14v12h18V44h14v76z" fill="${night?'#0b1433':'#3d6fa8'}" opacity="${night?'.9':'.55'}"/><path d="M0 120V92h40v-8h30v8h50V80h40v12h100v28z" fill="${night?'#060d24':'#2f5b8e'}" opacity=".7"/></svg>`;
+  return `<div class="cell"><p class="cap"><b>${label}</b> ${desc}</p><div class="phone ${cls}"><div class="sky ${night?'night':''}"></div>${clouds}${city}
+  <div class="title" style="opacity:${op}"><div class="ko">너의 화장실은.</div><div class="en">your restroom.</div></div>
+  <div class="cta"><b>지금 어디세요?</b><span>내 위치로 찾기</span></div></div></div>`;
+}
+document.getElementById('fonts').innerHTML=fonts.map(([c,n,d])=>phone(c,.9,false,n,d)).join('');
+document.getElementById('opacity').innerHTML=[[1,false,'송명 100%',''],[.7,false,'송명 70%','(반투명)'],[.45,false,'송명 45%','(많이 투명)'],[.8,true,'송명 · 밤 80%','다크 모드']].map(([o,n,l,d])=>phone('f1',o,n,l,d)).join('');
+</script>
+</body>
+</html>

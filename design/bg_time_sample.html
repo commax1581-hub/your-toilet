@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시간대 배경 샘플</title>
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Serif+KR:wght@200;300&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#15202b;--sub:#5b6875;--bg:#eef1f5;--brand:#0f766e}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--ink)}
+header{max-width:1300px;margin:0 auto;padding:22px 16px 6px} h1{margin:0 0 4px;font-size:19px} header p{margin:0;color:var(--sub);font-size:13px}
+.row{max-width:1300px;margin:0 auto;padding:14px 16px 30px;display:flex;flex-wrap:wrap;gap:18px;justify-content:center}
+.cell{width:250px} .cap{font-size:12px;color:var(--sub);margin:0 0 6px;min-height:32px} .cap b{color:var(--ink)}
+.phone{position:relative;height:556px;border-radius:26px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.14);background:#3a6fb0 center/cover}
+.scrim{position:absolute;left:0;right:0;top:0;height:45%;background:linear-gradient(180deg,rgba(30,34,80,.45),rgba(30,34,80,0))}
+.title{position:absolute;left:0;right:0;top:62px;text-align:center;color:#fff}
+.title .ko{font-size:35px;white-space:nowrap;letter-spacing:.02em;text-shadow:0 2px 12px rgba(20,20,60,.35)}
+.title .sub{margin-top:10px;font-size:12px;letter-spacing:.08em;opacity:.95}
+.f1 .ko{font-family:'Song Myung'} .f2 .ko{font-family:'Noto Serif KR';font-weight:300}
+.cta{position:absolute;left:14px;right:14px;bottom:20px;background:rgba(255,255,255,.95);border-radius:16px;padding:12px;text-align:center}
+.cta b{display:block;font-size:16px;margin-bottom:8px} .cta span{display:block;background:var(--brand);color:#fff;border-radius:12px;padding:11px;font-weight:700;font-size:14px}
+.cta small{display:block;margin-top:8px;color:var(--sub);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>시간대 배경 × "너의 화장실은." (제미나이 원본 → WebP)</h1>
+  <p>1536×2748 원본을 1080px WebP로(56~93KB). 제목 송명 85% + 위쪽 살짝 어둡게. 아래 버튼 카드가 워터마크(✦) 자리를 덮는다. 낮 B·저녁·밤은 같은 구도(윤곽 겹침 0.65·0.43).</p>
+</header>
+<div class="row" id="r"></div>
+<script>
+const v=[['bg_day_soft_1080.webp','낮 A (부드러운 하늘)','93KB'],['bg_day_blue_1080.webp','낮 B (짙은 파랑) — 추천','80KB'],['bg_evening_1080.webp','저녁 17~20시','60KB'],['bg_night_1080.webp','밤 20~06시 · 다크 모드','56KB']];
+document.getElementById('r').innerHTML=v.map(([img,l,d])=>`<div class="cell"><p class="cap"><b>${l}</b> ${d}</p><div class="phone f1" style="${img?`background-image:url(${img})`:'background:#c9ccd6'}">${img?'<div class="scrim"></div>':''}
+<div class="title" style="opacity:.85"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
+<div class="cta"><b>지금 어디세요?</b><span>내 위치로 찾기</span><small>다른 곳에서 찾기</small></div></div></div>`).join('');
+</script>
+</body>
+</html>
