@@ -23,6 +23,7 @@ const S = {                      // 화면 상태(저장하지 않음)
   base: null,                    // {la, lo, addr, sub}
   gps: null,                     // {la, lo, acc}
   radius: 500,
+  query: null,                   // 검색으로 고른 장소 {name, la, lo}
   openOnly: true,                // 기본은 "지금 열림"만
   index: null,
   holidays: new Set(),
@@ -104,12 +105,13 @@ $('#b-gps').onclick = () => {
   if (!navigator.geolocation) return homeMsg('이 브라우저는 위치를 알려주지 않아요. <b>다른 곳</b>으로 찾아 주세요.');
   const btn = $('#b-gps'), keep = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span>위치 확인 중';
+  btn.innerHTML = '<span class="spin" style="margin:0 auto"></span><div class="t">위치 확인 중</div><div class="s">잠시만요</div>';
   homeMsg('');
   navigator.geolocation.getCurrentPosition(
     (p) => {
       btn.disabled = false; btn.innerHTML = keep;
       S.gps = { la: p.coords.latitude, lo: p.coords.longitude, acc: p.coords.accuracy || 0 };
+      S.query = null;
       openPin('gps');
     },
     (err) => {
@@ -214,6 +216,7 @@ let searchJob = 0, searchTimer = null, lastQuery = '';
 
 function pickPlace(p) {
   S.base = { la: p.la, lo: p.lo, addr: p.name, sub: p.addr };
+  S.query = { name: p.name, la: p.la, lo: p.lo };      // 이름으로 찾아온 곳 — 목록 맨 위에 그 장소의 화장실을 먼저 보여 준다
   openPin('other', p);
 }
 
@@ -271,6 +274,19 @@ $('#q').addEventListener('compositionend', (e) => {            // 한글 한 글
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => doSearch(e.target.value, true), 350);
 });
+
+/* ── 검색한 장소의 화장실 먼저 ─────────────
+   이름으로 찾아온 사람에게는 그 장소가 답이다 — 묶음 규칙과 상관없이 맨 위에 따로 보여 준다.
+   비교는 군더더기 말을 뺀 뒤 서로 포함하는지로 본다(같은 이름의 다른 지역을 집지 않게 300m 안만). */
+const nameCore = (s) => String(s || '').replace(/\(.*?\)/g, '')
+  .replace(/공중화장실|개방화장실|간이화장실|화장실|주차장|공영|본점|점포/g, '')
+  .replace(/[\s·,()\[\]{}\-_]/g, '');
+
+function isQueryHit(rec, m) {
+  if (!S.query || m > 300) return false;
+  const a = nameCore(rec.n), b = nameCore(S.query.name);
+  return a.length >= 2 && b.length >= 2 && (a.includes(b) || b.includes(a));
+}
 
 /* ── 카드 내용 ─────────────────────────── */
 const ymdStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -416,7 +432,15 @@ async function showList() {
   const inR = (radius, openOnly) => withD.filter((x) => x.m <= radius
     && (!openOnly || ['open', 'soon'].includes(cardState(x.r, now).k)));
 
-  let shown = inR(S.radius, S.openOnly);
+  // 검색한 장소의 화장실은 "지금 열림"과 상관없이 맨 위에(찾아온 목적지라 닫혀 있어도 알려 줘야 한다)
+  const hits = (S.query ? withD.filter((x) => isQueryHit(x.r, x.m)) : []).slice(0, 6);   // 너무 많으면 목록이 밀린다
+  const hitIds = new Set(hits.map((x) => x.r.id));
+  let shown = inR(S.radius, S.openOnly).filter((x) => !hitIds.has(x.r.id));
+  const hitHtml = hits.length
+    ? `<div class="secline">찾으신 곳 · ${esc(S.query.name)}</div>`
+      + hits.map((x) => cardHtml(x.r, x.m, now)).join('')
+      + `<div class="secline">둘레 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</div>`
+    : '';
   const head = `<div class="basebar"><b>📍 ${esc(shortAddr(base.addr))}<span class="r">이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
     <div class="chips"><span class="chip${S.openOnly ? ' on' : ''}" id="c-open">지금 열림</span></div>`;
   const foot = `<div class="foot">출처 행정안전부 공중화장실정보(공공데이터포털) · 기준일 ${idx.date}<br>
@@ -426,7 +450,7 @@ async function showList() {
   if (!shown.length) {
     const wider = [1000, 2000, 5000].find((r) => r > S.radius && inR(r, S.openOnly).length);
     const all = inR(S.radius, false).length;
-    body.innerHTML = head + `<div class="empty"><svg><use href="#i-pin"/></svg>
+    body.innerHTML = head + hitHtml + `<div class="empty"><svg><use href="#i-pin"/></svg>
         <b>${S.radius < 1000 ? `${S.radius}m` : `${S.radius / 1000}km`} 안에 ${S.openOnly ? '지금 열린 곳이' : '화장실이'} 없어요</b>
         <div class="sub">${wider ? `${wider < 1000 ? `${wider}m` : `${wider / 1000}km`} 안에 ${inR(wider, S.openOnly).length}곳` : '가까운 곳에 등록된 화장실이 없습니다'}${S.openOnly && all ? ` · 닫힘·시간 확인 ${all - shown.length}곳` : ''}</div>
       </div>
@@ -444,7 +468,7 @@ async function showList() {
     const cards = [...groups.values()].map((g, i) =>
       g.list.length > 1 ? groupHtml(g.list, g.m, now, i) : cardHtml(g.list[0], g.m, now)).join('');
     const hidden = inR(S.radius, false).length - shown.length;
-    body.innerHTML = head + cards
+    body.innerHTML = head + hitHtml + cards
       + (S.openOnly && hidden ? `<button class="btn ghost" id="b-all">닫힌 곳·시간 확인 필요 ${hidden}곳 보기</button>` : '')
       + foot;
     if ($('#b-all')) $('#b-all').onclick = () => { S.openOnly = false; showList(); };

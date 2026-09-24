@@ -37,11 +37,15 @@
   <section class="screen on" id="s-home">
     <div class="scrim"></div>
     <div class="h-title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
-    <div class="h-card">
-      <b>지금 어디세요?</b>
-      <div class="grid">
-        <button class="btn main" id="b-gps"><svg><use href="#i-gps"/></svg>내 위치로</button>
-        <button class="btn ghost" id="b-other"><svg><use href="#i-search"/></svg>다른 곳</button>
+    <div class="h-bottom">
+      <div class="ask">지금 어디세요?</div>
+      <div class="glass">
+        <button class="gbox primary" id="b-gps">
+          <svg class="gi"><use href="#i-gps"/></svg><div class="t">내 위치로</div><div class="s">가장 빠른 길</div>
+        </button>
+        <button class="gbox" id="b-other">
+          <svg class="gi"><use href="#i-search"/></svg><div class="t">다른 곳</div><div class="s">주소·건물 이름</div>
+        </button>
       </div>
       <div class="msg" id="home-msg"></div>
     </div>
