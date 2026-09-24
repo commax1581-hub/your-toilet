@@ -33,6 +33,10 @@
 - 화면 파일을 고치면 `python bump_version.py` (브라우저가 옛 파일을 쓰지 않게 주소에 내용 해시를 붙임 — 배포 전 필수)
 - 구성: `app/index.html` · `app/style.css` · `app/app.js` · `app/hours.js`(개방시간 판정) · `app/img/`(시간대 배경)
 
+## 역사 화장실 (v2 준비)
+- `python build_rail.py` — 역 좌표표(`data/rail_stations.csv`, 845개 역) · 원본은 `data/raw/rail/`(24개 파일·2,522행)
+- 본 데이터와 **합치지 않고 잇는다**(사례지식 6-24~6-26)
+
 ## 백업·문서
 - `python backup_data.py [--prune]` — 원본·캐시·기준본 비공개 백업(+기준본 보관 정책: 최근 8주 전체 → 월 1개 → 연 1개)
 - `python check_docs.py` — 문서끼리·문서와 코드가 어긋나지 않았는지
