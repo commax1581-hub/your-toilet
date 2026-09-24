@@ -346,7 +346,9 @@ function distHtml(m) {
   return `<div class="dist">${lab}<small>${Math.max(1, Math.round(m / WALK))}분</small></div>`;
 }
 
-/** 같은 좌표(같은 건물) 카드를 한 장으로 — 이름의 공통 앞부분을 쓴다 */
+/** 같은 좌표(같은 건물)에 쌓인 카드의 이름 —
+    층만 다른 같은 시설이면 공통 앞부분("○○지하상가 · 3곳"),
+    이름이 서로 다른 시설이면 이름을 함께 보여 준다("대구역 · 롯데백화점 대구점") — 한 이름만 쓰면 나머지가 없는 것처럼 보인다 */
 function groupName(list) {
   const names = list.map((r) => r.n);
   let p = names[0];
@@ -356,8 +358,26 @@ function groupName(list) {
     p = p.slice(0, i);
   }
   p = p.replace(/[\s(\[{\-·]+$/, '');
-  if (p.length < 3) p = names.slice().sort((a, b) => a.length - b.length)[0];
-  return p;
+  if (p.length >= 3) return `${p} · ${list.length}곳`;
+  const two = names.slice(0, 2).join(' · ');
+  return list.length > 2 ? `${two} 외 ${list.length - 2}곳` : two;
+}
+
+/** 묶음 카드의 시설 수 — 그 자리에 있는 것을 모두 더한다(한 곳만 보여 주면 나머지가 빠진다) */
+function sumFac(list) {
+  const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
+  const t = { m: [0, 0], f: 0, x: [0, 0], c: [0, 0], dp: 0, bl: 0, cc: 0, ni: 1, ft: list[0].ft, h: list[0].h };
+  for (const r of list) {
+    t.m = add(t.m, r.m || [0, 0]);
+    t.f += r.f || 0;
+    t.x = add(t.x, r.x || [0, 0]);
+    t.c = add(t.c, r.c || [0, 0]);
+    t.dp = Math.max(t.dp, r.dp || 0);
+    t.bl = Math.max(t.bl, r.bl || 0);
+    if (!r.ni) t.ni = 0;
+  }
+  if (!t.ni && t.f === 0) t.fq = 1;
+  return t;
 }
 
 function cardHtml(rec, m, now) {
@@ -370,13 +390,13 @@ function cardHtml(rec, m, now) {
 }
 
 function groupHtml(list, m, now, gi) {
-  const now_open = list.filter((r) => ['open', 'soon'].includes(cardState(r, now).k)).length;
-  const k = KINDS[list[0].t] || KINDS[0];
-  const label = now_open ? `<span class="st open">${now_open}곳 열림</span>` : '<span class="st shut">닫힘</span>';
+  const nowOpen = list.filter((r) => ['open', 'soon'].includes(cardState(r, now).k)).length;
+  const kinds = [...new Set(list.map((r) => r.t))].slice(0, 2).map((t) => KINDS[t] || KINDS[0]);
+  const label = nowOpen ? `<span class="st open">${nowOpen}곳 열림</span>` : '<span class="st shut">닫힘</span>';
   return `<div class="card group" data-g="${gi}" role="button" tabindex="0">
-      <div class="h"><div class="grow" style="min-width:0"><div class="n">${esc(groupName(list))} · ${list.length}곳</div><div class="adr">${esc(shortAddr(list[0].a))}</div></div>${distHtml(m)}</div>
-      <div class="meta"><span class="pill ${k.c}"><svg><use href="${k.i}"/></svg>${k.l}</span>${label}</div>
-      ${facRow(list[0], '<span class="more">펼쳐 보기 ›</span>')}
+      <div class="h"><div class="grow" style="min-width:0"><div class="n">${esc(groupName(list))}</div><div class="adr">${esc(shortAddr(list[0].a))} · 같은 자리 ${list.length}곳</div></div>${distHtml(m)}</div>
+      <div class="meta">${kinds.map((k) => `<span class="pill ${k.c}"><svg><use href="${k.i}"/></svg>${k.l}</span>`).join('')}${label}</div>
+      ${facRow(sumFac(list))}<div class="more2">펼쳐 보기 ›</div>
     </div>
     <div class="kids" id="kids-${gi}">${list.map((r) => cardHtml(r, m, now)).join('')}</div>`;
 }
@@ -428,7 +448,10 @@ async function showList() {
       + (S.openOnly && hidden ? `<button class="btn ghost" id="b-all">닫힌 곳·시간 확인 필요 ${hidden}곳 보기</button>` : '')
       + foot;
     if ($('#b-all')) $('#b-all').onclick = () => { S.openOnly = false; showList(); };
-    body.querySelectorAll('[data-g]').forEach((c) => (c.onclick = () => $(`#kids-${c.dataset.g}`).classList.toggle('on')));
+    body.querySelectorAll('[data-g]').forEach((c) => (c.onclick = () => {
+      const on = $(`#kids-${c.dataset.g}`).classList.toggle('on');
+      c.querySelector('.more2').textContent = on ? '접기 ›' : '펼쳐 보기 ›';
+    }));
   }
   $('#b-change').onclick = () => go(S.mode === 'gps' ? 'pin' : 'pin');
   $('#c-open').onclick = () => { S.openOnly = !S.openOnly; showList(); };
