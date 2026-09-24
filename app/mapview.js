@@ -9,8 +9,11 @@ function pinHtml(g, i, now) {
   const open = g.list.some((r) => ['open', 'soon'].includes(cardState(r, now).k));
   const k = KINDS[g.list[0].t] || KINDS[0];
   const label = g.list.length > 1 ? g.list.length : '';
+  const name = g.list.length > 1 ? groupName(g.list) : g.list[0].n;   // 고른 핀에만 보이는 이름표
+  const dist = g.m < 1000 ? `${Math.round(g.m)}m` : `${(g.m / 1000).toFixed(1)}km`;
   return `<div class="mpin ${k.c}${open ? '' : ' shut'}${i === cardIdx ? ' on' : ''}" data-i="${i}">
-      <svg><use href="${k.i}"/></svg>${label ? `<b>${label}</b>` : ''}</div>`;
+      <svg><use href="${k.i}"/></svg>${label ? `<b>${label}</b>` : ''}
+      <span class="lab">${esc(name)}<small>${dist}</small></span></div>`;
 }
 
 /** 지도 화면 열기 — 목록이 만든 묶음(S.groups)을 그대로 쓴다 */
@@ -45,8 +48,6 @@ async function openMap() {
   baseDot = new kakao.maps.Circle({ center, radius: 6, strokeWeight: 3, strokeColor: '#fff', fillColor: '#2563eb', fillOpacity: 1 });
   baseDot.setMap(map2);
 
-  const bounds = new kakao.maps.LatLngBounds();
-  bounds.extend(center);
   mapGroups.forEach((g, i) => {
     const pos = new kakao.maps.LatLng(g.list[0].la, g.list[0].lo);
     const el = document.createElement('div');
@@ -55,10 +56,12 @@ async function openMap() {
     const ov = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true });
     ov.setMap(map2);
     overlays.push(ov);
-    bounds.extend(pos);
   });
+  /* 확대 수준은 **반경으로** 정한다. 모든 핀을 담는 자동 맞춤(setBounds)은 멀리 있는 한 곳 때문에
+     지도가 너무 멀어져 핀이 작아지고(레벨 7), 그 뒤 억지로 당기면 핀이 화면 밖으로 밀려 사라졌다. */
   ignoreMove = true;
-  if (mapGroups.length) map2.setBounds(bounds, 60, 60, 60, 220);
+  map2.setCenter(center);
+  map2.setLevel(S.radius <= 300 ? 3 : S.radius <= 500 ? 4 : S.radius <= 1000 ? 5 : S.radius <= 2000 ? 6 : 7);
   setTimeout(() => { ignoreMove = false; $('#b-again').hidden = true; }, 700);
 
   // 아래 카드 — 좌우로 넘기면 지도가 따라간다
