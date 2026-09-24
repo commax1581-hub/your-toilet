@@ -53,16 +53,20 @@
 
   <!-- ②③ 핀으로 위치 확정 / ④ 다른 곳의 핀 -->
   <section class="screen" id="s-pin">
-    <div class="bar">
-      <button class="back" data-go="home" aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
-      <div class="grow"><div class="t" id="pin-t">여기가 맞나요?</div><div class="s" id="pin-s">지도를 움직여 핀을 정확한 자리에 맞춰 주세요</div></div>
-      <button class="home" data-go="home">🏠 처음</button>
+    <div class="bar col">
+      <div class="line">
+        <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+        <button class="findbar" id="b-tosearch"><svg><use href="#i-search"/></svg><span id="pin-q">주소 · 건물 이름으로 찾기</span></button>
+        <button class="home" data-go="home">🏠 처음</button>
+      </div>
+      <div class="s" id="pin-s">지도를 움직여 핀을 정확한 자리에 맞춰 주세요</div>
     </div>
     <div class="mapwrap">
       <div id="map"></div>
       <div class="warn" id="pin-warn"></div>
       <div class="centerpin"><svg><use href="#i-pin"/></svg></div>
       <div class="addrbox">
+        <button class="gpsbtn" id="b-tomy" aria-label="내 위치로"><svg><use href="#i-gps"/></svg></button>
         <div class="a" id="pin-addr">위치를 확인하는 중…</div>
         <div class="h" id="pin-sub">&nbsp;</div>
         <div class="radius" id="pin-radius" hidden>
@@ -76,7 +80,7 @@
   <!-- ④ 다른 곳 찾기 -->
   <section class="screen" id="s-search">
     <div class="bar">
-      <button class="back" data-go="home" aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+      <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
       <div class="grow">
         <form class="search" id="f-search" autocomplete="off">
           <svg><use href="#i-search"/></svg>
@@ -92,7 +96,7 @@
   <!-- ⑤ 목록 -->
   <section class="screen" id="s-list">
     <div class="bar">
-      <button class="back" data-go="pin" aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+      <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
       <div class="grow"><div class="t">가까운 화장실</div><div class="s" id="list-s"></div></div>
       <button class="home" data-go="home">🏠 처음</button>
     </div>

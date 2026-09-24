@@ -28,6 +28,17 @@ button{font-family:inherit}
 .bar .s{color:var(--sub);font-size:12px}
 .bar .back{border:0;background:transparent;padding:6px;margin-left:-6px;color:var(--ink);cursor:pointer}
 .bar .back svg{width:22px;height:22px;display:block}
+.bar.col{display:block;padding-bottom:8px}
+.bar.col .line{display:flex;align-items:center;gap:8px}
+.bar.col .s{margin:6px 2px 0}
+.findbar{flex:1;min-width:0;display:flex;align-items:center;gap:7px;border:1.5px solid var(--line);background:var(--soft);border-radius:12px;
+  padding:9px 11px;font-size:14px;color:var(--sub);font-family:inherit;text-align:left;cursor:pointer}
+.findbar svg{width:17px;height:17px;flex:none}
+.findbar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gpsbtn{position:absolute;right:0;top:-58px;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:#fff;
+  color:var(--gps);box-shadow:0 4px 12px rgba(15,32,43,.2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.gpsbtn svg{width:24px;height:24px}
+.gpsbtn.on{color:#fff;background:var(--gps);border-color:var(--gps)}
 .bar .home{flex:none;border:1px solid var(--line);background:#fff;color:var(--sub);font-weight:700;font-size:12px;border-radius:999px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:4px}
 .bar .home svg{width:14px;height:14px}
 .body{flex:1;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}

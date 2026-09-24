@@ -37,14 +37,23 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': 
 const shortAddr = (a) => String(a || '').replace(/^(서울특별시|부산광역시|대구광역시|인천광역시|광주광역시|대전광역시|울산광역시|세종특별자치시|경기도|강원특별자치도|강원도|충청북도|충청남도|전북특별자치도|전라북도|전라남도|경상북도|경상남도|제주특별자치도|서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)\s+/, '');
 const hhmm = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
-/* ── 화면 전환 ───────────────────────────── */
-function go(name) {
+/* ── 화면 전환 ─────────────────────────────
+   화면 이동을 브라우저 이력에 넣는다 — 휴대폰의 뒤로 가기가 앱을 닫지 않고 한 단계씩 돌아가게. */
+function go(name, fromPop) {
+  const same = S.screen === name;
   S.screen = name;
   document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('on', el.id === `s-${name}`));
   if (name === 'pin' && map) setTimeout(() => map.relayout(), 0);
   if (name === 'search') setTimeout(() => $('#q').focus(), 60);
+  if (!fromPop) {
+    if (same) history.replaceState({ s: name }, '');
+    else history.pushState({ s: name }, '');
+  }
 }
+history.replaceState({ s: 'home' }, '');
+window.addEventListener('popstate', (e) => go((e.state && e.state.s) || 'home', true));
 document.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => go(b.dataset.go)));
+document.querySelectorAll('[data-back]').forEach((b) => (b.onclick = () => history.back()));
 
 /* ── 첫 화면: 지금 시각으로 배경 (낮 06~17 · 저녁 17~20 · 밤 20~06) ── */
 (function background() {
@@ -124,6 +133,28 @@ $('#b-gps').onclick = () => {
   );
 };
 $('#b-other').onclick = () => { S.mode = 'other'; go('search'); };
+$('#b-tosearch').onclick = () => { S.mode = 'other'; go('search'); };
+
+/** 지도 위 "내 위치" — 지도를 끌다가 되돌아오는 길 */
+$('#b-tomy').onclick = () => {
+  if (!navigator.geolocation || !map) return;
+  const btn = $('#b-tomy');
+  btn.classList.add('on');
+  navigator.geolocation.getCurrentPosition(
+    (p) => {
+      btn.classList.remove('on');
+      S.gps = { la: p.coords.latitude, lo: p.coords.longitude, acc: p.coords.accuracy || 0 };
+      S.query = null;                                  // 내 위치로 옮기면 "찾으신 곳"은 지운다
+      openPin('gps');
+    },
+    () => {                                          // 실패해도 화면을 막지 않는다 — 지도 위에 알리고 그대로 둔다
+      btn.classList.remove('on');
+      $('#pin-warn').innerHTML = '<b>위치를 받지 못했어요</b><br>지도를 움직여 핀을 맞춰 주세요';
+      $('#pin-warn').classList.add('on');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+  );
+};
 
 /* ── 핀으로 위치 확정 ────────────────────── */
 function kakaoReady() {
@@ -142,7 +173,6 @@ async function openPin(mode, at) {
   S.mode = mode;
   const c = at || S.gps;
   $('#pin-radius').hidden = mode === 'gps';
-  $('#pin-t').textContent = mode === 'gps' ? '여기가 맞나요?' : '이 위치에서 찾을까요?';
   $('#pin-s').textContent = mode === 'gps' ? '지도를 움직여 핀을 정확한 자리에 맞춰 주세요' : '핀을 옮기고 반경을 고를 수 있어요';
   $('#b-here').textContent = mode === 'gps' ? '여기 맞아요' : '이 위치에서 찾기';
   go('pin');
@@ -197,6 +227,7 @@ function showAddr(ll) {
     if (st !== kakao.maps.services.Status.OK || !res.length) { $('#pin-addr').textContent = '주소를 찾지 못했어요'; return; }
     const r = res[0], a = (r.road_address && r.road_address.address_name) || (r.address && r.address.address_name) || '';
     $('#pin-addr').textContent = a ? `${a} 근처` : '주소를 찾지 못했어요';
+    $('#pin-q').textContent = a ? shortAddr(a) : '주소 · 건물 이름으로 찾기';
     S.base = { la, lo, addr: a || '이 위치', sub: (r.road_address && r.road_address.building_name) || '' };
   });
 }
