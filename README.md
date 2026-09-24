@@ -34,7 +34,8 @@
 - 구성: `app/index.html` · `app/style.css` · `app/app.js` · `app/hours.js`(개방시간 판정) · `app/img/`(시간대 배경)
 
 ## 역사 화장실 (v2 준비)
-- `python build_rail.py` — 역 좌표표(`data/rail_stations.csv`, 845개 역) · 원본은 `data/raw/rail/`(24개 파일·2,522행)
+- `python build_rail.py` — 역 좌표표(`data/rail_stations.csv`, **833행 · 역 739개**, 기관×노선×역) · 원본은 `data/raw/rail/`
+- `python build_rail_app.py` — 앱 데이터(`app/data/rail.json`, 212KB · 역 833곳 · 화장실 966칸)
 - 본 데이터와 **합치지 않고 잇는다**(사례지식 6-24~6-26)
 
 ## 백업·문서

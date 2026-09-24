@@ -30,6 +30,7 @@ const S = {                      // 화면 상태(저장하지 않음)
   holidays: new Set(),
   tiles: new Map(),
   groups: [],                    // 지도에 그릴 묶음
+  rails: [],                     // 지도에 그릴 역(출처가 다른 별개 데이터)
 };
 let map = null, geocoder = null, places = null, gpsMark = null, gpsCircle = null, addrSeq = 0;
 
@@ -430,6 +431,21 @@ function passFilter(r) {
   return true;
 }
 const filterOn = () => !!(S.f.bell || S.f.acc || S.f.dp || S.f.kid || S.f.ft);
+
+/** 역 카드도 같은 잣대로 거른다.
+    다만 **국가철도공단은 시설 정보를 주지 않는다** — 정보가 없는 것을 "없음"으로 읽어 지우면 안 되지만,
+    "기저귀 있는 곳만"을 고른 사람에게 알 수 없는 곳을 섞어 보여 주는 것도 답이 아니다 → **거르는 중에는 뺀다.**
+    종류 필터(공중·개방·간이·이동)는 역 화장실에 해당하는 값이 없으므로 켜져 있으면 뺀다. */
+function passRail(st, now) {
+  if (S.openOnly && !['open', 'likely'].includes(railState(st, now).k)) return false;
+  if (S.f.ft) return false;
+  if (!(S.f.bell || S.f.acc || S.f.dp || S.f.kid)) return true;
+  return st.t.some((x) => x.m !== undefined
+    && (!S.f.bell || x.bl === 1)
+    && (!S.f.acc || x.ac[0] + x.ac[1] > 0)
+    && (!S.f.dp || x.dp[0] + x.dp[1] > 0)
+    && (!S.f.kid || x.ch[0] + x.ch[1] > 0));
+}
 const clearFilter = () => { S.f = { bell: 0, acc: 0, dp: 0, kid: 0, ft: '' }; };
 
 function chipRows() {
@@ -611,7 +627,7 @@ async function showList(quiet) {
   const body = $('#list-body');
   body.innerHTML = '<div class="loading">가까운 곳을 찾는 중…</div>';
   const now = new Date(), base = S.base;
-  const recs = await nearby(base.la, base.lo);
+  const [recs] = await Promise.all([nearby(base.la, base.lo), loadRail()]);
   const idx = S.index;
   $('#list-s').textContent = `${hhmm(now)} 기준 · 공공데이터 ${idx.date}`;
 
@@ -620,6 +636,22 @@ async function showList(quiet) {
   const inR = (radius, openOnly, noFilter) => withD.filter((x) => x.m <= radius
     && (noFilter || passFilter(x.r))
     && (!openOnly || ['open', 'soon'].includes(cardState(x.r, now).k)));
+
+  // 역 안 화장실 — 출처가 다른 별개 데이터를 **거리순 그대로** 섞는다(먼저 거리, 그다음 성격 · 6-27)
+  const rails = railNear(base.la, base.lo, S.radius).filter((x) => passRail(x.st, now));
+  /* 역 이름으로 찾아온 사람에게 "역은 공공데이터에 없어요"라고 말하면 안 된다 —
+     이제 역 안 화장실을 갖고 있다. 그 역이 가까이 잡히면 안내 문구를 바꾼다(T21의 교훈: 두 화면이 다른 말을 하면 안 된다). */
+  /* 겹침은 **표시만** 한다(규약 4-1). 같은 역이 지자체 목록에도 있으면 서로 가리키게만 하고 값은 섞지 않는다 —
+     섞으면 틀렸을 때 누구에게 알려야 하는지 알 수 없다. */
+  for (const x of rails) {
+    const key = nameCore(`${x.st.n}역`);
+    x.also = key && withD.some((y) => y.m <= 250 && nameCore(y.r.n).includes(key));
+  }
+  const railHit = S.query && rails.find((x) => {
+    if (x.m > 250) return false;
+    const a = nameCore(S.query.name), b = nameCore(`${x.st.n}역`);
+    return a && b && (a.includes(b) || b.includes(a));
+  });
 
   // 검색한 장소의 화장실은 "지금 열림"과 상관없이 맨 위에(찾아온 목적지라 닫혀 있어도 알려 줘야 한다)
   const hits = (S.query ? withD.filter((x) => isQueryHit(x.r, x.m)) : []).slice(0, 6);   // 너무 많으면 목록이 밀린다
@@ -630,7 +662,10 @@ async function showList(quiet) {
     ? `<div class="secline">찾으신 곳 · ${esc(S.query.name)}</div>`
       + hits.map((x) => cardHtml(x.r, x.m, now)).join('')
       + `<div class="secline">둘레 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</div>`
-    : (S.query
+    : (S.query && railHit
+      ? `<div class="nohit"><b>${esc(S.query.name)}의 화장실은 아래 <span class="ln">${esc(lineLabel(railHit.st))}</span> 상자에 있어요</b>
+           역 화장실은 <b>지자체가 아니라 운영기관</b>(${esc(railHit.st.src)})이 관리해, 지자체 목록과 <b>따로</b> 보여 드립니다.</div>`
+      : S.query
       ? `<div class="nohit">${PRIVATE_BIG.test(S.query.name)
             ? `<b>${esc(S.query.name)}에는 등록된 화장실이 없어요</b>
                백화점·마트 같은 <b>민간 건물</b>은 지자체에 신고된 곳만 공공데이터에 들어옵니다. 실제로는 있을 수 있으니 <b>안내 데스크에 물어보세요.</b>`
@@ -650,6 +685,7 @@ async function showList(quiet) {
     gmap.get(key).list.push(x.r);
   }
   S.groups = [...gmap.values()];
+  S.rails = rails;                                       // 지도도 같은 목록을 본다
 
   const head = `<div class="basebar"><b><svg class="ic"><use href="#i-pin"/></svg>${esc(base.name || shortAddr(base.addr))}<span class="r">${base.name ? `${esc(shortAddr(base.addr))} · ` : ''}이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
     ${chipRows()}`;
@@ -658,7 +694,7 @@ async function showList(quiet) {
     <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터 오류 신고</a>
     · <button class="linklike" data-go2="info">알아보기</button></div>`;
 
-  if (!shown.length) {
+  if (!shown.length && !rails.length) {
     const wider = [1000, 2000, 5000].find((r) => r > S.radius && inR(r, S.openOnly).length);
     const all = inR(S.radius, false).length;
     body.innerHTML = head + hitHtml + `<div class="empty"><svg><use href="#i-pin"/></svg>
@@ -682,8 +718,10 @@ async function showList(quiet) {
       if (!groups.has(key)) groups.set(key, { m: x.m, list: [] });
       groups.get(key).list.push(x.r);
     }
-    const cards = [...groups.values()].map((g, i) =>
-      g.list.length > 1 ? groupHtml(g.list, g.m, now, i) : cardHtml(g.list[0], g.m, now)).join('');
+    const cards = [...groups.values()].map((g, i) => ({ m: g.m,
+      html: g.list.length > 1 ? groupHtml(g.list, g.m, now, i) : cardHtml(g.list[0], g.m, now) }))
+      .concat(rails.map((x, i) => ({ m: x.m, html: railCard(x.st, x.m, now, i, x.also) })))
+      .sort((a, b) => a.m - b.m).map((x) => x.html).join('');
     const hidden = inR(S.radius, false).length - shown.length;
     body.innerHTML = head + hitHtml + cards
       + (S.openOnly && hidden ? `<button class="btn ghost" id="b-all">닫힌 곳·시간 확인 필요 ${hidden}곳 보기</button>` : '')
@@ -694,6 +732,10 @@ async function showList(quiet) {
     body.querySelectorAll('.card[data-id]').forEach((c) => (c.onclick = () => {
       const x = byId.get(c.dataset.id);
       if (x) openDetail(x.r, x.m);
+    }));
+    body.querySelectorAll('[data-rail]').forEach((c) => (c.onclick = () => {
+      const x = rails[+c.dataset.rail];
+      if (x) openRailDetail(x.st, x.m);
     }));
     body.querySelectorAll('[data-g]').forEach((c) => (c.onclick = () => {
       const on = $(`#kids-${c.dataset.g}`).classList.toggle('on');

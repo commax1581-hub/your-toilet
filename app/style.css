@@ -297,3 +297,44 @@ html[data-size] .card .n{white-space:normal;display:-webkit-box;-webkit-line-cla
 .legend{display:flex;flex-wrap:wrap;gap:12px 16px;margin:4px 0 8px}
 .legend span{display:inline-flex;align-items:center;gap:5px;font-size:0.8125rem;font-weight:700}
 .legend svg{width:1.75rem;height:1.75rem}
+
+/* ── 역 안 화장실 — 출처가 다른 정보 ──────────────
+   지자체 데이터가 아니라는 것이 한눈에 보여야 한다(6-27). 연한 파스텔 청록 + 머리띠 + 출처 이름.
+   **색만으로 구분하지 않는다** — 머리띠에 글자로도 적는다(색각 차이·큰 글씨·흑백에서도 읽히게). */
+:root{ --src-bg:#f0fafc; --src-soft:#d8eef4; --src-line:#c2e3ec; --src-ink:#0a4f60; }
+.railbox{background:var(--src-bg);border:1px solid var(--src-line);border-radius:16px;overflow:hidden;
+  margin-bottom:8px;width:100%;text-align:left;cursor:pointer;display:block}
+.railbox .rhead{background:var(--src-soft);color:var(--src-ink);display:flex;align-items:center;gap:6px;
+  padding:7px 12px;font-size:0.75rem;font-weight:800}
+.railbox .rhead svg{width:0.9375rem;height:0.9375rem}
+.railbox .rhead .who{margin-left:auto}
+.railbox .rbody{padding:11px 12px}
+.railbox .rh{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.railbox .rh b{font-weight:800;font-size:0.9375rem}
+.ln{display:inline-block;font-size:0.6875rem;font-weight:800;color:var(--src-ink);background:var(--src-soft);
+  border-radius:6px;padding:2px 7px;margin-right:6px;vertical-align:2px}
+.rrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:8px}
+.flr{display:inline-flex;align-items:center;justify-content:center;min-width:2.125rem;min-height:1.5rem;
+  font-weight:800;font-size:0.8125rem;border-radius:7px;background:var(--src-soft);color:var(--src-ink);padding:0 6px}
+.gate{display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;font-weight:800;padding:3px 8px;
+  border-radius:999px;border:1px solid currentColor}
+.gate svg{width:0.875rem;height:0.875rem}
+.gate.out{color:var(--open)} .gate.in{color:var(--warn)}
+.ex{display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;font-weight:800;color:var(--sub)}
+.ex svg{width:0.875rem;height:0.875rem}
+.rwhere{margin-top:6px;padding:7px 9px;border-radius:9px;background:var(--paper);border:1px solid var(--src-line);
+  font-size:0.8125rem;line-height:1.5}
+.railbox .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ralso{margin-top:8px;padding:7px 9px;border-radius:9px;background:var(--paper);border:1px solid var(--src-line);
+  font-size:0.75rem;color:var(--sub);line-height:1.55}
+.ralso svg{width:0.875rem;height:0.875rem;vertical-align:-.13em;color:var(--pub)}
+.rnone{margin-top:8px;padding:8px 9px;border-radius:9px;background:var(--paper);border:1px dashed var(--src-line);
+  font-size:0.75rem;color:var(--sub);line-height:1.55}
+.rnone svg{width:0.875rem;height:0.875rem;vertical-align:-.13em}
+.rseat{padding:9px 0;border-bottom:1px dashed var(--line)}
+.rseat:last-child{border-bottom:0}
+.dhead.rail .dn .ln{vertical-align:4px}
+
+:root[data-theme="dark"]{ --src-bg:#12272e; --src-soft:#1b3d47; --src-line:#25545f; --src-ink:#bdeef8; }
+.mpin.rail{background:var(--src-soft);color:var(--src-ink);border:1.6px solid var(--src-line)}
+:root[data-theme="dark"] .mpin.rail{border-color:var(--src-ink)}

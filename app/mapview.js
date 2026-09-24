@@ -3,7 +3,7 @@
    지도를 옮기면 "이 지역에서 다시 찾기"가 뜬다(마음대로 다시 찾지 않는다 — 사용자가 누를 때만). */
 'use strict';
 
-let map2 = null, overlays = [], baseDot = null, cardIdx = 0, mapGroups = [], ignoreMove = true;
+let map2 = null, overlays = [], baseDot = null, cardIdx = 0, mapGroups = [], mapRails = [], ignoreMove = true;
 
 function pinHtml(g, i, now) {
   const open = g.list.some((r) => ['open', 'soon'].includes(cardState(r, now).k));
@@ -39,7 +39,7 @@ async function openMap() {
     map2.relayout();
     map2.setCenter(center);
   }
-  $('#map-s').textContent = `${hhmm(now)} 기준 · ${mapGroups.length}곳${S.openOnly ? ' · 지금 열림만' : ''}${filterOn() ? ' · 거르는 중' : ''}`;
+  $('#map-s').textContent = `${hhmm(now)} 기준 · ${mapGroups.length + (S.rails || []).length}곳${S.openOnly ? ' · 지금 열림만' : ''}${filterOn() ? ' · 거르는 중' : ''}`;
   $('#b-again').hidden = true;
   const mf = $('#b-mfilter');                              // 목록과 지도가 다른 개수로 보이지 않게 필터를 알린다
   mf.hidden = !(S.openOnly || filterOn());
@@ -51,6 +51,19 @@ async function openMap() {
   if (baseDot) baseDot.setMap(null);
   baseDot = new kakao.maps.Circle({ center, radius: 6, strokeWeight: 3, strokeColor: '#fff', fillColor: '#2563eb', fillOpacity: 1 });
   baseDot.setMap(map2);
+
+  /* 역 안 화장실도 지도에 올린다 — 목록에 있는데 지도에 없으면 두 화면이 다른 말을 한다(T21).
+     핀 색·모양을 달리해 **출처가 다르다는 것**을 지도에서도 알 수 있게 한다(6-27). */
+  mapRails = (S.rails || []);
+  mapRails.forEach((x, i) => {
+    const el = document.createElement('div');
+    el.innerHTML = `<div class="mpin rail" data-r="${i}"><svg><use href="#i-train"/></svg>
+        <span class="lab">${esc(x.st.n)}역<small>${x.m < 1000 ? `${Math.round(x.m)}m` : `${(x.m / 1000).toFixed(1)}km`}</small></span></div>`;
+    el.firstElementChild.onclick = () => openRailDetail(x.st, x.m);
+    const ov = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(x.st.la, x.st.lo), content: el, yAnchor: 1, clickable: true });
+    ov.setMap(map2);
+    overlays.push(ov);
+  });
 
   mapGroups.forEach((g, i) => {
     const pos = new kakao.maps.LatLng(g.list[0].la, g.list[0].lo);

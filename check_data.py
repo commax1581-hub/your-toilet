@@ -94,6 +94,18 @@ def main(data=DATA, prev=None):
         years, now = json.loads(hol.read_text(encoding='utf-8')), str(date.today().year)
         if now not in years:
             fails.append(f'holidays.json에 {now}년 없음 — python fetch_holidays.py')
+    rail = data / 'rail.json'                                # 역 안 화장실 — 본 데이터와 합치지 않고 잇는 별개 파일
+    if not rail.exists():
+        fails.append('rail.json 없음 — python build_rail.py && python build_rail_app.py')
+    else:
+        r = json.loads(rail.read_text(encoding='utf-8'))
+        if r.get('count', 0) < 700:
+            fails.append(f'rail.json 역 {r.get("count", 0):,} — 833곳보다 크게 적다')
+        no_xy = [s['n'] for s in r['s'] if not (33 < s['la'] < 39 and 124 < s['lo'] < 132)]
+        if no_xy:
+            fails.append(f'rail.json 국내 범위 밖 좌표 {len(no_xy)}곳: {", ".join(no_xy[:5])}')
+        print(f'  역 {r["count"]:,}곳 · 화장실 {r["toilets"]:,}칸 · {rail.stat().st_size / 1024:,.0f}KB')
+
     if prev:
         p = json.loads(Path(prev).read_text(encoding='utf-8'))
         if total < p['count'] * (1 - DROP):

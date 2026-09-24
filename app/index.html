@@ -12,7 +12,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=9fec0d08">
+<link rel="stylesheet" href="style.css?v=5409ba6c">
 <script>
   /* 저장된 보기 설정을 그리기 전에 입힌다(깜빡임 방지). 기기 설정을 따르는 것이 기본. */
   try {
@@ -50,6 +50,10 @@
   <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5l1.4 2.6 2.9-.5 1 2.8 2.6 1.4-1 2.8 1 2.8-2.6 1.4-1 2.8-2.9-.5L12 21.5l-1.4-2.6-2.9.5-1-2.8L4.1 15.2l1-2.8-1-2.8 2.6-1.4 1-2.8 2.9.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
   <symbol id="i-wc" viewBox="0 0 24 24"><circle cx="6.5" cy="4" r="2" fill="currentColor"/><path d="M4.3 7.4h4.4a1.3 1.3 0 0 1 1.3 1.3v5.1H8.3V21H6.7v-6H5.6v6H3.9v-7.2H2.9V8.7a1.3 1.3 0 0 1 1.4-1.3z" fill="currentColor"/><path d="M12 3v18" stroke="currentColor" stroke-width="1.2"/><circle cx="17.5" cy="4" r="2" fill="currentColor"/><path d="M15.4 7.4h4.2l2.6 7h-2.3V21h-1.7v-6.6h-1V21h-1.7v-6.6h-2.4z" fill="currentColor"/></symbol>
   <symbol id="i-toilet" viewBox="0 0 24 24"><path d="M16.4 3h4.1a1 1 0 0 1 1 1v5.6a1 1 0 0 1-1 1h-4.1z" fill="currentColor"/><ellipse cx="11.8" cy="6" rx="4.2" ry="2.7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.6 11.6h14.8a1 1 0 0 1 1 1.1c-.3 3.2-2.3 5.6-5.2 6.4l.8 2.9H7l.8-2.9c-2.9-.8-4.9-3.2-5.2-6.4a1 1 0 0 1 1-1.1z" fill="currentColor"/></symbol>
+  <symbol id="i-train" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="13" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 8.5h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="12.5" r="1.2" fill="currentColor"/><circle cx="15" cy="12.5" r="1.2" fill="currentColor"/><path d="M8 16l-2 4M16 16l2 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-gate" viewBox="0 0 24 24"><rect x="3" y="6" width="4" height="13" rx="1.4" fill="none" stroke="currentColor" stroke-width="2"/><rect x="17" y="6" width="4" height="13" rx="1.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 11h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 11v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-exit" viewBox="0 0 24 24"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 12h9M17.5 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5.3l3.4 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </defs></svg>
 
@@ -205,7 +209,11 @@
 
       <h3>데이터의 한계</h3>
       <ul>
-        <li><b>역 화장실이 적습니다.</b> 역 화장실은 운영기관(코레일·교통공사)이 관리해 지자체 목록에서 빠지는 일이 잦습니다. 같은 도시에서도 역마다 다릅니다.</li>
+        <li><b>역 안 화장실은 따로 보여 드립니다.</b> 역 화장실은 지자체가 아니라 <b>운영기관</b>(국가철도공단·서울교통공사)이 관리해 지자체 목록에서 빠지는 일이 잦습니다.
+          그래서 운영기관이 공개한 자료를 <b>연한 청록 상자</b>에 따로 담았습니다 — <b>역 833곳</b>의 층·개찰구 안팎·출구·자세한 위치입니다.
+          두 자료를 <b>섞지 않습니다.</b> 값을 섞으면 정보가 틀렸을 때 <b>누구에게 알려야 하는지</b> 알 수 없기 때문입니다.</li>
+        <li><b>역 자료에 없는 것.</b> 국가철도공단 자료에는 <b>여는 시간과 변기 수가 아예 없습니다</b>(칸 자체가 없습니다). 그래서 "보통 첫차~막차"로만 안내합니다 — 없다는 뜻이 아닙니다.
+          <b>대전·광주 도시철도</b>는 아직 넣지 못했습니다.</li>
         <li><b>백화점·마트 같은 민간 건물</b>은 신고된 곳만 들어옵니다. 실제로는 있어도 목록에 없을 수 있습니다.</li>
         <li><b>정보가 오래된 곳</b>이 있습니다. 지자체가 적은 기준 연도를 상세에서 보여 줍니다.</li>
         <li>구글 지도는 국내에서 <b>도보 길찾기</b>를 제공하지 않고 장소 이름도 없어 좌표로 열립니다. 네이버 거리뷰는 링크로 바로 열 수 없습니다.</li>
@@ -251,8 +259,9 @@
 
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6516210bcdd3c0a50b562ea3dedda4a3&libraries=services&autoload=false" onerror="window.__kakaoFail=true"></script>
 <script src="hours.js?v=f8a06c08"></script>
-<script src="app.js?v=be95a184"></script>
+<script src="app.js?v=e5b68520"></script>
 <script src="detail.js?v=89bbe22e"></script>
-<script src="mapview.js?v=15d681b5"></script>
+<script src="rail.js?v=87775d25"></script>
+<script src="mapview.js?v=bafed3f0"></script>
 </body>
 </html>
