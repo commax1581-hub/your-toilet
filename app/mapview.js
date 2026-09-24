@@ -12,7 +12,7 @@ function pinHtml(g, i, now) {
   const name = g.list.length > 1 ? groupName(g.list) : g.list[0].n;   // 고른 핀에만 보이는 이름표
   const dist = g.m < 1000 ? `${Math.round(g.m)}m` : `${(g.m / 1000).toFixed(1)}km`;
   return `<div class="mpin ${k.c}${open ? '' : ' shut'}${i === cardIdx ? ' on' : ''}" data-i="${i}">
-      <svg><use href="${k.i}"/></svg>${label ? `<b>${label}</b>` : ''}
+      <svg><use href="#i-toilet"/></svg>${label ? `<b>${label}</b>` : ''}
       <span class="lab">${esc(name)}<small>${dist}</small></span></div>`;
 }
 

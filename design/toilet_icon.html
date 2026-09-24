@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>변기 아이콘 — 안 고르기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#4338ca;--brand2:#6d28d9;--ink:#15202b;--sub:#5b6875;--line:#e3e8ee;--pub:#0f766e;--paper:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:#eef1f5;font-family:'Noto Sans KR',system-ui,sans-serif;color:var(--ink);word-break:keep-all;font-size:14px}
+h1{font-size:19px;margin:20px 16px 4px} .lead{margin:0 16px 16px;color:var(--sub);font-size:13px;line-height:1.7}
+h2{font-size:15px;margin:22px 16px 8px}
+.wrap{padding:0 16px 30px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap}
+.one{text-align:center;color:var(--sub);font-size:11px}
+.one b{display:block;color:var(--ink);font-size:12px;margin-bottom:6px}
+.sizes{display:flex;gap:18px;align-items:flex-end}
+.sizes span{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--sub)}
+svg.i{color:var(--ink)}
+.dark{background:#161d26;border-color:#2a3644}
+.dark svg.i{color:#e8edf3} .dark .one,.dark .sizes span{color:#9aa7b5} .dark .one b{color:#e8edf3}
+/* 지도 핀에 얹어 보기 */
+.pins{display:flex;gap:14px;align-items:center;background:#e8eef0;border-radius:12px;padding:16px}
+.mpin{display:inline-flex;align-items:center;gap:3px;padding:6px 9px;border-radius:999px;color:#fff;font-weight:800;font-size:12px;box-shadow:0 2px 8px rgba(10,20,40,.35)}
+.mpin svg{width:16px;height:16px}
+.mpin.pub{background:var(--pub)} .mpin.opn{background:#fff;color:var(--pub);border:2px solid var(--pub)}
+/* 앱 아이콘 */
+.appicons{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.app{width:96px;height:96px;border-radius:22px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#4338ca,#6d28d9);color:#fff;box-shadow:0 6px 18px rgba(15,32,43,.2)}
+.app svg{width:58px;height:58px}
+.app.sky{background:linear-gradient(160deg,#2f6fd0,#1e4f96)}
+.app.white{background:#fff;color:var(--brand);border:1px solid var(--line)}
+.note{font-size:12px;color:var(--sub);line-height:1.7;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>변기 아이콘 — 시안 세 가지</h1>
+<p class="lead">보내 주신 그림은 워터마크가 있는 남의 클립아트라 <b>따라 그리지 않고</b>, 형태(옆모습·뚜껑)만 참고해 새로 그렸습니다.<br>
+모두 <b>단색(currentColor)</b>·24×24 격자입니다. 색은 화면이 정하므로 어두운 모드·핀 색을 자동으로 따라갑니다.</p>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <!-- A · 옆모습(뚜껑 열림) — 보내 주신 형태에 가장 가까움 -->
+  <symbol id="t-a" viewBox="0 0 24 24">
+    <path d="M17 3.2h3.2a1 1 0 0 1 1 1v5.4a1 1 0 0 1-1 1H17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+    <ellipse cx="12.4" cy="6.2" rx="4.6" ry="3" fill="none" stroke="currentColor" stroke-width="1.9"/>
+    <path d="M17 10.6v3.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+    <path d="M3.2 12.2h13.4c0 3.4-2 6-5 6.6l.7 2.4H7.4l.7-2.4c-3-.6-4.9-3.2-4.9-6.6z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+  </symbol>
+  <!-- B · 옆모습(채움) — 작은 크기에서 가장 또렷 -->
+  <symbol id="t-b" viewBox="0 0 24 24">
+    <path d="M16.4 3h4.1a1 1 0 0 1 1 1v5.6a1 1 0 0 1-1 1h-4.1z" fill="currentColor"/>
+    <ellipse cx="11.8" cy="6" rx="4.2" ry="2.7" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M2.6 11.6h14.8a1 1 0 0 1 1 1.1c-.3 3.2-2.3 5.6-5.2 6.4l.8 2.9H7l.8-2.9c-2.9-.8-4.9-3.2-5.2-6.4a1 1 0 0 1 1-1.1z" fill="currentColor"/>
+  </symbol>
+  <!-- C · 정면(위에서 본 변좌) — 가장 단순, 픽토그램에 가까움 -->
+  <symbol id="t-c" viewBox="0 0 24 24">
+    <rect x="7.4" y="2.6" width="9.2" height="3.6" rx="1.2" fill="currentColor"/>
+    <ellipse cx="12" cy="12" rx="7" ry="5.4" fill="none" stroke="currentColor" stroke-width="2"/>
+    <ellipse cx="12" cy="12" rx="3.4" ry="2.4" fill="currentColor"/>
+    <path d="M9 17.2l-.8 4.2M15 17.2l.8 4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+</defs></svg>
+
+<div class="wrap">
+  <h2>1 · 크기별로 보기 (밝은 화면)</h2>
+  <div class="card">
+    <div class="row">
+      <div class="one"><b>A 옆모습(선)</b>
+        <div class="sizes">
+          <span><svg class="i" width="16" height="16"><use href="#t-a"/></svg>16</span>
+          <span><svg class="i" width="24" height="24"><use href="#t-a"/></svg>24</span>
+          <span><svg class="i" width="36" height="36"><use href="#t-a"/></svg>36</span>
+          <span><svg class="i" width="56" height="56"><use href="#t-a"/></svg>56</span>
+        </div></div>
+      <div class="one"><b>B 옆모습(채움)</b>
+        <div class="sizes">
+          <span><svg class="i" width="16" height="16"><use href="#t-b"/></svg>16</span>
+          <span><svg class="i" width="24" height="24"><use href="#t-b"/></svg>24</span>
+          <span><svg class="i" width="36" height="36"><use href="#t-b"/></svg>36</span>
+          <span><svg class="i" width="56" height="56"><use href="#t-b"/></svg>56</span>
+        </div></div>
+      <div class="one"><b>C 정면(변좌)</b>
+        <div class="sizes">
+          <span><svg class="i" width="16" height="16"><use href="#t-c"/></svg>16</span>
+          <span><svg class="i" width="24" height="24"><use href="#t-c"/></svg>24</span>
+          <span><svg class="i" width="36" height="36"><use href="#t-c"/></svg>36</span>
+          <span><svg class="i" width="56" height="56"><use href="#t-c"/></svg>56</span>
+        </div></div>
+    </div>
+  </div>
+
+  <h2>2 · 어두운 화면</h2>
+  <div class="card dark">
+    <div class="row">
+      <div class="one"><b>A</b><div class="sizes"><span><svg class="i" width="24" height="24"><use href="#t-a"/></svg>24</span><span><svg class="i" width="40" height="40"><use href="#t-a"/></svg>40</span></div></div>
+      <div class="one"><b>B</b><div class="sizes"><span><svg class="i" width="24" height="24"><use href="#t-b"/></svg>24</span><span><svg class="i" width="40" height="40"><use href="#t-b"/></svg>40</span></div></div>
+      <div class="one"><b>C</b><div class="sizes"><span><svg class="i" width="24" height="24"><use href="#t-c"/></svg>24</span><span><svg class="i" width="40" height="40"><use href="#t-c"/></svg>40</span></div></div>
+    </div>
+  </div>
+
+  <h2>3 · 지도 핀에 얹어 보기 (공중=채움 · 개방=테두리)</h2>
+  <div class="card">
+    <div class="pins">
+      <span class="mpin pub"><svg><use href="#t-a"/></svg></span>
+      <span class="mpin opn"><svg><use href="#t-a"/></svg><b>2</b></span>
+      <span class="mpin pub"><svg><use href="#t-b"/></svg></span>
+      <span class="mpin opn"><svg><use href="#t-b"/></svg><b>2</b></span>
+      <span class="mpin pub"><svg><use href="#t-c"/></svg></span>
+      <span class="mpin opn"><svg><use href="#t-c"/></svg><b>2</b></span>
+    </div>
+    <div class="note">왼쪽부터 A·B·C. 핀에서는 16px로 쓰이므로 <b>작은 크기에서 형태가 남는지</b>가 관건입니다.</div>
+  </div>
+
+  <h2>4 · 앱 아이콘 (홈 화면 추가·파비콘)</h2>
+  <div class="card">
+    <div class="appicons">
+      <div class="app"><svg><use href="#t-a"/></svg></div>
+      <div class="app"><svg><use href="#t-b"/></svg></div>
+      <div class="app sky"><svg><use href="#t-c"/></svg></div>
+      <div class="app white"><svg><use href="#t-b"/></svg></div>
+    </div>
+    <div class="note">배경은 주 색 그라데이션(인디고→바이올렛) · 하늘색(첫 화면 배경과 같은 결) · 흰 바탕 세 가지로 시험했습니다.</div>
+  </div>
+
+  <div class="card">
+    <div class="note">
+      <b>고를 때 참고</b><br>
+      · <b>A(선)</b>는 보내 주신 그림에 가장 가깝고 우아하지만, <b>16px에서 선이 뭉개집니다</b>.<br>
+      · <b>B(채움)</b>는 작은 크기에서 가장 또렷합니다. 지도 핀·검색 결과처럼 작은 자리에 유리합니다.<br>
+      · <b>C(정면)</b>는 가장 단순해 어디서든 읽히지만, "변기"보다 "변좌"로 보일 수 있습니다.<br>
+      · 어느 것을 골라도 <b>단색</b>이라 어두운 모드·핀 색·글씨 크기 설정을 자동으로 따라갑니다.
+    </div>
+  </div>
+</div>
+</body>
+</html>
