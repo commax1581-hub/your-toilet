@@ -44,6 +44,8 @@
   <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 3L3 5.5v15L9 18l6 3 6-2.5v-15L15 6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 3v15M15 6v15" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
   <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5l1.4 2.6 2.9-.5 1 2.8 2.6 1.4-1 2.8 1 2.8-2.6 1.4-1 2.8-2.9-.5L12 21.5l-1.4-2.6-2.9.5-1-2.8L4.1 15.2l1-2.8-1-2.8 2.6-1.4 1-2.8 2.9.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="i-wc" viewBox="0 0 24 24"><circle cx="6.5" cy="4" r="2" fill="currentColor"/><path d="M4.3 7.4h4.4a1.3 1.3 0 0 1 1.3 1.3v5.1H8.3V21H6.7v-6H5.6v6H3.9v-7.2H2.9V8.7a1.3 1.3 0 0 1 1.4-1.3z" fill="currentColor"/><path d="M12 3v18" stroke="currentColor" stroke-width="1.2"/><circle cx="17.5" cy="4" r="2" fill="currentColor"/><path d="M15.4 7.4h4.2l2.6 7h-2.3V21h-1.7v-6.6h-1V21h-1.7v-6.6h-2.4z" fill="currentColor"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </defs></svg>
 
@@ -52,7 +54,7 @@
   <!-- ① 첫 화면 — 지금 어디세요? -->
   <section class="screen on" id="s-home">
     <div class="scrim"></div>
-    <button class="setbtn" id="b-set" aria-label="보기 설정">⚙</button>
+    <button class="setbtn" id="b-set" aria-label="보기 설정"><svg><use href="#i-gear"/></svg></button>
     <div class="h-title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
     <div class="h-bottom">
       <div class="ask">지금 어디세요?</div>

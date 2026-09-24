@@ -326,7 +326,7 @@ async function markToilets(list) {
       });
       if (mine.length) {
         el.className = 'wc yes';
-        el.textContent = `🚻 ${mine[0].r.n}${mine.length > 1 ? ` 외 ${mine.length - 1}곳` : ''}`;
+        el.innerHTML = `<svg class="ic"><use href="#i-wc"/></svg>${esc(mine[0].r.n)}${mine.length > 1 ? ` 외 ${mine.length - 1}곳` : ''}`;
       } else if (near.length) {
         el.className = 'wc near';
         el.textContent = `이 시설에는 없음 · 가까운 곳 ${Math.round(near[0].m)}m (${near[0].r.n})`;
@@ -595,7 +595,7 @@ async function showList(quiet) {
   }
   S.groups = [...gmap.values()];
 
-  const head = `<div class="basebar"><b>📍 ${esc(base.name || shortAddr(base.addr))}<span class="r">${base.name ? `${esc(shortAddr(base.addr))} · ` : ''}이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
+  const head = `<div class="basebar"><b><svg class="ic"><use href="#i-pin"/></svg>${esc(base.name || shortAddr(base.addr))}<span class="r">${base.name ? `${esc(shortAddr(base.addr))} · ` : ''}이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
     <div class="chips"><span class="chip${S.openOnly ? ' on' : ''}" id="c-open">지금 열림</span>
       ${[300, 500, 1000].map((r) => `<span class="chip${S.radius === r ? ' on' : ''}" data-r="${r}">${r < 1000 ? `${r}m` : '1km'}</span>`).join('')}</div>`;
   const foot = `<div class="foot">출처 행정안전부 공중화장실정보(공공데이터포털) · 기준일 ${idx.date}<br>
