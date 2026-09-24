@@ -72,6 +72,8 @@ function openDetail(rec, m) {
     roadview: `https://map.kakao.com/link/roadview/${ll}`,
     place: rec.p ? `https://place.map.kakao.com/${rec.p}` : `https://map.kakao.com/link/map/${enc(rec.n)},${ll}`,
     google: `https://www.google.com/maps/search/?api=1&query=${ll}`,
+    streetview: `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${ll}`,
+    naverMap: `https://map.naver.com/p/search/${enc(rec.n + ' ' + rec.a)}`,
   };
   $('#dt-s').textContent = `${hhmm(now)} 기준 · 공공데이터 ${S.index.date}`;
   $('#detail-body').innerHTML = `
@@ -86,15 +88,26 @@ function openDetail(rec, m) {
     <div class="dsec"><h3>여는 시간</h3>
       <div class="dtime">${st.html}<div class="raw">공공데이터 표기 · <b>${esc(rec.ht || '적혀 있지 않음')}</b></div></div>
     </div>
-    <div class="dsec"><h3>가는 길</h3>
+    <div class="dsec"><h3>길찾기 (도보)</h3>
       <div class="dbtns">
         <a class="btn main" href="${L.kakaoWalk}" target="_blank" rel="noopener"><svg><use href="#i-walk"/></svg>카카오맵 길찾기</a>
         <a class="btn ghost" href="${L.naverWalk}" target="_blank" rel="noopener"><svg><use href="#i-walk"/></svg>네이버 도보 길찾기</a>
-        <a class="btn ghost" href="${L.roadview}" target="_blank" rel="noopener"><svg><use href="#i-eye"/></svg>로드뷰로 입구 보기</a>
-        <a class="btn ghost" href="${L.place}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>${rec.p ? '카카오 장소 보기' : '카카오맵에서 보기'}</a>
-        <a class="btn ghost" href="${L.google}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>구글 지도에서 보기</a>
       </div>
-      <div class="dsub">구글은 국내에서 <b>도보 길찾기를 제공하지 않아</b> 위치 보기만 연결합니다.</div>
+      <div class="dsub">휴대폰에서 카카오맵 앱으로 열리면 목적지가 <b>좌표로 보일 수 있습니다</b>(앱이 이름을 받지 않습니다).${rec.p ? ' 아래 <b>카카오 장소</b>로 열면 이름 그대로 보입니다.' : ''}</div>
+    </div>
+    <div class="dsec"><h3>지도에서 보기</h3>
+      <div class="dbtns">
+        <a class="btn ghost" href="${L.place}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>${rec.p ? '카카오 장소' : '카카오맵'}</a>
+        <a class="btn ghost" href="${L.naverMap}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>네이버 지도</a>
+        <a class="btn ghost" href="${L.google}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>구글 지도</a>
+      </div>
+    </div>
+    <div class="dsec"><h3>입구 확인 (로드뷰)</h3>
+      <div class="dbtns">
+        <a class="btn ghost" href="${L.roadview}" target="_blank" rel="noopener"><svg><use href="#i-eye"/></svg>카카오 로드뷰</a>
+        <a class="btn ghost" href="${L.streetview}" target="_blank" rel="noopener"><svg><use href="#i-eye"/></svg>구글 스트리트뷰</a>
+      </div>
+      <div class="dsub">네이버 거리뷰는 <b>좌표로 바로 여는 방법이 없어</b>(파노라마 고유 번호로만 열림) 넣지 못했습니다. 네이버 지도를 연 뒤 거리뷰를 눌러 주세요. 구글 스트리트뷰는 국내에 없는 곳이 많습니다.</div>
     </div>
     <div class="dsec"><h3>관리기관</h3>
       <div class="dorg"><b>${esc(rec.o || '표기 없음')}</b>
@@ -106,7 +119,7 @@ function openDetail(rec, m) {
         ${old ? '<br><b>정보가 오래됐습니다.</b> 지금과 다를 수 있어요.' : ''}
         <br>번호 ${esc(rec.id)}${rec.ids ? ` · 같은 곳으로 합친 등록 ${rec.ids.length}건` : ''}</div>
       <div class="dfix"><b>정보가 틀렸나요?</b><br>① 위 관리기관에 전화 ② <span id="d-gov">해당 시군구 홈페이지</span> ③ <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터포털 오류 신고</a>
-        <div class="dsub">원본은 지자체가 고칩니다. 저희가 고칠 수 있는 것은 위치를 찾아 보여 주는 방법뿐입니다.</div></div>
+        <div class="dsub">이 정보는 각 지자체가 관리합니다. 틀린 내용이 있으면 관리기관에 알려 주세요.</div></div>
     </div>`;
   go('detail');
   $('#detail-body').scrollTop = 0;

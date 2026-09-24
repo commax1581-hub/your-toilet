@@ -248,7 +248,9 @@ async function openPin(mode, at) {
 /** 핀 아래 주소 — 카카오 좌표→주소 */
 function showAddr(ll) {
   const la = ll.getLat(), lo = ll.getLng(), seq = ++addrSeq;
-  S.base = { la, lo, addr: '이 위치', sub: '' };
+  if (S.query && distM(S.query.la, S.query.lo, la, lo) > 30) S.query = null;   // 핀을 옮기면 찾아온 장소가 아니다
+  const name = S.query ? S.query.name : '';
+  S.base = { la, lo, addr: '이 위치', name };
   $('#pin-sub').textContent = S.mode === 'gps' && S.gps
     ? `내 위치에서 ${Math.round(distM(S.gps.la, S.gps.lo, la, lo))}m · 오차 약 ${Math.round(S.gps.acc)}m`
     : '핀을 옮기면 주소가 바뀌어요';
@@ -256,9 +258,10 @@ function showAddr(ll) {
     if (seq !== addrSeq) return;                                  // 지도를 계속 움직인 경우 늦게 온 답은 버린다
     if (st !== kakao.maps.services.Status.OK || !res.length) { $('#pin-addr').textContent = '주소를 찾지 못했어요'; return; }
     const r = res[0], a = (r.road_address && r.road_address.address_name) || (r.address && r.address.address_name) || '';
-    $('#pin-addr').textContent = a ? `${a} 근처` : '주소를 찾지 못했어요';
-    $('#pin-q').textContent = a ? shortAddr(a) : '주소 · 건물 이름으로 찾기';
-    S.base = { la, lo, addr: a || '이 위치', sub: (r.road_address && r.road_address.building_name) || '' };
+    $('#pin-addr').textContent = name ? esc(name) : (a ? `${a} 근처` : '주소를 찾지 못했어요');
+    $('#pin-sub2') && ($('#pin-sub2').textContent = '');
+    $('#pin-q').textContent = name || (a ? shortAddr(a) : '주소 · 건물 이름으로 찾기');
+    S.base = { la, lo, addr: a || '이 위치', name };
   });
 }
 
@@ -346,8 +349,10 @@ const nameCore = (s) => String(s || '').replace(/\(.*?\)/g, '')
 function isQueryHit(rec, m) {
   if (!S.query || m > 300) return false;
   const a = nameCore(rec.n), b = nameCore(S.query.name);
-  return a.length >= 2 && b.length >= 2 && (a.includes(b) || b.includes(a));
-}
+  if (a.length < 2 || b.length < 2) return false;
+  if (a.includes(b)) return true;                    // 화장실 이름이 검색한 이름을 품는다 → 확실(서울역 → 서울역(4호선))
+  return b.includes(a) && a.length >= 4;             // 반대 방향은 4자 이상일 때만
+}                                                    // (T19: '상인공영주차장 화장실'의 '상인'이 '롯데백화점 상인점'에 들어가 오답)
 
 /* ── 카드 내용 ─────────────────────────── */
 const ymdStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -497,12 +502,17 @@ async function showList() {
   const hits = (S.query ? withD.filter((x) => isQueryHit(x.r, x.m)) : []).slice(0, 6);   // 너무 많으면 목록이 밀린다
   const hitIds = new Set(hits.map((x) => x.r.id));
   let shown = inR(S.radius, S.openOnly).filter((x) => !hitIds.has(x.r.id));
+  const near1 = withD[0];
   const hitHtml = hits.length
     ? `<div class="secline">찾으신 곳 · ${esc(S.query.name)}</div>`
       + hits.map((x) => cardHtml(x.r, x.m, now)).join('')
       + `<div class="secline">둘레 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</div>`
-    : '';
-  const head = `<div class="basebar"><b>📍 ${esc(shortAddr(base.addr))}<span class="r">이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
+    : (S.query
+      ? `<div class="nohit"><b>${esc(S.query.name)}에는 등록된 화장실이 없어요</b>
+          백화점·마트·사무실 같은 민간 건물은 <b>지자체에 신고된 곳만</b> 공공데이터에 들어옵니다.
+          ${near1 ? `가장 가까운 곳은 <b>${near1.m < 1000 ? `${Math.round(near1.m)}m` : `${(near1.m / 1000).toFixed(1)}km`}</b> 앞입니다.` : ''}</div>`
+      : '');
+  const head = `<div class="basebar"><b>📍 ${esc(base.name || shortAddr(base.addr))}<span class="r">${base.name ? `${esc(shortAddr(base.addr))} · ` : ''}이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
     <div class="chips"><span class="chip${S.openOnly ? ' on' : ''}" id="c-open">지금 열림</span>
       ${[300, 500, 1000].map((r) => `<span class="chip${S.radius === r ? ' on' : ''}" data-r="${r}">${r < 1000 ? `${r}m` : '1km'}</span>`).join('')}</div>`;
   const foot = `<div class="foot">출처 행정안전부 공중화장실정보(공공데이터포털) · 기준일 ${idx.date}<br>
