@@ -228,6 +228,10 @@ def main():
                 seen[sig] = rec
         tiles[key] = list(seen.values())
 
+    gov = ROOT / 'data' / 'gov_sites.json'                    # 오류 신고 안내용 시군구 홈페이지 — 앱이 읽는다
+    if gov.exists():
+        OUT.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(gov, OUT / 'gov_sites.json')
     if (OUT / 't').exists():
         shutil.rmtree(OUT / 't')                              # 칸 파일만 새로 쓴다 — holidays.json 등 다른 앱 파일은 둔다(T15)
     (OUT / 't').mkdir(parents=True, exist_ok=True)

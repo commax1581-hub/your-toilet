@@ -26,6 +26,7 @@ const S = {                      // 화면 상태(저장하지 않음)
   query: null,                   // 검색으로 고른 장소 {name, la, lo}
   openOnly: true,                // 기본은 "지금 열림"만
   index: null,
+  detail: null,                  // 상세로 연 곳
   holidays: new Set(),
   tiles: new Map(),
 };
@@ -459,7 +460,7 @@ function sumFac(list) {
 function cardHtml(rec, m, now) {
   const k = KINDS[rec.t] || KINDS[0], st = statePill(rec, now);
   const shut = st.s.k === 'closed';
-  return `<div class="card${shut ? ' shut' : ''}">
+  return `<div class="card${shut ? ' shut' : ''}" data-id="${rec.id}" data-m="${Math.round(m)}" role="button" tabindex="0">
     <div class="h"><div class="grow" style="min-width:0"><div class="n">${esc(rec.n)}</div><div class="adr">${esc(shortAddr(rec.a))}</div></div>${distHtml(m)}</div>
     <div class="meta"><span class="pill ${k.c}"><svg><use href="${k.i}"/></svg>${k.l}</span>${st.html}${accBadge(rec)}</div>
     ${facRow(rec)}${notice(rec, st.s)}</div>`;
@@ -517,6 +518,11 @@ async function showList() {
       </div>
       ${wider ? `<button class="btn main" id="b-wide">${wider < 1000 ? `${wider}m` : `${wider / 1000}km`}까지 넓혀 보기</button>` : ''}
       ${S.openOnly && all ? '<button class="btn ghost" style="margin-top:8px" id="b-all">닫힌 곳·시간 확인 필요 포함</button>' : ''}` + foot;
+    const byId0 = new Map(withD.map((x) => [x.r.id, x]));
+    body.querySelectorAll('.card[data-id]').forEach((c) => (c.onclick = () => {
+      const x = byId0.get(c.dataset.id);
+      if (x) openDetail(x.r, x.m);
+    }));
     if (wider) $('#b-wide').onclick = () => { S.radius = wider; showList(); };
     if ($('#b-all')) $('#b-all').onclick = () => { S.openOnly = false; showList(); };
   } else {
@@ -533,6 +539,12 @@ async function showList() {
       + (S.openOnly && hidden ? `<button class="btn ghost" id="b-all">닫힌 곳·시간 확인 필요 ${hidden}곳 보기</button>` : '')
       + foot;
     if ($('#b-all')) $('#b-all').onclick = () => { S.openOnly = false; showList(); };
+    // 카드를 누르면 상세로 (묶음 카드는 펼치기)
+    const byId = new Map(withD.map((x) => [x.r.id, x]));
+    body.querySelectorAll('.card[data-id]').forEach((c) => (c.onclick = () => {
+      const x = byId.get(c.dataset.id);
+      if (x) openDetail(x.r, x.m);
+    }));
     body.querySelectorAll('[data-g]').forEach((c) => (c.onclick = () => {
       const on = $(`#kids-${c.dataset.g}`).classList.toggle('on');
       c.querySelector('.more2').textContent = on ? '접기 ›' : '펼쳐 보기 ›';

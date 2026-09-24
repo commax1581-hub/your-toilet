@@ -200,3 +200,30 @@ html[data-size] .card .n{white-space:normal;display:-webkit-box;-webkit-line-cla
 .basebar button{min-height:44px}
 .search .go{min-height:40px}
 .sug{min-height:56px}
+
+/* ── 상세 ─────────────────────────────── */
+.dhead{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:4px}
+.dn{font-size:1.375rem;font-weight:800;line-height:1.3}
+.da{color:var(--sub);font-size:0.8125rem;margin-top:4px}
+.dm{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-weight:800;font-size:0.9375rem}
+.dm svg{width:1.125rem;height:1.125rem;color:var(--brand)}
+.dnote{background:var(--soft);border-left:4px solid var(--brand);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:0.8125rem;color:var(--sub);line-height:1.6}
+.dnote>b:first-child{display:block;color:var(--ink);font-size:0.875rem;margin-bottom:3px}
+.dnote b{color:var(--ink)}
+.dsec{margin:18px 0}
+.dsec h3{font-size:0.9375rem;margin:0 0 10px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fbox{border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+.fbox svg{width:2.75rem;height:2.75rem}
+.fbox .fl{font-size:0.75rem;color:var(--sub)}
+.fbox .fn{font-weight:800;font-size:0.875rem}
+.fbox.off{opacity:.4}
+.dtime{border:1px solid var(--line);border-radius:14px;padding:12px}
+.dtime .raw{margin-top:8px;font-size:0.8125rem;color:var(--sub)}
+.dbtns{display:flex;flex-direction:column;gap:8px}
+.dbtns .btn{text-decoration:none;min-height:48px}
+.dsub{font-size:0.75rem;color:var(--sub);margin-top:8px;line-height:1.6}
+.dorg{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;padding:12px}
+.dorg .btn{width:auto;text-decoration:none;min-height:44px;padding:10px 14px}
+.dfix{background:var(--soft);border-radius:12px;padding:12px;margin-top:10px;font-size:0.8125rem;line-height:1.7}
+.dfix a{color:var(--brand)}
