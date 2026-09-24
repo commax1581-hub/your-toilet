@@ -291,8 +291,27 @@ function showSug(list, q) {
       건물·역·공원 이름이나 <b>도로명 주소</b>로 찾아 보세요. 예) 서울역, 여의도 한강공원, 세종대로 110</div>`;
     return;
   }
-  box.innerHTML = list.map((p, i) => `<button class="sug" data-i="${i}"><b>${esc(p.name)}</b><span>${p.cat ? `${esc(p.cat)} · ` : ''}${esc(p.addr)}</span></button>`).join('');
+  box.innerHTML = list.map((p, i) => `<button class="sug" data-i="${i}"><b>${esc(p.name)}</b>
+    <span>${p.cat ? `${esc(p.cat)} · ` : ''}${esc(p.addr)}</span>
+    <span class="wc" id="wc-${i}">화장실 확인 중…</span></button>`).join('');
   box.querySelectorAll('.sug').forEach((b) => (b.onclick = () => pickPlace(list[+b.dataset.i])));
+  markToilets(list);                                   // 결과를 먼저 띄우고, 화장실 정보는 뒤이어 채운다
+}
+
+/** 검색 결과마다 "그 자리에 등록된 화장실"을 붙인다(120m 안).
+    고르기 전에 알 수 있어야 한다 — 골라 들어간 뒤에야 없다고 알려 주면 헛걸음이다. */
+async function markToilets(list) {
+  await Promise.all(list.map(async (p, i) => {
+    const el = $(`#wc-${i}`);
+    if (!el) return;
+    try {
+      const recs = await nearby(p.la, p.lo);
+      const near = recs.map((r) => ({ r, m: distM(p.la, p.lo, r.la, r.lo) })).filter((x) => x.m <= 120).sort((a, b) => a.m - b.m);
+      if (!near.length) { el.className = 'wc none'; el.textContent = '120m 안에 등록된 화장실 없음'; return; }
+      el.className = 'wc yes';
+      el.textContent = `🚻 ${near[0].r.n}${near.length > 1 ? ` 외 ${near.length - 1}곳` : ''}`;
+    } catch (e) { el.textContent = ''; }
+  }));
 }
 
 async function doSearch(q, auto) {

@@ -94,7 +94,10 @@ button{font-family:inherit}
 .search .go{flex:none;border:0;background:var(--brand-grad);color:#fff;font-weight:800;font-size:0.8125rem;border-radius:9px;padding:7px 12px;cursor:pointer}
 .sug{border-bottom:1px solid var(--line);padding:11px 2px;cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left}
 .sug b{display:block;font-size:0.9375rem}
-.sug span{font-size:0.75rem;color:var(--sub)}
+.sug span{display:block;font-size:0.75rem;color:var(--sub)}
+.sug .wc{margin-top:3px;font-weight:700}
+.sug .wc.yes{color:var(--open)}
+.sug .wc.none{color:var(--sub);opacity:.75}
 
 /* ⑤ 목록 */
 .basebar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px 10px 10px 12px;margin-bottom:8px}

@@ -72,7 +72,6 @@ function openDetail(rec, m) {
     roadview: `https://map.kakao.com/link/roadview/${ll}`,
     place: rec.p ? `https://place.map.kakao.com/${rec.p}` : `https://map.kakao.com/link/map/${enc(rec.n)},${ll}`,
     google: `https://www.google.com/maps/search/?api=1&query=${ll}`,
-    streetview: `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${ll}`,
     naverMap: `https://map.naver.com/p/search/${enc(rec.n + ' ' + rec.a)}`,
   };
   $('#dt-s').textContent = `${hhmm(now)} 기준 · 공공데이터 ${S.index.date}`;
@@ -101,13 +100,13 @@ function openDetail(rec, m) {
         <a class="btn ghost" href="${L.naverMap}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>네이버 지도</a>
         <a class="btn ghost" href="${L.google}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>구글 지도</a>
       </div>
+      <div class="dsub">구글 지도는 국내 장소 이름을 갖고 있지 않아 <b>좌표로 표시</b>됩니다(위치는 정확합니다).</div>
     </div>
     <div class="dsec"><h3>입구 확인 (로드뷰)</h3>
       <div class="dbtns">
         <a class="btn ghost" href="${L.roadview}" target="_blank" rel="noopener"><svg><use href="#i-eye"/></svg>카카오 로드뷰</a>
-        <a class="btn ghost" href="${L.streetview}" target="_blank" rel="noopener"><svg><use href="#i-eye"/></svg>구글 스트리트뷰</a>
       </div>
-      <div class="dsub">네이버 거리뷰는 <b>좌표로 바로 여는 방법이 없어</b>(파노라마 고유 번호로만 열림) 넣지 못했습니다. 네이버 지도를 연 뒤 거리뷰를 눌러 주세요. 구글 스트리트뷰는 국내에 없는 곳이 많습니다.</div>
+      <div class="dsub">국내 로드뷰는 카카오가 가장 넓습니다. 네이버 거리뷰는 <b>좌표로 바로 여는 방법이 없고</b>(파노라마 고유 번호로만 열림), 구글 스트리트뷰는 <b>국내에 없는 곳이 많아</b>(검은 화면) 넣지 않았습니다.</div>
     </div>
     <div class="dsec"><h3>관리기관</h3>
       <div class="dorg"><b>${esc(rec.o || '표기 없음')}</b>
