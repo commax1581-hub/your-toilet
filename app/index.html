@@ -10,6 +10,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script>
+  /* 저장된 보기 설정을 그리기 전에 입힌다(깜빡임 방지). 기기 설정을 따르는 것이 기본. */
+  try {
+    var t = localStorage.getItem('theme') || 'auto', z = localStorage.getItem('size') || 'normal';
+    var dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    if (z !== 'normal') document.documentElement.dataset.size = z;
+  } catch (e) {}
+</script>
 </head>
 <body>
 
@@ -36,6 +45,7 @@
   <!-- ① 첫 화면 — 지금 어디세요? -->
   <section class="screen on" id="s-home">
     <div class="scrim"></div>
+    <button class="setbtn" id="b-set" aria-label="보기 설정">⚙</button>
     <div class="h-title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
     <div class="h-bottom">
       <div class="ask">지금 어디세요?</div>
@@ -102,6 +112,31 @@
     </div>
     <div class="body" id="list-body"></div>
   </section>
+
+  <!-- 보기 설정 — 어두운 모드·글씨 크기 -->
+  <div class="sheet" id="s-set">
+    <div class="dim" data-close></div>
+    <div class="panel">
+      <h2>보기 설정</h2>
+      <div class="grp">
+        <b>화면</b>
+        <div class="segs" id="seg-theme">
+          <button data-v="light">밝게</button>
+          <button data-v="dark">어둡게</button>
+          <button data-v="auto">기기 설정<span class="sm">자동</span></button>
+        </div>
+      </div>
+      <div class="grp">
+        <b>글씨 크기</b>
+        <div class="segs" id="seg-size">
+          <button data-v="normal">보통</button>
+          <button data-v="big">크게<span class="sm">+12%</span></button>
+          <button data-v="huge">아주 크게<span class="sm">+25%</span></button>
+        </div>
+      </div>
+      <button class="btn main" data-close>닫기</button>
+    </div>
+  </div>
 
 </div>
 

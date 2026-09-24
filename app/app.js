@@ -55,12 +55,41 @@ window.addEventListener('popstate', (e) => go((e.state && e.state.s) || 'home', 
 document.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => go(b.dataset.go)));
 document.querySelectorAll('[data-back]').forEach((b) => (b.onclick = () => history.back()));
 
-/* ── 첫 화면: 지금 시각으로 배경 (낮 06~17 · 저녁 17~20 · 밤 20~06) ── */
-(function background() {
+/* ── 첫 화면 배경: 지금 시각(낮 06~17 · 저녁 17~20 · 밤 20~06). 어두운 모드면 밤 그림 ── */
+function background(dark) {
   const h = new Date().getHours();
-  const f = h >= 6 && h < 17 ? 'bg_day_blue_1080.webp' : h >= 17 && h < 20 ? 'bg_evening_1080.webp' : 'bg_night_1080.webp';
+  const f = dark ? 'bg_night_1080.webp'
+    : h >= 6 && h < 17 ? 'bg_day_blue_1080.webp' : h >= 17 && h < 20 ? 'bg_evening_1080.webp' : 'bg_night_1080.webp';
   $('#s-home').style.backgroundImage = `url(img/${f})`;
-})();
+}
+
+
+/* ── 보기 설정 — 어두운 모드·글씨 크기 ─────────
+   설정만 저장한다(위치는 저장하지 않는다). 기본은 기기 설정을 따름. */
+const PREF = {
+  get(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+
+function applyPrefs() {
+  const t = PREF.get('theme', 'auto'), z = PREF.get('size', 'normal');
+  const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  if (z === 'normal') delete document.documentElement.dataset.size;
+  else document.documentElement.dataset.size = z;
+  document.querySelector('meta[name=theme-color]').setAttribute('content', dark ? '#0f141a' : '#4338ca');
+  background(dark);                                     // 어두운 모드면 첫 화면도 밤 그림으로
+  $('#seg-theme').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === t));
+  $('#seg-size').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === z));
+  if (map) setTimeout(() => map.relayout(), 0);
+}
+
+$('#b-set').onclick = () => $('#s-set').classList.add('on');
+document.querySelectorAll('#s-set [data-close]').forEach((b) => (b.onclick = () => $('#s-set').classList.remove('on')));
+$('#seg-theme').onclick = (e) => { const b = e.target.closest('button[data-v]'); if (b) { PREF.set('theme', b.dataset.v); applyPrefs(); } };
+$('#seg-size').onclick = (e) => { const b = e.target.closest('button[data-v]'); if (b) { PREF.set('size', b.dataset.v); applyPrefs(); if (S.screen === 'list') showList(); } };
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (PREF.get('theme', 'auto') === 'auto') applyPrefs(); });
+applyPrefs();
 
 function homeMsg(t) {
   const el = $('#home-msg');
@@ -473,7 +502,8 @@ async function showList() {
       + `<div class="secline">둘레 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</div>`
     : '';
   const head = `<div class="basebar"><b>📍 ${esc(shortAddr(base.addr))}<span class="r">이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
-    <div class="chips"><span class="chip${S.openOnly ? ' on' : ''}" id="c-open">지금 열림</span></div>`;
+    <div class="chips"><span class="chip${S.openOnly ? ' on' : ''}" id="c-open">지금 열림</span>
+      ${[300, 500, 1000].map((r) => `<span class="chip${S.radius === r ? ' on' : ''}" data-r="${r}">${r < 1000 ? `${r}m` : '1km'}</span>`).join('')}</div>`;
   const foot = `<div class="foot">출처 행정안전부 공중화장실정보(공공데이터포털) · 기준일 ${idx.date}<br>
     실제와 다를 수 있습니다. 시설 상태·개방 시간은 관리기관에 확인해 주세요.<br>
     <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터 오류 신고</a></div>`;
@@ -510,6 +540,7 @@ async function showList() {
   }
   $('#b-change').onclick = () => go(S.mode === 'gps' ? 'pin' : 'pin');
   $('#c-open').onclick = () => { S.openOnly = !S.openOnly; showList(); };
+  body.querySelectorAll('.chip[data-r]').forEach((c) => (c.onclick = () => { S.radius = +c.dataset.r; showList(); }));   // 목록에서 바로 반경 바꾸기
   body.scrollTop = 0;
 }
 
