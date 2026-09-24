@@ -112,9 +112,26 @@
     <div class="bar">
       <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
       <div class="grow"><div class="t">가까운 화장실</div><div class="s" id="list-s"></div></div>
+      <button class="home" id="b-map">🗺 지도</button>
       <button class="home" data-go="home">🏠 처음</button>
     </div>
     <div class="body" id="list-body"></div>
+  </section>
+
+  <!-- ⑦ 지도 보기 -->
+  <section class="screen" id="s-map">
+    <div class="bar">
+      <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+      <div class="grow"><div class="t">지도로 보기</div><div class="s" id="map-s"></div></div>
+      <button class="home" id="b-list">☰ 목록</button>
+      <button class="home" data-go="home">🏠 처음</button>
+    </div>
+    <div class="mapwrap">
+      <div id="map2"></div>
+      <button class="again" id="b-again" hidden>이 지역에서 다시 찾기</button>
+      <button class="gpsbtn map" id="b-recenter" aria-label="기준 위치로"><svg><use href="#i-gps"/></svg></button>
+      <div class="mapcards" id="mapcards"></div>
+    </div>
   </section>
 
   <!-- ⑥ 상세 -->
@@ -158,5 +175,6 @@
 <script src="hours.js"></script>
 <script src="app.js"></script>
 <script src="detail.js"></script>
+<script src="mapview.js"></script>
 </body>
 </html>

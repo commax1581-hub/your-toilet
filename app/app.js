@@ -29,6 +29,7 @@ const S = {                      // 화면 상태(저장하지 않음)
   detail: null,                  // 상세로 연 곳
   holidays: new Set(),
   tiles: new Map(),
+  groups: [],                    // 지도에 그릴 묶음
 };
 let map = null, geocoder = null, places = null, gpsMark = null, gpsCircle = null, addrSeq = 0;
 
@@ -550,8 +551,8 @@ function groupHtml(list, m, now, gi) {
 }
 
 /* ── 목록 ─────────────────────────────── */
-async function showList() {
-  go('list');
+async function showList(quiet) {
+  if (!quiet) go('list');
   const body = $('#list-body');
   body.innerHTML = '<div class="loading">가까운 곳을 찾는 중…</div>';
   const now = new Date(), base = S.base;
@@ -585,6 +586,15 @@ async function showList() {
                  그 안에 있는 화장실이 <b>다른 이름으로</b> 등록돼 있을 수 있습니다 — 아래 목록을 봐 주세요.`}
           ${near1 ? `<br>가장 가까운 곳은 <b>${near1.m < 1000 ? `${Math.round(near1.m)}m` : `${(near1.m / 1000).toFixed(1)}km`}</b> 앞입니다.` : ''}</div>`
       : '');
+  const forMap = hits.concat(shown);                     // 지도는 "찾으신 곳"까지 한 덩어리로 본다
+  const gmap = new Map();
+  for (const x of forMap) {
+    const key = `${x.r.la},${x.r.lo}`;
+    if (!gmap.has(key)) gmap.set(key, { m: x.m, list: [] });
+    gmap.get(key).list.push(x.r);
+  }
+  S.groups = [...gmap.values()];
+
   const head = `<div class="basebar"><b>📍 ${esc(base.name || shortAddr(base.addr))}<span class="r">${base.name ? `${esc(shortAddr(base.addr))} · ` : ''}이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
     <div class="chips"><span class="chip${S.openOnly ? ' on' : ''}" id="c-open">지금 열림</span>
       ${[300, 500, 1000].map((r) => `<span class="chip${S.radius === r ? ' on' : ''}" data-r="${r}">${r < 1000 ? `${r}m` : '1km'}</span>`).join('')}</div>`;

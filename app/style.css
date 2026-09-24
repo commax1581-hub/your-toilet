@@ -172,7 +172,8 @@ button{font-family:inherit}
 :root[data-theme="dark"] .pill.opn{background:transparent}
 :root[data-theme="dark"] .gpsbtn{color:#7aa2ff}
 :root[data-theme="dark"] .mapwrap{background:#0b0f14}
-:root[data-theme="dark"] #map{filter:brightness(.88) contrast(1.02)}   /* 지도만 살짝 낮춰 눈부심을 줄인다 */
+:root[data-theme="dark"] #map,
+:root[data-theme="dark"] #map2{filter:brightness(.88) contrast(1.02)}   /* 지도만 살짝 낮춰 눈부심을 줄인다 */
 :root[data-theme="dark"] .addrbox,
 :root[data-theme="dark"] .bar{background:var(--paper)}
 :root[data-theme="dark"] .gbox{background:rgba(22,29,38,.55);border-color:rgba(255,255,255,.28)}
@@ -236,3 +237,26 @@ html[data-size] .card .n{white-space:normal;display:-webkit-box;-webkit-line-cla
 .nohit b{display:block;font-size:0.9375rem;margin-bottom:4px}
 .nohit b+b,.nohit b:not(:first-child){display:inline;font-size:inherit;margin:0}
 :root[data-theme="dark"] .nohit{background:#3a2a10;border-color:#5a4520;color:#fbd38d}
+
+/* ── 지도로 보기 ─────────────────────────── */
+#map2{position:absolute;inset:0}
+.mpin{display:flex;align-items:center;gap:2px;padding:5px 8px;border-radius:999px;color:#fff;font-weight:800;font-size:0.75rem;
+  box-shadow:0 2px 8px rgba(10,20,40,.35);cursor:pointer;transform:translateY(0);transition:transform .1s}
+.mpin svg{width:0.9375rem;height:0.9375rem}
+.mpin.pub{background:var(--pub)}
+.mpin.opn{background:var(--paper);color:var(--opn);border:2px solid var(--opn)}
+.mpin.shut{opacity:.5}
+.mpin.on{transform:scale(1.25);box-shadow:0 4px 14px rgba(10,20,40,.5);z-index:5}
+.again{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:6;border:0;border-radius:999px;padding:11px 16px;min-height:44px;
+  background:var(--brand-grad);color:#fff;font-weight:800;font-size:0.8125rem;font-family:inherit;box-shadow:0 4px 14px rgba(67,56,202,.35);cursor:pointer}
+.gpsbtn.map{position:absolute;right:14px;top:auto;bottom:calc(150px + var(--safe-b));z-index:6}
+.mapcards{position:absolute;left:0;right:0;bottom:calc(10px + var(--safe-b));z-index:5;display:flex;gap:10px;overflow-x:auto;
+  scroll-snap-type:x mandatory;padding:0 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.mapcards::-webkit-scrollbar{display:none}
+.mcard{flex:0 0 calc(100% - 44px);scroll-snap-align:center;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:11px 12px;
+  box-shadow:0 6px 18px rgba(15,32,43,.18);cursor:pointer}
+.mcard .h{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.mcard .h b{font-size:0.9375rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mcard .d{font-weight:800;white-space:nowrap}
+.mcard .a{font-size:0.75rem;color:var(--sub);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mcard .meta{margin-top:6px}
