@@ -12,7 +12,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=16212789">
+<link rel="stylesheet" href="style.css?v=9fec0d08">
 <script>
   /* 저장된 보기 설정을 그리기 전에 입힌다(깜빡임 방지). 기기 설정을 따르는 것이 기본. */
   try {
@@ -71,6 +71,7 @@
         </button>
       </div>
       <div class="msg" id="home-msg"></div>
+      <button class="infolink" data-go="info">이 앱과 데이터 알아보기</button>
     </div>
   </section>
 
@@ -154,6 +155,73 @@
     <div class="body" id="detail-body"></div>
   </section>
 
+  <!-- ⑧ 알아보기 -->
+  <section class="screen" id="s-info">
+    <div class="bar">
+      <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+      <div class="grow"><div class="t">알아보기</div><div class="s" id="info-s"></div></div>
+      <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+    </div>
+    <div class="body info">
+      <h3>이 앱은</h3>
+      <p>행정안전부 <b>공중화장실정보</b>(공공데이터포털)로, 지금 있는 자리에서 <b>가장 가까운 공중·개방화장실</b>을 찾아 줍니다. 비영리 개인 제작이며 공식 서비스가 아닙니다.</p>
+
+      <h3>무엇을 보여 주나</h3>
+      <table>
+        <tr><td><span class="pill pub"><svg><use href="#i-public"/></svg>공중</span></td><td>지자체가 만들고 관리하는 화장실</td></tr>
+        <tr><td><span class="pill opn"><svg><use href="#i-opendoor"/></svg>개방</span></td><td>관공서·건물·상가가 <b>열어 준</b> 화장실</td></tr>
+        <tr><td><span class="pill opn"><svg><use href="#i-opendoor"/></svg>간이</span></td><td>공원·행사장의 간이 화장실</td></tr>
+        <tr><td><span class="pill opn"><svg><use href="#i-opendoor"/></svg>이동식</span></td><td>자리가 바뀔 수 있는 이동식</td></tr>
+      </table>
+      <p class="dim"><b>보여 주지 않는 것</b> — 미개방으로 적힌 곳, 학교·유치원·어린이집, 위치를 믿을 수 없는 곳(동·리 중심점만 있거나 좌표를 못 찾은 곳). <b>급할 때 못 찾는 것이 가장 나쁘다</b>고 보아 숨겼습니다.</p>
+
+      <h3>그림 뜻</h3>
+      <div class="legend">
+        <span><svg style="color:var(--male)"><use href="#i-male"/></svg>남성</span>
+        <span><svg style="color:var(--female)"><use href="#i-female"/></svg>여성</span>
+        <span><svg style="color:var(--acc)"><use href="#i-acc"/></svg>장애인</span>
+        <span><svg style="color:var(--baby)"><use href="#i-child"/></svg>어린이</span>
+        <span><svg style="color:var(--baby)"><use href="#i-diaper"/></svg>기저귀 교환대</span>
+        <span><svg style="color:var(--open)"><use href="#i-bell"/></svg>비상벨</span>
+        <span><svg style="color:var(--acc)"><use href="#i-cctv"/></svg>입구 CCTV</span>
+      </div>
+      <p class="dim">숫자는 변기 수입니다. 흐린 그림은 <b>공공데이터에 적혀 있지 않다</b>는 뜻이지 없다는 뜻이 아닙니다. 여성 칸이 <b>?</b>면 남녀 공용 한 칸일 수 있습니다.</p>
+
+      <h3>시간 표시</h3>
+      <table>
+        <tr><td><span class="st open">상시</span></td><td>24시간 열림</td></tr>
+        <tr><td><span class="st open">22시까지</span></td><td>그 시각에 닫힘</td></tr>
+        <tr><td><span class="st soon">곧 닫힘</span></td><td>30분 안에 닫힘</td></tr>
+        <tr><td><span class="st ask">시간 확인</span></td><td>"근무시간"처럼 적혀 있어 지금 열렸는지 알 수 없음</td></tr>
+        <tr><td><span class="st ask">공휴일 확인</span></td><td>관공서·사무실은 공휴일·주말에 닫혀 있을 수 있음(원본에 공휴일 표기가 거의 없습니다)</td></tr>
+      </table>
+
+      <h3>위치 정확도</h3>
+      <table>
+        <tr><td>표시 없음</td><td>주소로 <b>건물·번지</b>를 찾은 곳 — 가장 믿을 만합니다</td></tr>
+        <tr><td><span class="acc2 lv3"><svg><use href="#i-build"/></svg>시설 위치</span></td><td>주소가 부실해 <b>시설 이름</b>으로 찾은 곳(두 지도에서 일치). 시설 안 어디인지는 알 수 없습니다</td></tr>
+        <tr><td><span class="acc2 lv4"><svg><use href="#i-q"/></svg>추정</span></td><td>한 곳에서만 찾은 위치 — <b>실제와 다를 수 있습니다</b></td></tr>
+      </table>
+
+      <h3>데이터의 한계</h3>
+      <ul>
+        <li><b>역 화장실이 적습니다.</b> 역 화장실은 운영기관(코레일·교통공사)이 관리해 지자체 목록에서 빠지는 일이 잦습니다. 같은 도시에서도 역마다 다릅니다.</li>
+        <li><b>백화점·마트 같은 민간 건물</b>은 신고된 곳만 들어옵니다. 실제로는 있어도 목록에 없을 수 있습니다.</li>
+        <li><b>정보가 오래된 곳</b>이 있습니다. 지자체가 적은 기준 연도를 상세에서 보여 줍니다.</li>
+        <li>구글 지도는 국내에서 <b>도보 길찾기</b>를 제공하지 않고 장소 이름도 없어 좌표로 열립니다. 네이버 거리뷰는 링크로 바로 열 수 없습니다.</li>
+      </ul>
+
+      <h3>위치와 개인정보</h3>
+      <p>위치는 <b>이 화면에서 찾는 데만</b> 씁니다 — 저장하지도, 어디로 보내지도 않습니다. 저장하는 것은 <b>보기 설정</b>(밝게/어둡게·글씨 크기)뿐입니다.</p>
+
+      <h3>정보가 틀렸다면</h3>
+      <p>원본은 각 지자체가 관리합니다. 상세 화면 아래의 <b>관리기관 전화</b>·<b>시군구 홈페이지</b>·<b>공공데이터포털 오류 신고</b>로 알려 주시면 고쳐집니다.</p>
+
+      <p class="dim">출처 행정안전부 공중화장실정보(공공데이터포털) · 배경 그림은 AI로 만들었습니다 · 지도 카카오맵<br>
+      실제와 다를 수 있습니다. 시설 상태·개방 시간은 관리기관에 확인해 주세요.</p>
+    </div>
+  </section>
+
   <!-- 보기 설정 — 어두운 모드·글씨 크기 -->
   <div class="sheet" id="s-set">
     <div class="dim" data-close></div>
@@ -183,8 +251,8 @@
 
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6516210bcdd3c0a50b562ea3dedda4a3&libraries=services&autoload=false" onerror="window.__kakaoFail=true"></script>
 <script src="hours.js?v=f8a06c08"></script>
-<script src="app.js?v=233ed534"></script>
+<script src="app.js?v=be95a184"></script>
 <script src="detail.js?v=89bbe22e"></script>
-<script src="mapview.js?v=8e3c1a39"></script>
+<script src="mapview.js?v=15d681b5"></script>
 </body>
 </html>

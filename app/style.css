@@ -109,6 +109,8 @@ button{font-family:inherit}
 .chips{display:flex;gap:6px;overflow:auto;padding:2px 0 8px}
 .chip{flex:none;border:1px solid var(--line);border-radius:999px;padding:6px 11px;font-size:0.8125rem;background:var(--paper);white-space:nowrap;cursor:pointer}
 .chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:700}
+.chip.clear{border-color:var(--warn);color:var(--warn);font-weight:700}
+.chips+.chips{padding-top:0}
 .card{border:1px solid var(--line);border-radius:16px;padding:11px 12px;margin-bottom:8px;background:var(--paper);width:100%;text-align:left;cursor:pointer;display:block}
 .card.group{border-left:5px solid var(--brand)}
 .card.shut{background:#fbfcfd}
@@ -148,6 +150,7 @@ button{font-family:inherit}
 .empty svg{width:2.875rem;height:2.875rem;color:var(--sub)}
 .foot{font-size:0.6875rem;color:var(--sub);padding:14px 2px calc(20px + var(--safe-b));line-height:1.6}
 .foot a{color:var(--sub)}
+.linklike{background:none;border:0;color:var(--brand);font-family:inherit;font-size:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
 .loading{text-align:center;color:var(--sub);padding:30px 0}
 .radius[hidden]{display:none}
 
@@ -278,3 +281,19 @@ html[data-size] .card .n{white-space:normal;display:-webkit-box;-webkit-line-cla
 .mcard .d{font-weight:800;white-space:nowrap}
 .mcard .a{font-size:0.75rem;color:var(--sub);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mcard .meta{margin-top:6px}
+
+/* ── 알아보기 ─────────────────────────── */
+.infolink{display:block;width:100%;margin-top:10px;background:transparent;border:0;color:#fff;font-family:inherit;font-size:0.8125rem;
+  font-weight:700;text-shadow:0 1px 8px rgba(10,20,60,.6);text-decoration:underline;text-underline-offset:3px;cursor:pointer;min-height:44px}
+.info h3{font-size:1rem;margin:20px 0 8px}
+.info h3:first-child{margin-top:4px}
+.info p{margin:0 0 8px;font-size:0.875rem;line-height:1.75}
+.info p.dim{color:var(--sub);font-size:0.8125rem}
+.info ul{margin:0;padding-left:18px;font-size:0.875rem;line-height:1.8}
+.info li{margin-bottom:6px}
+.info table{width:100%;border-collapse:collapse;font-size:0.8125rem}
+.info td{border-bottom:1px solid var(--line);padding:9px 4px;vertical-align:top;line-height:1.6}
+.info td:first-child{white-space:nowrap;width:1%;padding-right:12px}
+.legend{display:flex;flex-wrap:wrap;gap:12px 16px;margin:4px 0 8px}
+.legend span{display:inline-flex;align-items:center;gap:5px;font-size:0.8125rem;font-weight:700}
+.legend svg{width:1.75rem;height:1.75rem}

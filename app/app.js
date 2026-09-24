@@ -25,6 +25,7 @@ const S = {                      // 화면 상태(저장하지 않음)
   radius: 500,
   query: null,                   // 검색으로 고른 장소 {name, la, lo}
   openOnly: true,                // 기본은 "지금 열림"만
+  f: { bell: 0, acc: 0, dp: 0, kid: 0, ft: '' },   // 안심·장애인·기저귀·어린이·시설 종류
   index: null,
   holidays: new Set(),
   tiles: new Map(),
@@ -414,6 +415,33 @@ $('#q').addEventListener('compositionend', (e) => {            // 한글 한 글
   searchTimer = setTimeout(() => doSearch(e.target.value, true), 350);
 });
 
+/* ── 거르기(필터) ───────────────────────────
+   급할 때 필요한 조건만 남겼다: 안심(비상벨)·장애인·기저귀·어린이 + 시설 종류.
+   조건은 "있는 것만 남기기"다 — 데이터에 없다고 없는 것은 아니므로(ni) 조건을 켜면 표기가 있는 곳만 보인다. */
+const FTYPES = ['공원', '역', '터미널', '관공서', '공공시설', '주유소', '시장·상가', '주차장·쉼터', '문화·관광', '체육', '병원·복지', '산', '바다', '하천', '대학', '종교', '민간시설'];
+
+function passFilter(r) {
+  const f = S.f;
+  if (f.bell && r.bl !== 1) return false;
+  if (f.acc && (r.x || [0, 0])[0] + (r.x || [0, 0])[1] <= 0) return false;
+  if (f.dp && r.dp !== 1) return false;
+  if (f.kid && (r.c || [0, 0])[0] + (r.c || [0, 0])[1] <= 0) return false;
+  if (f.ft && r.ft !== f.ft) return false;
+  return true;
+}
+const filterOn = () => !!(S.f.bell || S.f.acc || S.f.dp || S.f.kid || S.f.ft);
+const clearFilter = () => { S.f = { bell: 0, acc: 0, dp: 0, kid: 0, ft: '' }; };
+
+function chipRows() {
+  const c = (on, label, attr) => `<span class="chip${on ? ' on' : ''}" ${attr}>${label}</span>`;
+  return `<div class="chips">${c(S.openOnly, '지금 열림', 'id="c-open"')}
+      ${[300, 500, 1000].map((r) => c(S.radius === r, r < 1000 ? `${r}m` : '1km', `data-r="${r}"`)).join('')}</div>
+    <div class="chips">${c(S.f.bell, '안심', 'data-f="bell"')}${c(S.f.acc, '장애인', 'data-f="acc"')}
+      ${c(S.f.dp, '기저귀', 'data-f="dp"')}${c(S.f.kid, '어린이', 'data-f="kid"')}
+      ${filterOn() ? '<span class="chip clear" id="c-clear">거르기 끄기</span>' : ''}</div>
+    <div class="chips">${c(!S.f.ft, '모든 종류', 'data-ft=""')}${FTYPES.map((t) => c(S.f.ft === t, t, `data-ft="${t}"`)).join('')}</div>`;
+}
+
 /* ── 검색한 장소의 화장실 먼저 ─────────────
    이름으로 찾아온 사람에게는 그 장소가 답이다 — 묶음 규칙과 상관없이 맨 위에 따로 보여 준다.
    비교는 군더더기 말을 뺀 뒤 서로 포함하는지로 본다(같은 이름의 다른 지역을 집지 않게 300m 안만). */
@@ -589,7 +617,8 @@ async function showList(quiet) {
 
   // 거리 → 같은 좌표끼리 묶기
   const withD = recs.map((r) => ({ r, m: distM(base.la, base.lo, r.la, r.lo) })).sort((a, b) => a.m - b.m);
-  const inR = (radius, openOnly) => withD.filter((x) => x.m <= radius
+  const inR = (radius, openOnly, noFilter) => withD.filter((x) => x.m <= radius
+    && (noFilter || passFilter(x.r))
     && (!openOnly || ['open', 'soon'].includes(cardState(x.r, now).k)));
 
   // 검색한 장소의 화장실은 "지금 열림"과 상관없이 맨 위에(찾아온 목적지라 닫혀 있어도 알려 줘야 한다)
@@ -623,11 +652,11 @@ async function showList(quiet) {
   S.groups = [...gmap.values()];
 
   const head = `<div class="basebar"><b><svg class="ic"><use href="#i-pin"/></svg>${esc(base.name || shortAddr(base.addr))}<span class="r">${base.name ? `${esc(shortAddr(base.addr))} · ` : ''}이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
-    <div class="chips"><span class="chip${S.openOnly ? ' on' : ''}" id="c-open">지금 열림</span>
-      ${[300, 500, 1000].map((r) => `<span class="chip${S.radius === r ? ' on' : ''}" data-r="${r}">${r < 1000 ? `${r}m` : '1km'}</span>`).join('')}</div>`;
+    ${chipRows()}`;
   const foot = `<div class="foot">출처 행정안전부 공중화장실정보(공공데이터포털) · 기준일 ${idx.date}<br>
     실제와 다를 수 있습니다. 시설 상태·개방 시간은 관리기관에 확인해 주세요.<br>
-    <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터 오류 신고</a></div>`;
+    <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터 오류 신고</a>
+    · <button class="linklike" data-go2="info">알아보기</button></div>`;
 
   if (!shown.length) {
     const wider = [1000, 2000, 5000].find((r) => r > S.radius && inR(r, S.openOnly).length);
@@ -637,6 +666,7 @@ async function showList(quiet) {
         <div class="sub">${wider ? `${wider < 1000 ? `${wider}m` : `${wider / 1000}km`} 안에 ${inR(wider, S.openOnly).length}곳` : '가까운 곳에 등록된 화장실이 없습니다'}${S.openOnly && all ? ` · 닫힘·시간 확인 ${all - shown.length}곳` : ''}</div>
       </div>
       ${wider ? `<button class="btn main" id="b-wide">${wider < 1000 ? `${wider}m` : `${wider / 1000}km`}까지 넓혀 보기</button>` : ''}
+      ${filterOn() ? `<button class="btn ghost" style="margin-top:8px" id="b-clear2">거르기 끄면 ${inR(S.radius, S.openOnly, true).length}곳</button>` : ''}
       ${S.openOnly && all ? '<button class="btn ghost" style="margin-top:8px" id="b-all">닫힌 곳·시간 확인 필요 포함</button>' : ''}` + foot;
     const byId0 = new Map(withD.map((x) => [x.r.id, x]));
     body.querySelectorAll('.card[data-id]').forEach((c) => (c.onclick = () => {
@@ -670,9 +700,14 @@ async function showList(quiet) {
       c.querySelector('.more2').textContent = on ? '접기 ›' : '펼쳐 보기 ›';
     }));
   }
+  body.querySelectorAll('[data-go2]').forEach((b) => (b.onclick = () => go(b.dataset.go2)));
   $('#b-change').onclick = () => go(S.mode === 'gps' ? 'pin' : 'pin');
   $('#c-open').onclick = () => { S.openOnly = !S.openOnly; showList(); };
   body.querySelectorAll('.chip[data-r]').forEach((c) => (c.onclick = () => { S.radius = +c.dataset.r; showList(); }));   // 목록에서 바로 반경 바꾸기
+  body.querySelectorAll('.chip[data-f]').forEach((c) => (c.onclick = () => { S.f[c.dataset.f] = S.f[c.dataset.f] ? 0 : 1; showList(); }));
+  body.querySelectorAll('.chip[data-ft]').forEach((c) => (c.onclick = () => { S.f.ft = c.dataset.ft; showList(); }));
+  if ($('#c-clear')) $('#c-clear').onclick = () => { clearFilter(); showList(); };
+  if ($('#b-clear2')) $('#b-clear2').onclick = () => { clearFilter(); showList(); };
   body.scrollTop = 0;
 }
 
@@ -690,6 +725,16 @@ function refreshByTime() {
 }
 setInterval(refreshByTime, 5 * 60 * 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshByTime(); });
+
+/* 오프라인 준비 — 한 번 본 화면·지도 칸을 저장해 둔다(자세한 규칙은 sw.js) */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+
+loadIndex().then((idx) => {      // 알아보기 머리에 지금 데이터의 수치를 적는다
+  const el = $('#info-s');
+  if (el) el.textContent = `화장실 ${idx.toilets.toLocaleString()}곳 · 공공데이터 기준일 ${idx.date}`;
+});
 
 loadIndex();     // 첫 화면을 보는 동안 칸 목록을 미리 받아 둔다
 
