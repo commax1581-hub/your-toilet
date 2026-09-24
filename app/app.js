@@ -312,6 +312,7 @@ function accBadge(rec) {
 /** 카드 한 줄 안내(사례지식 2-13) */
 function notice(rec, st) {
   const n = [];
+  if (rec.h.ir) n.push("적힌 시각 기준(원본 표기 '불규칙') · <b>시간이 바뀔 수 있어요</b>");
   if (st && st.holi) n.push(`${st.holi === '주말' ? '주말' : '오늘은 공휴일'} · <b>닫혀 있을 수 있어요</b>`);
   if (rec.g === 'P') n.push(rec.pc ? '시설 위치 기준 · <b>입구·안내판 확인</b>' : '이름으로 찾은 위치 · <b>정확하지 않을 수 있어요</b>');
   else if (rec.w === 'M') n.push('산지에 있어요 · <b>주차장·입구 쪽</b>');

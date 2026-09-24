@@ -1,5 +1,6 @@
 """개방시간 해석 — 원본(개방시간 코드 + 개방시간상세 자유 입력)을 앱이 계산할 수 있는 구조로 바꾼다.
 공식 코드 뜻(행안부 점검표): 상시 = 24시간 개방 / 정시 = (00:00 ~ 00:00) 시각 기재 / 불규칙 / 미개방
+코드 '불규칙'이라도 상세에 시각이 또렷하면 그 시각을 따른다(2026-09-24 결정) — 담당자가 코드를 잘못 고른 경우가 많다. 앱은 'irregular'를 받아 "시간이 바뀔 수 있어요"로 고지한다.
 원칙: 애매하면 'unknown'(앱에 "시간 확인 필요") — 열렸다고 했는데 닫혀 있는 게 가장 나쁘다.
 
 parse(code, detail) → {
@@ -72,7 +73,7 @@ def parse(code, detail):
     s = norm(raw)
     if code == '미개방':
         return {'kind': 'closed', 'rules': [], 'holiday': None, 'breaks': [], 'reason': '미개방'}
-    if code == '불규칙':
+    if code == '불규칙' and not ranges(s):
         return {'kind': 'unknown', 'rules': [], 'holiday': None, 'breaks': [], 'reason': f'불규칙({raw})' if raw else '불규칙'}
     if re.fullmatch(r'\(?\s*미개방\s*\)?', s):
         return {'kind': 'closed', 'rules': [], 'holiday': None, 'breaks': [], 'reason': f'{code}인데 상세가 미개방 → 숨김(보수적으로)'}
@@ -118,7 +119,8 @@ def parse(code, detail):
     if not rules:
         return {'kind': 'unknown', 'rules': [], 'holiday': None, 'breaks': [], 'reason': f'읽지 못함({raw})'}
     return {'kind': 'hours', 'rules': rules, 'holiday': holiday, 'breaks': breaks,
-            'said': sorted(said - closed_days), 'reason': raw}
+            'said': sorted(said - closed_days), 'irregular': code == '불규칙',   # 코드는 '불규칙'인데 시각이 적힌 곳 → 적힌 시각을 따르되 앱에서 고지
+            'reason': (f'코드 불규칙 · 상세 시각 따름({raw})' if code == '불규칙' else raw)}
 
 
 def _min(hm):

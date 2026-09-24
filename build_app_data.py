@@ -70,6 +70,8 @@ def hours_compact(code, detail):
             h['hd'] = [[r['open'].replace(':', ''), r['close'].replace(':', '')] for r in p['holiday']]
         if p['breaks']:
             h['br'] = [[b['from'].replace(':', ''), b['to'].replace(':', '')] for b in p['breaks']]
+        if p.get('irregular'):
+            h['ir'] = 1                              # 원본 코드는 '불규칙' — 적힌 시각을 따르되 카드에 고지한다
         if p.get('said'):
             h['dw'] = days_mask(p['said'])           # 원문이 직접 말한 요일 — 앱이 주말·공휴일에 이 말을 우선한다
         short = any(((int(c[:2]) * 60 + int(c[2:])) - (int(o[:2]) * 60 + int(o[2:]))) % 1440 in range(1, 5) for _, o, c in h['r'])
