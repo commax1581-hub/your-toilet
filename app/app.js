@@ -32,6 +32,8 @@ let map = null, geocoder = null, places = null, gpsMark = null, gpsCircle = null
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+/** 기준 위치 줄에 쓸 짧은 주소 — 지금 있는 시·도 이름은 빼서 도로명·건물이 잘리지 않게 */
+const shortAddr = (a) => String(a || '').replace(/^(서울특별시|부산광역시|대구광역시|인천광역시|광주광역시|대전광역시|울산광역시|세종특별자치시|경기도|강원특별자치도|강원도|충청북도|충청남도|전북특별자치도|전라북도|전라남도|경상북도|경상남도|제주특별자치도|서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)\s+/, '');
 const hhmm = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
 /* ── 화면 전환 ───────────────────────────── */
@@ -361,7 +363,7 @@ function cardHtml(rec, m, now) {
   const k = KINDS[rec.t] || KINDS[0], st = statePill(rec, now);
   const shut = st.s.k === 'closed';
   return `<div class="card${shut ? ' shut' : ''}">
-    <div class="h"><div class="grow" style="min-width:0"><div class="n">${esc(rec.n)}</div><div class="adr">${esc(rec.a)}</div></div>${distHtml(m)}</div>
+    <div class="h"><div class="grow" style="min-width:0"><div class="n">${esc(rec.n)}</div><div class="adr">${esc(shortAddr(rec.a))}</div></div>${distHtml(m)}</div>
     <div class="meta"><span class="pill ${k.c}"><svg><use href="${k.i}"/></svg>${k.l}</span>${st.html}${accBadge(rec)}</div>
     ${facRow(rec)}${notice(rec, st.s)}</div>`;
 }
@@ -371,7 +373,7 @@ function groupHtml(list, m, now, gi) {
   const k = KINDS[list[0].t] || KINDS[0];
   const label = now_open ? `<span class="st open">${now_open}곳 열림</span>` : '<span class="st shut">닫힘</span>';
   return `<div class="card group" data-g="${gi}" role="button" tabindex="0">
-      <div class="h"><div class="grow" style="min-width:0"><div class="n">${esc(groupName(list))} · ${list.length}곳</div><div class="adr">${esc(list[0].a)}</div></div>${distHtml(m)}</div>
+      <div class="h"><div class="grow" style="min-width:0"><div class="n">${esc(groupName(list))} · ${list.length}곳</div><div class="adr">${esc(shortAddr(list[0].a))}</div></div>${distHtml(m)}</div>
       <div class="meta"><span class="pill ${k.c}"><svg><use href="${k.i}"/></svg>${k.l}</span>${label}</div>
       ${facRow(list[0], '<span class="more">펼쳐 보기 ›</span>')}
     </div>
@@ -394,7 +396,7 @@ async function showList() {
     && (!openOnly || ['open', 'soon'].includes(cardState(x.r, now).k)));
 
   let shown = inR(S.radius, S.openOnly);
-  const head = `<div class="basebar"><b>📍 ${esc(base.addr)} · ${S.radius < 1000 ? `${S.radius}m` : '1km'}</b><button id="b-change">바꾸기</button></div>
+  const head = `<div class="basebar"><b>📍 ${esc(shortAddr(base.addr))}<span class="r">이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
     <div class="chips"><span class="chip${S.openOnly ? ' on' : ''}" id="c-open">지금 열림</span></div>`;
   const foot = `<div class="foot">출처 행정안전부 공중화장실정보(공공데이터포털) · 기준일 ${idx.date}<br>
     실제와 다를 수 있습니다. 시설 상태·개방 시간은 관리기관에 확인해 주세요.<br>
