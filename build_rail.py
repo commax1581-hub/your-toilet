@@ -5,6 +5,7 @@
   python build_rail.py --report   지금 표의 상태만 보기
 
 좌표는 **카카오 장소검색(역명+노선, 지하철역·기차역 분류만)**으로 만든다.
+파일 목록에는 **중복이 있다**(노선별 파일 ⊂ 기관 전체 파일). 칸이 모두 같은 행을 지우고, 역명은 **부기를 뗀 이름**으로 묶는다.
 서울교통공사 파일에도 위경도가 있지만 **248행 중 53행(21%)이 주소와 2km 넘게 어긋나** 쓰지 않는다
 (예: 송정 5호선 — 주소는 서울 강서구인데 좌표는 충남 부여 부근 135km 밖). 그 좌표는 `원본좌표`로 남겨 대조에만 쓴다.
 """
@@ -40,27 +41,57 @@ def read(f):
     sys.exit(f'읽지 못함: {f}')
 
 
+BARE = re.compile(r'[\(（].*?[\)）]')        # 역명 부기 — `강변(동서울터미널)` = `강변`
+
+
 def stations():
-    """24개 파일에서 역 목록을 뽑는다(운영기관·선명·역명 + 화장실 수)"""
+    """24개 파일에서 역 목록을 뽑는다.
+
+    **먼저 중복을 지운다.** 공공데이터포털은 같은 데이터를 **노선별 파일과 기관 전체 파일로 두 번** 올려 둔다
+    (부산2·3·4호선 파일은 부산교통공사 파일에 통째로 들어 있고, 분당선·수인분당선 파일은 내용이 같다).
+    칸 9개가 모두 같은 행을 지우면 2,210행 → 1,923행(13% 감소).
+    역명은 **부기를 뗀 이름**으로 묶는다(안 떼면 `강변`과 `강변(동서울터미널)`이 다른 역이 된다 — 서울 56역이 두 번 잡혔다).
+    """
+    COLS = ['철도운영기관명', '선명', '역명', '지상구분', '역층', '게이트내외', '출구번호', '상세위치', '화장실구분']
+    ks = pd.concat([read(f) for f in glob.glob(str(RAW / '국가철도공단*.csv'))], ignore_index=True)
+    before = len(ks)
+    ks = ks.drop_duplicates(subset=COLS)
+    print(f'국가철도공단 {before:,}행 → 중복 제거 {len(ks):,}행(파일끼리 겹친 {before - len(ks):,}행)')
+    ks['역명정규'] = ks['역명'].str.strip().map(lambda s: BARE.sub('', s).strip())
     rows = []
-    for f in glob.glob(str(RAW / '국가철도공단*.csv')):
-        d = read(f)
-        for (op, ln, nm), g in d.groupby(['철도운영기관명', '선명', '역명']):
-            rows.append({'운영기관': op.strip(), '노선': ln.strip(), '역명': nm.strip(), '화장실행': len(g), '출처': '국가철도공단'})
+    for (op, ln, nm), g in ks.groupby(['철도운영기관명', '선명', '역명정규']):
+        rows.append({'운영기관': op.strip(), '노선': ln.strip(), '역명': nm, '화장실행': len(g), '출처': '국가철도공단',
+                     '역명원본': ' / '.join(sorted(set(g['역명'].str.strip())))})
+
     s = read(RAW / '서울교통공사_역사공중화장실정보_20260212.csv')
+    s = s[s['역명'].str.strip() != '']                     # 빈 행 10개
     s['위도'] = pd.to_numeric(s['위도'], errors='coerce')
     s['경도'] = pd.to_numeric(s['경도'], errors='coerce')
-    for (ln, nm), g in s.groupby(['운영노선명', '역명']):
+    s['역명정규'] = s['역명'].str.strip().map(lambda x: BARE.sub('', x).strip())
+    for (ln, nm), g in s.groupby(['운영노선명', '역명정규']):
         ok = g.dropna(subset=['위도', '경도'])
         ok = ok[(ok['위도'] > 33) & (ok['위도'] < 39) & (ok['경도'] > 124) & (ok['경도'] < 132)]
-        rows.append({'운영기관': '서울교통공사', '노선': ln.strip(), '역명': nm.strip(), '화장실행': len(g), '출처': '서울교통공사',
+        rows.append({'운영기관': '서울교통공사', '노선': ln.strip(), '역명': nm, '화장실행': len(g), '출처': '서울교통공사',
                      '원본위도': round(ok['위도'].mean(), 6) if len(ok) else '', '원본경도': round(ok['경도'].mean(), 6) if len(ok) else '',
                      '주소': g['소재지도로명주소'].iloc[0].strip()})   # 좌표는 믿지 않고 주소만 남긴다
     df = pd.DataFrame(rows).fillna('')
-    # 같은 역이 두 출처에 있으면 좌표가 있는 쪽을 살린다(행은 합치지 않고 좌표만 이어 준다)
-    key = df['역명'] + '|' + df['노선'].str.replace('호선', '호선', regex=False)
-    df['키'] = key
-    return df
+    # 같은 역·노선이 두 출처에 있으면(서울교통공사 239역 전부) 한 줄로 합치고 **출처를 모두 적는다.**
+    # 좌표는 어차피 카카오로 다시 만들므로, 여기서는 화장실 행 수를 출처별로 나눠 둔다.
+    df['키'] = df['운영기관'] + '|' + df['노선'] + '|' + df['역명']
+    agg = []
+    for k, g in df.groupby('키', sort=False):
+        r = g.iloc[0].to_dict()
+        r['출처'] = ' + '.join(g['출처'])
+        r['화장실행'] = int(g.loc[g['출처'] == '국가철도공단', '화장실행'].sum()) if (g['출처'] == '국가철도공단').any() else 0
+        r['화장실행_서울'] = int(g.loc[g['출처'] == '서울교통공사', '화장실행'].sum()) if (g['출처'] == '서울교통공사').any() else 0
+        for c in ('원본위도', '원본경도', '주소', '역명원본'):
+            v = [x for x in g.get(c, pd.Series(dtype=str)).tolist() if x != '']
+            r[c] = v[0] if v else ''
+        agg.append(r)
+    out = pd.DataFrame(agg).fillna('')
+    both = (out['출처'].str.contains(r'\+')).sum()
+    print(f'역·노선 {len(out):,}개(두 출처 모두 가진 것 {both:,}개) · 역 이름 {out["역명"].nunique():,}개')
+    return out
 
 
 def ask(q, key, cache):
