@@ -319,7 +319,9 @@ async function markToilets(list) {
       const b = nameCore(p.name);
       const mine = near.filter((x) => {                 // 이름이 그 시설을 가리키는 것만 "이 시설의 화장실"
         const aName = nameCore(x.r.n);
-        return x.m <= 150 && aName.length >= 2 && b.length >= 2 && (aName.includes(b) || (b.includes(aName) && aName.length >= 4));
+        if (x.m > 150 || aName.length < 2 || b.length < 2) return false;
+        if (aName.includes(b)) return !kindDiffers(aName, b);
+        return b.includes(aName) && aName.length >= 4 && !kindDiffers(b, aName);
       });
       if (mine.length) {
         el.className = 'wc yes';
@@ -395,13 +397,27 @@ const nameCore = (s) => String(s || '').replace(/\(.*?\)/g, '')
 /* 대형 민간시설 — 공공데이터에 없을 때 "신고된 곳만 들어온다"고 설명해야 하는 종류.
    공원·역처럼 공공시설이면 그 설명이 틀리므로, 이름으로 갈라서 말한다. */
 const PRIVATE_BIG = /백화점|마트|아울렛|쇼핑|몰$|플라자|프라자|타워|빌딩|스퀘어|면세점|시네마|영화관|호텔|리조트|웨딩|골프|백화/;
+/* 역·터미널 — 화장실은 반드시 있지만 운영기관(코레일·교통공사)이 관리해 지자체 공중화장실 대장에 빠지는 일이 잦다.
+   등록된 역 1,052곳뿐이고, 같은 도시 안에서도 역마다 다르다(대구: 상인역 있음 · 동대구역·안심역 없음). */
+const TRANSPORT = /역$|역\s|터미널|공항|정류장|환승센터|휴게소|철도|선착장|여객선/;
+
+/* 종류어 — 이름이 포함돼도 덧붙은 말이 "다른 종류"면 다른 시설이다.
+   (착한가격·화장실 모듈: 포함 + 종류 검사. 예: 동대구역 ≠ 동대구역치안센터, 계산역 ≠ 계산역아파트) */
+const KIND = /치안센터|파출소|지구대|소방서|안전센터|아파트|빌라|오피스텔|주택|학교|대학교|유치원|어린이집|병원|의원|약국|주차장|공원|시장|상가|우체국|주민센터|행정복지센터|도서관|미술관|박물관|경기장|체육관|교회|성당|사찰|주유소|충전소|은행|호텔|모텔|카페|식당|편의점/g;
+
+/** 긴 이름에서 짧은 이름을 뺀 나머지에 "다른 종류"가 있으면 서로 다른 시설 */
+function kindDiffers(longer, shorter) {
+  const rest = longer.split(shorter).join('');
+  const inShort = shorter.match(KIND) || [];
+  return (rest.match(KIND) || []).some((k) => !inShort.includes(k));
+}
 
 function isQueryHit(rec, m) {
   if (!S.query || m > 300) return false;
   const a = nameCore(rec.n), b = nameCore(S.query.name);
   if (a.length < 2 || b.length < 2) return false;
-  if (a.includes(b)) return true;                    // 화장실 이름이 검색한 이름을 품는다 → 확실(서울역 → 서울역(4호선))
-  return b.includes(a) && a.length >= 4;             // 반대 방향은 4자 이상일 때만
+  if (a.includes(b)) return !kindDiffers(a, b);      // 화장실 이름이 검색한 이름을 품는다 → 확실(서울역 → 서울역(4호선))
+  return b.includes(a) && a.length >= 4 && !kindDiffers(b, a);   // 반대 방향은 4자 이상일 때만
 }                                                    // (T19: '상인공영주차장 화장실'의 '상인'이 '롯데백화점 상인점'에 들어가 오답)
 
 /* ── 카드 내용 ─────────────────────────── */
@@ -561,8 +577,12 @@ async function showList() {
       ? `<div class="nohit">${PRIVATE_BIG.test(S.query.name)
             ? `<b>${esc(S.query.name)}에는 등록된 화장실이 없어요</b>
                백화점·마트 같은 <b>민간 건물</b>은 지자체에 신고된 곳만 공공데이터에 들어옵니다. 실제로는 있을 수 있으니 <b>안내 데스크에 물어보세요.</b>`
-            : `<b>'${esc(S.query.name)}' 이름으로 등록된 곳은 없어요</b>
-               그 안에 있는 화장실이 <b>다른 이름으로</b> 등록돼 있을 수 있습니다 — 아래 목록을 봐 주세요.`}
+            : TRANSPORT.test(S.query.name)
+              ? `<b>${esc(S.query.name)}은(는) 공공데이터에 없어요</b>
+                 역·터미널 화장실은 <b>운영기관(코레일·교통공사 등)이 관리</b>해 지자체 공중화장실 목록에서 빠지는 일이 잦습니다.
+                 <b>역 안에는 대개 화장실이 있으니</b> 역 안내도를 봐 주세요.`
+              : `<b>'${esc(S.query.name)}' 이름으로 등록된 곳은 없어요</b>
+                 그 안에 있는 화장실이 <b>다른 이름으로</b> 등록돼 있을 수 있습니다 — 아래 목록을 봐 주세요.`}
           ${near1 ? `<br>가장 가까운 곳은 <b>${near1.m < 1000 ? `${Math.round(near1.m)}m` : `${(near1.m / 1000).toFixed(1)}km`}</b> 앞입니다.` : ''}</div>`
       : '');
   const head = `<div class="basebar"><b>📍 ${esc(base.name || shortAddr(base.addr))}<span class="r">${base.name ? `${esc(shortAddr(base.addr))} · ` : ''}이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
