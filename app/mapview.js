@@ -39,8 +39,11 @@ async function openMap() {
     map2.relayout();
     map2.setCenter(center);
   }
-  $('#map-s').textContent = `${hhmm(now)} 기준 · ${mapGroups.length}곳`;
+  $('#map-s').textContent = `${hhmm(now)} 기준 · ${mapGroups.length}곳${S.openOnly ? ' · 지금 열림만' : ''}`;
   $('#b-again').hidden = true;
+  const mf = $('#b-mfilter');                              // 목록과 지도가 다른 개수로 보이지 않게 필터를 알린다
+  mf.hidden = !S.openOnly;
+  mf.onclick = async () => { S.openOnly = false; await showList(true); openMap(); };
 
   overlays.forEach((o) => o.setMap(null));
   overlays = [];

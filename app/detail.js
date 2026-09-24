@@ -61,7 +61,6 @@ async function sigunguHome(addr) {
 }
 
 function openDetail(rec, m) {
-  S.detail = rec;
   const now = new Date(), st = statePill(rec, now), k = KINDS[rec.t] || KINDS[0];
   const ll = `${rec.la},${rec.lo}`;
   const tel = String(rec.tel || '').replace(/[^0-9+-]/g, '');

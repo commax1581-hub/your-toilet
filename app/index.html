@@ -12,7 +12,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=16212789">
 <script>
   /* 저장된 보기 설정을 그리기 전에 입힌다(깜빡임 방지). 기기 설정을 따르는 것이 기본. */
   try {
@@ -137,6 +137,7 @@
     </div>
     <div class="mapwrap">
       <div id="map2"></div>
+      <button class="mfilter" id="b-mfilter" hidden>지금 열림만 · 모두 보기</button>
       <button class="again" id="b-again" hidden>이 지역에서 다시 찾기</button>
       <button class="gpsbtn map" id="b-recenter" aria-label="기준 위치로"><svg><use href="#i-gps"/></svg></button>
       <div class="mapcards" id="mapcards"></div>
@@ -181,9 +182,9 @@
 </div>
 
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6516210bcdd3c0a50b562ea3dedda4a3&libraries=services&autoload=false" onerror="window.__kakaoFail=true"></script>
-<script src="hours.js"></script>
-<script src="app.js"></script>
-<script src="detail.js"></script>
-<script src="mapview.js"></script>
+<script src="hours.js?v=f8a06c08"></script>
+<script src="app.js?v=233ed534"></script>
+<script src="detail.js?v=89bbe22e"></script>
+<script src="mapview.js?v=8e3c1a39"></script>
 </body>
 </html>

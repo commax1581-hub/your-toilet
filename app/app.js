@@ -26,7 +26,6 @@ const S = {                      // 화면 상태(저장하지 않음)
   query: null,                   // 검색으로 고른 장소 {name, la, lo}
   openOnly: true,                // 기본은 "지금 열림"만
   index: null,
-  detail: null,                  // 상세로 연 곳
   holidays: new Set(),
   tiles: new Map(),
   groups: [],                    // 지도에 그릴 묶음
@@ -56,6 +55,12 @@ history.replaceState({ s: 'home' }, '');
 window.addEventListener('popstate', (e) => go((e.state && e.state.s) || 'home', true));
 document.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => go(b.dataset.go)));
 document.querySelectorAll('[data-back]').forEach((b) => (b.onclick = () => history.back()));
+/* 키보드로도 카드를 열 수 있게 — 누를 수 있는 것은 Enter·Space로도 눌려야 한다 */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const c = e.target.closest('[role="button"]');
+  if (c) { e.preventDefault(); c.click(); }
+});
 
 /* ── 첫 화면 배경: 지금 시각(낮 06~17 · 저녁 17~20 · 밤 20~06). 어두운 모드면 밤 그림 ── */
 function background(dark) {
@@ -127,6 +132,28 @@ async function nearby(la, lo) {
       if (!S.tiles.has(k)) S.tiles.set(k, fetch(`data/t/${k}.json`).then((r) => r.json()));
       jobs.push(S.tiles.get(k).then((recs) => out.push(...recs)));
     }
+  }
+  await Promise.all(jobs);
+  return out;
+}
+
+/** 작은 반경용 — 점이 든 칸만 읽고, 칸 경계에 가까울 때만 옆 칸을 더 읽는다(검색 결과 12개 × 9칸을 막는다) */
+async function nearbySmall(la, lo, meters) {
+  const idx = await loadIndex();
+  const r0 = Math.floor(la / TILE), c0 = Math.floor(lo / TILE);
+  const fy = la / TILE - r0, fx = lo / TILE - c0;
+  const dy = meters / 111000 / TILE, dx = meters / (111000 * Math.cos(la * Math.PI / 180)) / TILE;
+  const rows = [r0], cols = [c0];
+  if (fy < dy) rows.push(r0 - 1);
+  if (fy > 1 - dy) rows.push(r0 + 1);
+  if (fx < dx) cols.push(c0 - 1);
+  if (fx > 1 - dx) cols.push(c0 + 1);
+  const out = [], jobs = [];
+  for (const r of rows) for (const c of cols) {
+    const k = `${r}_${c}`;
+    if (!idx.tiles[k]) continue;
+    if (!S.tiles.has(k)) S.tiles.set(k, fetch(`data/t/${k}.json`).then((x) => x.json()));
+    jobs.push(S.tiles.get(k).then((recs) => out.push(...recs)));
   }
   await Promise.all(jobs);
   return out;
@@ -315,7 +342,7 @@ async function markToilets(list) {
     const el = $(`#wc-${i}`);
     if (!el) return;
     try {
-      const recs = await nearby(p.la, p.lo);
+      const recs = await nearbySmall(p.la, p.lo, 220);
       const near = recs.map((r) => ({ r, m: distM(p.la, p.lo, r.la, r.lo) })).filter((x) => x.m <= 200).sort((a, b) => a.m - b.m);
       const b = nameCore(p.name);
       const mine = near.filter((x) => {                 // 이름이 그 시설을 가리키는 것만 "이 시설의 화장실"
@@ -648,6 +675,21 @@ async function showList(quiet) {
   body.querySelectorAll('.chip[data-r]').forEach((c) => (c.onclick = () => { S.radius = +c.dataset.r; showList(); }));   // 목록에서 바로 반경 바꾸기
   body.scrollTop = 0;
 }
+
+/* 시각이 흐르면 화면도 따라가야 한다 — 저녁이 됐는데 낮 배경이거나, 닫힌 곳이 아직 "열림"이면 안 된다.
+   5분마다·앱으로 돌아올 때 다시 그린다(목록은 보던 자리를 지킨다). */
+function refreshByTime() {
+  if (document.hidden) return;
+  background(document.documentElement.dataset.theme === 'dark');
+  if (S.screen === 'list' && S.base) {
+    const b = $('#list-body'), y = b.scrollTop;
+    showList(true).then(() => { b.scrollTop = y; });
+  } else if (S.screen === 'map' && S.base && typeof openMap === 'function') {
+    showList(true).then(() => openMap());
+  }
+}
+setInterval(refreshByTime, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshByTime(); });
 
 loadIndex();     // 첫 화면을 보는 동안 칸 목록을 미리 받아 둔다
 
