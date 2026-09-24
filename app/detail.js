@@ -116,10 +116,10 @@ function openDetail(rec, m) {
     </div>
     <div class="dsec"><h3>이 정보는</h3>
       <div class="dsub">출처 행정안전부 공중화장실정보(공공데이터포털) · 공공데이터 기준일 ${S.index.date}${rec.dy ? ` · 지자체가 적은 정보 기준 <b>${rec.dy}년</b>` : ''}
-        ${old ? '<br><b>정보가 오래됐습니다.</b> 지금과 다를 수 있어요.' : ''}
-        <br>번호 ${esc(rec.id)}${rec.ids ? ` · 같은 곳으로 합친 등록 ${rec.ids.length}건` : ''}</div>
+${rec.dy ? ' · ' : ''}번호 ${esc(rec.id)}${rec.ids ? ` · 합친 등록 ${rec.ids.length}건` : ''}
+        ${old ? '<br><b>정보가 오래됐습니다.</b> 지금과 다를 수 있어요.' : ''}</div>
       <div class="dfix"><b>정보가 틀렸나요?</b><br>① 위 관리기관에 전화 ② <span id="d-gov">해당 시군구 홈페이지</span> ③ <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터포털 오류 신고</a>
-        <div class="dsub">이 정보는 각 지자체가 관리합니다. 틀린 내용이 있으면 관리기관에 알려 주세요.</div></div>
+        <div class="dsub">정보는 각 지자체가 관리하니, 틀린 내용은 관리기관에 알려 주세요.</div></div>
     </div>`;
   go('detail');
   $('#detail-body').scrollTop = 0;

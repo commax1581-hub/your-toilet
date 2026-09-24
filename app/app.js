@@ -291,7 +291,7 @@ function showSug(list, q) {
       건물·역·공원 이름이나 <b>도로명 주소</b>로 찾아 보세요. 예) 서울역, 여의도 한강공원, 세종대로 110</div>`;
     return;
   }
-  box.innerHTML = list.map((p, i) => `<button class="sug" data-i="${i}"><b>${esc(p.name)}</b><span>${esc(p.addr)}</span></button>`).join('');
+  box.innerHTML = list.map((p, i) => `<button class="sug" data-i="${i}"><b>${esc(p.name)}</b><span>${p.cat ? `${esc(p.cat)} · ` : ''}${esc(p.addr)}</span></button>`).join('');
   box.querySelectorAll('.sug').forEach((b) => (b.onclick = () => pickPlace(list[+b.dataset.i])));
 }
 
@@ -316,7 +316,8 @@ async function doSearch(q, auto) {
   const done = (list) => { if (job === searchJob) showSug(list, q); };
   places.keywordSearch(q, (data, st) => {
     if (st === kakao.maps.services.Status.OK && data.length) {
-      done(data.slice(0, 12).map((d) => ({ name: d.place_name, addr: d.road_address_name || d.address_name, la: +d.y, lo: +d.x })));
+      done(data.slice(0, 12).map((d) => ({ name: d.place_name, addr: d.road_address_name || d.address_name, la: +d.y, lo: +d.x,
+        cat: d.category_group_name || (d.category_name || '').split('>').pop().trim() })));   // 업종을 함께 보여 준다(같은 주소에 여러 가게)
       return;
     }
     geocoder.addressSearch(q, (ad, st2) => {                    // 이름으로 못 찾으면 주소로(도로명·지번)

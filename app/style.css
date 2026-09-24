@@ -54,11 +54,12 @@ button{font-family:inherit}
 /* ① 첫 화면 */
 #s-home{background:#1e4f96 center/cover no-repeat}
 #s-home .scrim{position:absolute;left:0;right:0;top:0;height:42%;background:linear-gradient(180deg,rgba(15,25,70,.45),rgba(15,25,70,0))}
-.h-title{position:absolute;left:0;right:0;top:12vh;text-align:center;color:#fff;opacity:.85;z-index:2}
-.h-title .ko{font-family:'Song Myung',serif;font-size:min(45px,12.5vw);white-space:nowrap;letter-spacing:.15em;text-indent:.15em;text-shadow:0 2px 12px rgba(20,20,60,.35)}
-.h-title .sub{margin-top:12px;font-size:1rem;letter-spacing:.08em}
+.h-title{position:absolute;left:0;right:0;top:12vh;text-align:center;color:#fff;opacity:.9;z-index:2}
+/* 포스터 느낌 — 굵기가 여러 개인 명조(Noto Serif KR)의 Light(300). 송명은 굵기가 400 하나뿐이라 가늘게 할 수 없었다 */
+.h-title .ko{font-family:'Noto Serif KR',serif;font-weight:300;font-size:min(44px,11.8vw);white-space:nowrap;letter-spacing:.15em;text-indent:.15em;text-shadow:0 2px 10px rgba(20,20,60,.35)}
+.h-title .sub{font-family:'Noto Serif KR',serif;font-weight:300;margin-top:12px;font-size:1rem;letter-spacing:.08em}
 .h-bottom{position:absolute;left:14px;right:14px;bottom:calc(16px + var(--safe-b));z-index:2}
-.h-bottom .ask{text-align:center;color:#fff;font-weight:700;font-size:1.0625rem;text-shadow:0 1px 8px rgba(10,20,60,.5);margin-bottom:10px}
+.h-bottom .ask{font-family:'Noto Serif KR',serif;text-align:center;color:#fff;font-weight:400;font-size:1.125rem;text-shadow:0 1px 10px rgba(10,20,60,.75);margin-bottom:10px}
 .glass{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 /* 유리 박스 — 배경 그림이 비치게(첫 화면의 인상이 배경이라 가리지 않는다) */
 .gbox{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);

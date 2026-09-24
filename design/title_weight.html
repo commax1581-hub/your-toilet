@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>제목 굵기·폰트 — 안 고르기</title>
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Serif+KR:wght@200;300;400&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#4338ca;--brand2:#6d28d9;--ink:#15202b;--sub:#5b6875;--line:#e3e8ee}
+*{box-sizing:border-box}
+body{margin:0;background:#eef1f5;font-family:'Noto Sans KR',system-ui,sans-serif;color:var(--ink);word-break:keep-all;font-size:14px}
+h1{font-size:18px;margin:18px 16px 2px} .lead{margin:0 16px 14px;color:var(--sub);font-size:13px;line-height:1.6}
+.row{display:flex;gap:16px;flex-wrap:wrap;padding:0 16px 26px}
+.col{width:330px}
+.cap{font-weight:800;font-size:13px;margin:0 0 8px;min-height:46px} .cap span{display:block;font-weight:500;color:var(--sub)}
+.phone{position:relative;height:560px;border-radius:24px;overflow:hidden;border:1px solid var(--line);box-shadow:0 8px 22px rgba(15,32,43,.12);
+  background:url(bg_night_1080.webp) center/cover no-repeat}
+.title{position:absolute;left:0;right:0;top:60px;text-align:center;color:#fff;z-index:2}
+.ko{font-size:42px;white-space:nowrap;letter-spacing:.15em;text-indent:.15em}
+.sub{margin-top:12px;font-size:15px;letter-spacing:.08em}
+/* 안별 제목 */
+.v1 .title{opacity:.85} .v1 .ko{font-family:'Song Myung',serif;text-shadow:0 2px 12px rgba(20,20,60,.35)}
+.v2 .title{opacity:.72} .v2 .ko{font-family:'Song Myung',serif;text-shadow:0 1px 6px rgba(20,20,60,.3)}
+.v3 .title{opacity:.9}  .v3 .ko{font-family:'Noto Serif KR',serif;font-weight:300;text-shadow:0 2px 10px rgba(20,20,60,.35)}
+.v4 .title{opacity:.9}  .v4 .ko{font-family:'Noto Serif KR',serif;font-weight:200;text-shadow:0 2px 10px rgba(20,20,60,.35)}
+.v1 .sub,.v2 .sub{font-family:'Noto Sans KR',sans-serif}
+.v3 .sub,.v4 .sub{font-family:'Noto Serif KR',serif;font-weight:300}
+/* 아래 버튼 */
+.bottom{position:absolute;left:14px;right:14px;bottom:16px;z-index:3}
+.ask{text-align:center;color:#fff;font-weight:700;font-size:17px;text-shadow:0 1px 8px rgba(10,20,60,.5);margin-bottom:10px}
+.glass{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gbox{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.55);backdrop-filter:blur(10px);
+  border-radius:20px;padding:15px 10px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(10,20,60,.35)}
+.gbox .t{font-weight:800;font-size:16px;margin-top:8px}
+.gbox .s{font-size:11px;opacity:.85;margin-top:2px}
+.gbox.primary{background:linear-gradient(135deg,rgba(67,56,202,.6),rgba(109,40,217,.6));border-color:rgba(255,255,255,.5)}
+svg.i{width:26px;height:26px}
+/* 메뉴 폰트 — B안(명조 카피) / C안(전부 명조) */
+.mB .ask{font-family:'Song Myung',serif;font-weight:400;font-size:19px}
+.mC .ask,.mC .gbox .t,.mC .gbox .s{font-family:'Song Myung',serif;font-weight:400}
+.mC .gbox .t{font-size:17px}
+.note{font-size:12px;color:var(--sub);margin:16px;line-height:1.7;background:#fff;border-radius:12px;padding:12px}
+</style>
+</head>
+<body>
+<h1>제목 굵기·폰트 — 네 가지 안</h1>
+<p class="lead">배경은 밤. <b>송명은 굵기가 400 하나뿐</b>이라 85%로 줄일 수 없습니다 → ① 얇아 <b>보이게</b>(불투명도·그림자) ② <b>굵기가 여러 개인 명조</b>(Noto Serif KR 200~300)로 교체, 두 길입니다.<br>아래 세 안은 제목이고, 맨 오른쪽은 <b>메뉴 글꼴</b>을 제목에 맞춘 경우입니다.</p>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="i-gps" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2.4"/></symbol>
+</defs></svg>
+
+<div class="row">
+  <div class="col">
+    <p class="cap">1 · 지금(송명 400, 불투명도 85%)<span>기준</span></p>
+    <div class="phone v1">
+      <div class="title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
+      <div class="bottom"><div class="ask">지금 어디세요?</div>
+        <div class="glass"><div class="gbox primary"><svg class="i"><use href="#i-gps"/></svg><div class="t">내 위치로</div><div class="s">가장 빠른 길</div></div>
+        <div class="gbox"><svg class="i"><use href="#i-search"/></svg><div class="t">다른 곳</div><div class="s">주소·건물 이름</div></div></div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="cap">2 · 송명 + 얇아 보이게<span>불투명도 72% · 그림자 줄임 — 글꼴은 그대로, 인상만 가볍게</span></p>
+    <div class="phone v2">
+      <div class="title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
+      <div class="bottom"><div class="ask">지금 어디세요?</div>
+        <div class="glass"><div class="gbox primary"><svg class="i"><use href="#i-gps"/></svg><div class="t">내 위치로</div><div class="s">가장 빠른 길</div></div>
+        <div class="gbox"><svg class="i"><use href="#i-search"/></svg><div class="t">다른 곳</div><div class="s">주소·건물 이름</div></div></div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="cap">3 · Noto Serif KR 300(Light)<span>진짜로 가는 획. 부제도 같은 명조 — 포스터 느낌 가장 강함</span></p>
+    <div class="phone v3">
+      <div class="title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
+      <div class="bottom"><div class="ask">지금 어디세요?</div>
+        <div class="glass"><div class="gbox primary"><svg class="i"><use href="#i-gps"/></svg><div class="t">내 위치로</div><div class="s">가장 빠른 길</div></div>
+        <div class="gbox"><svg class="i"><use href="#i-search"/></svg><div class="t">다른 곳</div><div class="s">주소·건물 이름</div></div></div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="cap">4 · Noto Serif KR 200(ExtraLight)<span>가장 가늘다 — 밝은 배경(낮)에서는 묻힐 수 있음</span></p>
+    <div class="phone v4">
+      <div class="title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
+      <div class="bottom"><div class="ask">지금 어디세요?</div>
+        <div class="glass"><div class="gbox primary"><svg class="i"><use href="#i-gps"/></svg><div class="t">내 위치로</div><div class="s">가장 빠른 길</div></div>
+        <div class="gbox"><svg class="i"><use href="#i-search"/></svg><div class="t">다른 곳</div><div class="s">주소·건물 이름</div></div></div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="cap">B · 메뉴 글꼴: "지금 어디세요?"만 명조<span>카피는 명조, 버튼 글씨는 고딕 — 조작부는 또렷하게</span></p>
+    <div class="phone v1 mB">
+      <div class="title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
+      <div class="bottom"><div class="ask">지금 어디세요?</div>
+        <div class="glass"><div class="gbox primary"><svg class="i"><use href="#i-gps"/></svg><div class="t">내 위치로</div><div class="s">가장 빠른 길</div></div>
+        <div class="gbox"><svg class="i"><use href="#i-search"/></svg><div class="t">다른 곳</div><div class="s">주소·건물 이름</div></div></div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="cap">C · 메뉴 글꼴: 버튼까지 전부 명조<span>통일감은 최고. 송명은 굵기가 하나뿐이라 버튼 글씨가 가늘어 보임</span></p>
+    <div class="phone v1 mC">
+      <div class="title"><div class="ko">너의 화장실은.</div><div class="sub">지금 여기서 가장 가까운 화장실</div></div>
+      <div class="bottom"><div class="ask">지금 어디세요?</div>
+        <div class="glass"><div class="gbox primary"><svg class="i"><use href="#i-gps"/></svg><div class="t">내 위치로</div><div class="s">가장 빠른 길</div></div>
+        <div class="gbox"><svg class="i"><use href="#i-search"/></svg><div class="t">다른 곳</div><div class="s">주소·건물 이름</div></div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <b>고를 때 참고</b><br>
+  · 첫 화면 배경은 <b>낮·저녁·밤</b>이 자동으로 바뀝니다. 가는 글꼴은 <b>낮(밝은 하늘)</b>에서 더 묻힙니다 — 4번은 낮에서 확인이 필요합니다.<br>
+  · 버튼 글씨까지 명조로 하면(C) <b>어르신용 큰 글씨</b>에서 획이 가늘어 읽기 어려워질 수 있습니다.<br>
+  · 제목 글꼴을 Noto Serif KR로 바꾸면 웹폰트가 한 종 더 늘어납니다(약 +40KB, 첫 화면에서만 씀).
+</div>
+</body>
+</html>
