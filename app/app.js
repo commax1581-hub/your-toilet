@@ -346,6 +346,10 @@ const nameCore = (s) => String(s || '').replace(/\(.*?\)/g, '')
   .replace(/공중화장실|개방화장실|간이화장실|화장실|주차장|공영|본점|점포/g, '')
   .replace(/[\s·,()\[\]{}\-_]/g, '');
 
+/* 대형 민간시설 — 공공데이터에 없을 때 "신고된 곳만 들어온다"고 설명해야 하는 종류.
+   공원·역처럼 공공시설이면 그 설명이 틀리므로, 이름으로 갈라서 말한다. */
+const PRIVATE_BIG = /백화점|마트|아울렛|쇼핑|몰$|플라자|프라자|타워|빌딩|스퀘어|면세점|시네마|영화관|호텔|리조트|웨딩|골프|백화/;
+
 function isQueryHit(rec, m) {
   if (!S.query || m > 300) return false;
   const a = nameCore(rec.n), b = nameCore(S.query.name);
@@ -508,9 +512,12 @@ async function showList() {
       + hits.map((x) => cardHtml(x.r, x.m, now)).join('')
       + `<div class="secline">둘레 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</div>`
     : (S.query
-      ? `<div class="nohit"><b>${esc(S.query.name)}에는 등록된 화장실이 없어요</b>
-          백화점·마트·사무실 같은 민간 건물은 <b>지자체에 신고된 곳만</b> 공공데이터에 들어옵니다.
-          ${near1 ? `가장 가까운 곳은 <b>${near1.m < 1000 ? `${Math.round(near1.m)}m` : `${(near1.m / 1000).toFixed(1)}km`}</b> 앞입니다.` : ''}</div>`
+      ? `<div class="nohit">${PRIVATE_BIG.test(S.query.name)
+            ? `<b>${esc(S.query.name)}에는 등록된 화장실이 없어요</b>
+               백화점·마트 같은 <b>민간 건물</b>은 지자체에 신고된 곳만 공공데이터에 들어옵니다. 실제로는 있을 수 있으니 <b>안내 데스크에 물어보세요.</b>`
+            : `<b>'${esc(S.query.name)}' 이름으로 등록된 곳은 없어요</b>
+               그 안에 있는 화장실이 <b>다른 이름으로</b> 등록돼 있을 수 있습니다 — 아래 목록을 봐 주세요.`}
+          ${near1 ? `<br>가장 가까운 곳은 <b>${near1.m < 1000 ? `${Math.round(near1.m)}m` : `${(near1.m / 1000).toFixed(1)}km`}</b> 앞입니다.` : ''}</div>`
       : '');
   const head = `<div class="basebar"><b>📍 ${esc(base.name || shortAddr(base.addr))}<span class="r">${base.name ? `${esc(shortAddr(base.addr))} · ` : ''}이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
     <div class="chips"><span class="chip${S.openOnly ? ' on' : ''}" id="c-open">지금 열림</span>
