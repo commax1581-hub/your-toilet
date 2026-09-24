@@ -258,10 +258,12 @@ function showAddr(ll) {
     if (seq !== addrSeq) return;                                  // 지도를 계속 움직인 경우 늦게 온 답은 버린다
     if (st !== kakao.maps.services.Status.OK || !res.length) { $('#pin-addr').textContent = '주소를 찾지 못했어요'; return; }
     const r = res[0], a = (r.road_address && r.road_address.address_name) || (r.address && r.address.address_name) || '';
-    $('#pin-addr').textContent = name ? esc(name) : (a ? `${a} 근처` : '주소를 찾지 못했어요');
+    const bn = (r.road_address && r.road_address.building_name) || '';
+    $('#pin-addr').textContent = name || bn || (a ? `${a} 근처` : '주소를 찾지 못했어요');
+    if (!name && bn && a) $('#pin-sub').textContent = `${shortAddr(a)} · ${$('#pin-sub').textContent}`;
     $('#pin-sub2') && ($('#pin-sub2').textContent = '');
     $('#pin-q').textContent = name || (a ? shortAddr(a) : '주소 · 건물 이름으로 찾기');
-    S.base = { la, lo, addr: a || '이 위치', name };
+    S.base = { la, lo, addr: a || '이 위치', name: name || bn };
   });
 }
 
@@ -300,6 +302,13 @@ function showSug(list, q) {
 
 /** 검색 결과마다 "그 자리에 등록된 화장실"을 붙인다(120m 안).
     고르기 전에 알 수 있어야 한다 — 골라 들어간 뒤에야 없다고 알려 주면 헛걸음이다. */
+/** 업종 이름 — `가정,생활 > 백화점 > 롯데백화점`처럼 끝이 브랜드일 때가 많아 한 칸 앞(종류)을 쓴다 */
+function catName(d) {
+  if (d.category_group_name) return d.category_group_name;
+  const p = String(d.category_name || '').split('>').map((x) => x.trim()).filter(Boolean);
+  return p.length >= 3 ? p[p.length - 2] : (p.pop() || '');
+}
+
 async function markToilets(list) {
   await Promise.all(list.map(async (p, i) => {
     const el = $(`#wc-${i}`);
@@ -336,12 +345,16 @@ async function doSearch(q, auto) {
   places.keywordSearch(q, (data, st) => {
     if (st === kakao.maps.services.Status.OK && data.length) {
       done(data.slice(0, 12).map((d) => ({ name: d.place_name, addr: d.road_address_name || d.address_name, la: +d.y, lo: +d.x,
-        cat: d.category_group_name || (d.category_name || '').split('>').pop().trim() })));   // 업종을 함께 보여 준다(같은 주소에 여러 가게)
+        cat: catName(d) })));                       // 업종을 함께 보여 준다(같은 주소에 여러 가게)
       return;
     }
     geocoder.addressSearch(q, (ad, st2) => {                    // 이름으로 못 찾으면 주소로(도로명·지번)
       done(st2 === kakao.maps.services.Status.OK
-        ? ad.slice(0, 12).map((d) => ({ name: d.address_name, addr: (d.road_address && d.road_address.address_name) || d.address_name, la: +d.y, lo: +d.x }))
+        ? ad.slice(0, 12).map((d) => ({
+          name: (d.road_address && d.road_address.building_name) || d.address_name,   // 건물명이 있으면 이름으로
+          addr: (d.road_address && d.road_address.address_name) || d.address_name,
+          cat: (d.road_address && d.road_address.building_name) ? '건물' : '주소',
+          la: +d.y, lo: +d.x }))
         : []);
     });
   }, { size: 12 });
