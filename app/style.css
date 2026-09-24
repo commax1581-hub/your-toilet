@@ -66,7 +66,7 @@ button{font-family:inherit}
 .gbox .gi{width:26px;height:26px}
 .gbox .t{font-weight:800;font-size:1rem;margin-top:8px}
 .gbox .s{font-size:0.6875rem;opacity:.85;margin-top:2px}
-.gbox.primary{background:linear-gradient(135deg,rgba(67,56,202,.85),rgba(109,40,217,.85));border-color:rgba(255,255,255,.35)}
+.gbox.primary{background:linear-gradient(135deg,rgba(67,56,202,.6),rgba(109,40,217,.6));border-color:rgba(255,255,255,.5)}
 .gbox[disabled]{opacity:.7}
 .h-bottom .msg{font-size:0.7812rem;color:#fff;text-align:center;margin-top:10px;display:none;text-shadow:0 1px 8px rgba(10,20,60,.6);
   background:rgba(180,83,9,.85);border-radius:12px;padding:8px 10px}
@@ -88,7 +88,8 @@ button{font-family:inherit}
 /* ④ 다른 곳 찾기 */
 .search{display:flex;gap:6px;align-items:center;border:1.5px solid var(--brand);border-radius:12px;padding:9px 11px;background:var(--paper)}
 .search svg{width:1.125rem;height:1.125rem;color:var(--sub);flex:none}
-.search input{border:0;outline:0;font:inherit;font-size:0.9375rem;width:100%;background:transparent}
+.search input{border:0;outline:0;font:inherit;font-size:0.9375rem;width:100%;background:transparent;color:var(--ink)}
+.search input::placeholder{color:var(--sub);opacity:1}
 .search .go{flex:none;border:0;background:var(--brand-grad);color:#fff;font-weight:800;font-size:0.8125rem;border-radius:9px;padding:7px 12px;cursor:pointer}
 .sug{border-bottom:1px solid var(--line);padding:11px 2px;cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left}
 .sug b{display:block;font-size:0.9375rem}
@@ -170,7 +171,7 @@ button{font-family:inherit}
 :root[data-theme="dark"] .addrbox,
 :root[data-theme="dark"] .bar{background:var(--paper)}
 :root[data-theme="dark"] .gbox{background:rgba(22,29,38,.55);border-color:rgba(255,255,255,.28)}
-:root[data-theme="dark"] .gbox.primary{background:linear-gradient(135deg,rgba(91,82,214,.9),rgba(124,79,224,.9))}
+:root[data-theme="dark"] .gbox.primary{background:linear-gradient(135deg,rgba(91,82,214,.58),rgba(124,79,224,.58))}
 
 /* ── 보기 설정 시트 ───────────────────────── */
 .sheet{position:absolute;inset:0;z-index:20;display:none}
