@@ -98,6 +98,7 @@ button{font-family:inherit}
 .sug .wc{margin-top:3px;font-weight:700}
 .sug .wc.yes{color:var(--open)}
 .sug .wc.none{color:var(--sub);opacity:.75}
+.sug .wc.near{color:var(--warn);font-weight:500}
 
 /* ⑤ 목록 */
 .basebar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px 10px 10px 12px;margin-bottom:8px}

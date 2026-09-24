@@ -300,8 +300,6 @@ function showSug(list, q) {
   markToilets(list);                                   // 결과를 먼저 띄우고, 화장실 정보는 뒤이어 채운다
 }
 
-/** 검색 결과마다 "그 자리에 등록된 화장실"을 붙인다(120m 안).
-    고르기 전에 알 수 있어야 한다 — 골라 들어간 뒤에야 없다고 알려 주면 헛걸음이다. */
 /** 업종 이름 — `가정,생활 > 백화점 > 롯데백화점`처럼 끝이 브랜드일 때가 많아 한 칸 앞(종류)을 쓴다 */
 function catName(d) {
   if (d.category_group_name) return d.category_group_name;
@@ -309,16 +307,30 @@ function catName(d) {
   return p.length >= 3 ? p[p.length - 2] : (p.pop() || '');
 }
 
+/** 검색 결과마다 화장실을 붙인다 — **그 시설의 것**과 **그냥 가까운 것**을 구분해서.
+    (구분하지 않으면 "있다"고 했다가 고른 뒤 "없다"고 하는 모순이 생긴다) */
 async function markToilets(list) {
   await Promise.all(list.map(async (p, i) => {
     const el = $(`#wc-${i}`);
     if (!el) return;
     try {
       const recs = await nearby(p.la, p.lo);
-      const near = recs.map((r) => ({ r, m: distM(p.la, p.lo, r.la, r.lo) })).filter((x) => x.m <= 120).sort((a, b) => a.m - b.m);
-      if (!near.length) { el.className = 'wc none'; el.textContent = '120m 안에 등록된 화장실 없음'; return; }
-      el.className = 'wc yes';
-      el.textContent = `🚻 ${near[0].r.n}${near.length > 1 ? ` 외 ${near.length - 1}곳` : ''}`;
+      const near = recs.map((r) => ({ r, m: distM(p.la, p.lo, r.la, r.lo) })).filter((x) => x.m <= 200).sort((a, b) => a.m - b.m);
+      const b = nameCore(p.name);
+      const mine = near.filter((x) => {                 // 이름이 그 시설을 가리키는 것만 "이 시설의 화장실"
+        const aName = nameCore(x.r.n);
+        return x.m <= 150 && aName.length >= 2 && b.length >= 2 && (aName.includes(b) || (b.includes(aName) && aName.length >= 4));
+      });
+      if (mine.length) {
+        el.className = 'wc yes';
+        el.textContent = `🚻 ${mine[0].r.n}${mine.length > 1 ? ` 외 ${mine.length - 1}곳` : ''}`;
+      } else if (near.length) {
+        el.className = 'wc near';
+        el.textContent = `이 시설에는 없음 · 가까운 곳 ${Math.round(near[0].m)}m (${near[0].r.n})`;
+      } else {
+        el.className = 'wc none';
+        el.textContent = '200m 안에 등록된 화장실 없음';
+      }
     } catch (e) { el.textContent = ''; }
   }));
 }
@@ -376,6 +388,7 @@ $('#q').addEventListener('compositionend', (e) => {            // 한글 한 글
    이름으로 찾아온 사람에게는 그 장소가 답이다 — 묶음 규칙과 상관없이 맨 위에 따로 보여 준다.
    비교는 군더더기 말을 뺀 뒤 서로 포함하는지로 본다(같은 이름의 다른 지역을 집지 않게 300m 안만). */
 const nameCore = (s) => String(s || '').replace(/\(.*?\)/g, '')
+  .replace(/특별자치시|광역시|특별시/g, '시').replace(/특별자치도/g, '도')   // 서울특별시청 = 서울시청
   .replace(/공중화장실|개방화장실|간이화장실|화장실|주차장|공영|본점|점포/g, '')
   .replace(/[\s·,()\[\]{}\-_]/g, '');
 
