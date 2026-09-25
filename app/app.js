@@ -828,8 +828,7 @@ async function showList(quiet) {
       const x = byId.get(c.dataset.id);
       if (x) openDetail(x.r, x.m);
     }));
-    body.querySelectorAll('[data-rail]').forEach((c) => (c.onclick = (e) => {
-      if (e.target.closest('[data-stop]')) return;        // 카드 안 길찾기·입구 보기는 그 링크대로
+    body.querySelectorAll('[data-rail]').forEach((c) => (c.onclick = () => {
       const x = rails[+c.dataset.rail];
       if (x) openRailDetail(x.st, x.m);
     }));

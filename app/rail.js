@@ -67,8 +67,8 @@ function railSeat(t) {
 function railCard(st, m, now, i, also, sameName) {
   const s = railState(st, now);
   const gongdan = st.src === '국가철도공단';
-  const nm = `${lineLabel(st)} ${st.n}역`;
-  const ll = `${st.la},${st.lo}`;
+  // 목록에서는 **버튼을 두지 않는다.** 역 카드만 단추를 달면 거리순으로 섞였을 때 혼자 무거워져
+  // "먼저 거리, 그다음 성격"이라는 차례가 화면에서 뒤집힌다(6-38). 길찾기는 상세에서 한다.
   return `<div class="railbox" data-rail="${i}">
       <div class="rhead"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실<span class="who">${esc(st.src)}</span></div>
       <div class="rbody">
@@ -77,10 +77,6 @@ function railCard(st, m, now, i, also, sameName) {
         ${st.t.map(railSeat).join('')}
         <div class="meta">${s.html}</div>
         ${also ? '<div class="ralso"><svg class="ic"><use href="#i-wc"/></svg> 이 역은 <b>지자체 자료에도</b> 있어요 — 아래 흰 카드에서 변기 수·전화를 볼 수 있습니다.</div>' : ''}
-        <div class="rgo">
-          <a class="btn main sm" href="https://map.naver.com/p/directions/-/${st.lo},${st.la},${encodeURIComponent(nm)}/-/walk" target="_blank" rel="noopener" data-stop><svg><use href="#i-walk"/></svg>길찾기</a>
-          <a class="btn ghost sm" href="https://map.kakao.com/link/roadview/${ll}" target="_blank" rel="noopener" data-stop><svg><use href="#i-eye"/></svg>입구 보기</a>
-        </div>
         ${gongdan ? '<div class="rnone"><svg class="ic"><use href="#i-q"/></svg> 이 출처는 <b>여는 시간과 변기 수를 제공하지 않습니다.</b> 없다는 뜻이 아닙니다.</div>' : ''}
       </div>
     </div>`;
@@ -113,10 +109,6 @@ function openRailDetail(st, m) {
     <div class="dnote"><b>역 한 곳에 점 하나</b>지도의 점은 <b>역 위치</b>입니다. 역 안 어디인지는 아래 <b>층·개찰구·출구</b>를 보세요.</div>
     ${st.t.some((t) => t.g) ? '<div class="dnote"><b>개찰구 안</b>교통카드로 들어가야 쓸 수 있는 곳이 있습니다.</div>' : ''}
     ${st.src === '국가철도공단' ? '<div class="dnote"><b>이 출처가 주지 않는 것</b>여는 시간·변기 수·기저귀교환대·비상벨이 <b>이 데이터에는 없습니다.</b> 없다는 뜻이 아닙니다.</div>' : ''}
-    <div class="dsec"><h3>역 안 어디에 (${st.t.length}곳)</h3>
-      ${st.t.map((t) => `<div class="rseat">${railSeat(t)}${fac(t)}</div>`).join('')}
-      <div class="dsub">층은 <b>지면에서 가까운 순</b>으로, 같은 층이면 <b>개찰구 밖</b>을 먼저 보여 줍니다.</div>
-    </div>
     <div class="dsec"><h3>길찾기</h3>
       <div class="dbtns">
         <a class="btn main" href="https://map.naver.com/p/directions/-/${st.lo},${st.la},${encodeURIComponent(nm)}/-/walk" target="_blank" rel="noopener"><svg><use href="#i-walk"/></svg>네이버 도보 길찾기</a>
@@ -124,6 +116,10 @@ function openRailDetail(st, m) {
       </div>
       <div class="dsub">역 출입구까지 안내합니다. <b>출입구를 지나서는 위 안내를 보고</b> 찾아가세요.
         카카오맵 길찾기는 <b>자동차 경로로 열립니다.</b></div>
+    </div>
+    <div class="dsec"><h3>역 안 어디에 (${st.t.length}곳)</h3>
+      ${st.t.map((t) => `<div class="rseat">${railSeat(t)}${fac(t)}</div>`).join('')}
+      <div class="dsub">층은 <b>지면에서 가까운 순</b>으로, 같은 층이면 <b>개찰구 밖</b>을 먼저 보여 줍니다.</div>
     </div>
     <div class="dsec"><h3>지도·입구 확인</h3>
       <div class="dbtns">

@@ -373,8 +373,6 @@ body.hastab .body{padding-bottom:calc(4.5rem + var(--safe-b))}
 .bar .home.on{color:var(--brand)}
 
 /* 역 카드 안의 길찾기 · 같은 역 꼬리표 */
-.rgo{display:flex;gap:8px;margin-top:9px}
-.rgo .btn.sm{flex:1;min-height:2.75rem;font-size:0.8125rem;padding:8px 10px;margin:0}
 .rsame{margin-top:6px;font-size:0.75rem;color:var(--sub)}
 .chiphint{font-size:0.75rem;color:var(--sub);align-self:center;margin-left:2px;word-break:keep-all;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
