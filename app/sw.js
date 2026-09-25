@@ -12,8 +12,21 @@ const FILES = ['./', 'index.html', 'style.css', 'app.js', 'hours.js', 'detail.js
   'img/bg_day_blue_1080.webp', 'img/bg_evening_1080.webp', 'img/bg_night_1080.webp',
   'data/index.json', 'data/holidays.json', 'data/gov_sites.json', 'data/rail.json'];
 
+/* 화면 파일은 주소에 **내용 해시**가 붙어 있다(`app.js?v=a68a7dfd`, T23).
+   그런데 아래 목록은 해시 없는 이름이라, 그대로 저장하면 **정작 화면이 부르는 주소가 없어**
+   인터넷이 끊겼을 때 앱이 뜨지 않았다(T30). → index.html을 읽어 **해시가 붙은 주소까지** 저장한다. */
+async function precache() {
+  const c = await caches.open(SHELL);
+  await c.addAll(FILES);
+  try {
+    const html = await (await fetch('index.html', { cache: 'no-cache' })).text();
+    const urls = [...html.matchAll(/(?:src|href)="([a-z_]+\.(?:js|css)\?v=[a-f0-9]+)"/g)].map((m) => m[1]);
+    if (urls.length) await c.addAll(urls);
+  } catch (e) { /* 목록만이라도 저장해 둔다 */ }
+}
+
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(SHELL).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(precache().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
