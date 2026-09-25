@@ -78,7 +78,7 @@ function railCard(st, m, now, i, also, sameName) {
         <div class="meta">${s.html}</div>
         ${also ? '<div class="ralso"><svg class="ic"><use href="#i-wc"/></svg> 이 역은 <b>지자체 자료에도</b> 있어요 — 아래 흰 카드에서 변기 수·전화를 볼 수 있습니다.</div>' : ''}
         <div class="rgo">
-          <a class="btn main sm" href="https://map.kakao.com/link/to/${encodeURIComponent(nm)},${ll}" target="_blank" rel="noopener" data-stop><svg><use href="#i-walk"/></svg>길찾기</a>
+          <a class="btn main sm" href="https://map.naver.com/p/directions/-/${st.lo},${st.la},${encodeURIComponent(nm)}/-/walk" target="_blank" rel="noopener" data-stop><svg><use href="#i-walk"/></svg>길찾기</a>
           <a class="btn ghost sm" href="https://map.kakao.com/link/roadview/${ll}" target="_blank" rel="noopener" data-stop><svg><use href="#i-eye"/></svg>입구 보기</a>
         </div>
         ${gongdan ? '<div class="rnone"><svg class="ic"><use href="#i-q"/></svg> 이 출처는 <b>여는 시간과 변기 수를 제공하지 않습니다.</b> 없다는 뜻이 아닙니다.</div>' : ''}
@@ -117,12 +117,13 @@ function openRailDetail(st, m) {
       ${st.t.map((t) => `<div class="rseat">${railSeat(t)}${fac(t)}</div>`).join('')}
       <div class="dsub">층은 <b>지면에서 가까운 순</b>으로, 같은 층이면 <b>개찰구 밖</b>을 먼저 보여 줍니다.</div>
     </div>
-    <div class="dsec"><h3>길찾기 (도보)</h3>
+    <div class="dsec"><h3>길찾기</h3>
       <div class="dbtns">
-        <a class="btn main" href="https://map.kakao.com/link/to/${encodeURIComponent(nm)},${ll}" target="_blank" rel="noopener"><svg><use href="#i-walk"/></svg>카카오맵 길찾기</a>
-        <a class="btn ghost" href="https://map.naver.com/p/directions/-/${st.lo},${st.la},${encodeURIComponent(nm)}/-/walk" target="_blank" rel="noopener"><svg><use href="#i-walk"/></svg>네이버 도보 길찾기</a>
+        <a class="btn main" href="https://map.naver.com/p/directions/-/${st.lo},${st.la},${encodeURIComponent(nm)}/-/walk" target="_blank" rel="noopener"><svg><use href="#i-walk"/></svg>네이버 도보 길찾기</a>
+        <a class="btn ghost" href="https://map.kakao.com/link/to/${encodeURIComponent(nm)},${ll}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>카카오맵 길찾기<small>자동차 기준</small></a>
       </div>
-      <div class="dsub">역 출입구까지 안내합니다. <b>출입구를 지나서는 위 안내를 보고</b> 찾아가세요.</div>
+      <div class="dsub">역 출입구까지 안내합니다. <b>출입구를 지나서는 위 안내를 보고</b> 찾아가세요.
+        카카오맵 길찾기는 <b>자동차 경로로 열립니다.</b></div>
     </div>
     <div class="dsec"><h3>지도·입구 확인</h3>
       <div class="dbtns">

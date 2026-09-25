@@ -86,12 +86,13 @@ function openDetail(rec, m) {
     <div class="dsec"><h3>여는 시간</h3>
       <div class="dtime">${st.html}<div class="raw">공공데이터 표기 · <b>${esc(rec.ht || '적혀 있지 않음')}</b></div></div>
     </div>
-    <div class="dsec"><h3>길찾기 (도보)</h3>
+    <div class="dsec"><h3>길찾기</h3>
       <div class="dbtns">
-        <a class="btn main" href="${L.kakaoWalk}" target="_blank" rel="noopener"><svg><use href="#i-walk"/></svg>카카오맵 길찾기</a>
-        <a class="btn ghost" href="${L.naverWalk}" target="_blank" rel="noopener"><svg><use href="#i-walk"/></svg>네이버 도보 길찾기</a>
+        <a class="btn main" href="${L.naverWalk}" target="_blank" rel="noopener"><svg><use href="#i-walk"/></svg>네이버 도보 길찾기</a>
+        <a class="btn ghost" href="${L.kakaoWalk}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>카카오맵 길찾기<small>자동차 기준</small></a>
       </div>
-      <div class="dsub">휴대폰에서 카카오맵 앱으로 열리면 목적지가 <b>좌표로 보일 수 있습니다</b>(앱이 이름을 받지 않습니다).${rec.p ? ' 아래 <b>카카오 장소</b>로 열면 이름 그대로 보입니다.' : ''}</div>
+      <div class="dsub"><b>걸어가는 길은 네이버</b>를 쓰세요. 카카오맵 길찾기는 <b>자동차 경로로 열립니다</b> — 앱에서 도보로 바꿀 수 있지만 한 번 더 눌러야 합니다.
+        휴대폰에서 카카오맵 앱으로 열리면 목적지가 <b>좌표로 보일 수 있습니다</b>.${rec.p ? ' 아래 <b>카카오 장소</b>로 열면 이름 그대로 보입니다.' : ''}</div>
     </div>
     <div class="dsec"><h3>지도에서 보기</h3>
       <div class="dbtns">

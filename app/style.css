@@ -436,3 +436,4 @@ body.hastab .body{padding-bottom:calc(4.5rem + var(--safe-b))}
 .srow.dead{background:var(--shut-soft);border-style:dashed}
 .srow.dead .stx b{text-decoration:line-through;color:var(--sub)}
 .srow.dead .stx span{color:var(--warn);font-weight:700}
+.btn small{display:block;font-size:0.6875rem;font-weight:600;opacity:.75;margin-top:1px}
