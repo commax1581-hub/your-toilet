@@ -158,6 +158,52 @@ def kakao_xy(name, line, region, key, cache, taken=None):
     return ''
 
 
+def compare_prev(df):
+    """지난 판과 견줘 **사라진 역**을 찾는다 — 역은 없어지지 않는다는 성질을 검사로 쓴다.
+
+    화장실·가게와 달리 역은 **노선이 연장되어 늘기만 하고 줄지 않는다**(사용자 지적, 사례지식 6-34).
+    그래서 같은 노선에서 **있던 역명이 사라졌다면** 셋 중 하나다: ① 개명 ② 원본 누락 ③ 우리 처리 오류.
+    같은 노선에 **새 역명이 동시에 나타났다면 개명으로 추정**하고, 자리가 가까우면 거의 확실하다.
+    추정은 여기까지 — 개명표(RENAMED)에 넣는 것은 사람이 확인한 뒤다.
+    """
+    if not OUT.exists():
+        return
+    from geocode_toilets import dist_m
+    prev = pd.read_csv(OUT, dtype=str, encoding='utf-8-sig').fillna('')
+    old = {(r['운영기관'], r['노선'], r['역명']): r for _, r in prev.iterrows()}
+    now = {(r['운영기관'], r['노선'], r['역명']): r for _, r in df.iterrows()}
+    gone, born = sorted(set(old) - set(now)), sorted(set(now) - set(old))
+    if not gone and not born:
+        print('지난 판과 견줌: 사라진 역 0 · 새 역 0')
+        return
+    # 짝은 **일대일**로 맞춘다 — 가까운 쌍부터 차지하게 한다.
+    # (한 새 역이 사라진 역 여럿의 짝으로 잡히면, 진짜 누락된 역이 '개명?'에 묻힌다)
+    pairs = sorted(((dist_m((float(old[g]['위도']), float(old[g]['경도'])),
+                            (float(now[b]['위도']), float(now[b]['경도']))), g, b)
+                    for g in gone for b in born
+                    if b[0] == g[0] and b[1] == g[1] and old[g]['위도'] and now[b]['위도']),
+                   key=lambda x: x[0])
+    match, used = {}, set()
+    for d0, g, b in pairs:
+        if g in match or b in used:
+            continue
+        match[g], used = (b, d0), used | {b}
+
+    rows = []
+    for k in gone:
+        best = match.get(k)
+        rows.append({'운영기관': k[0], '노선': k[1], '사라진역': k[2],
+                     '같은노선새역': best[0][2] if best else '', '거리m': round(best[1]) if best else '',
+                     '추정': '개명' if best and best[1] < 300 else ('개명?' if best else '확인 필요 — 같은 노선에 새 역이 없다')})
+    out = ROOT / 'data' / 'processed' / f'rail_changes_{pd.Timestamp.today():%Y%m%d}.csv'
+    pd.DataFrame(rows).to_csv(out, index=False, encoding='utf-8-sig')
+    print(f'\n■ 지난 판과 견줌 — 사라진 역 {len(gone)} · 새 역 {len(born)}  ({out.relative_to(ROOT)})')
+    for r in rows[:10]:
+        print(f"   {r['노선']} {r['사라진역']} → {r['같은노선새역'] or '(없음)'} {r['거리m']}m · {r['추정']}")
+    if any(r['추정'].startswith('확인') for r in rows):
+        print('   ※ 역은 없어지지 않는다 — 짝이 없는 것은 원본 누락이거나 우리 처리 오류다. 반드시 확인한다.')
+
+
 def merge_same_spot(df):
     """같은 기관·같은 노선에서 **좌표가 300m 안이면 같은 역**으로 보고 한 줄로 합친다.
 
@@ -229,6 +275,7 @@ def main():
         CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding='utf-8')
         print(f'카카오로 찾음 {got:,} · 못 찾음 {len(need) - got:,}')
         df = merge_same_spot(df)
+        compare_prev(df)                                    # 덮어쓰기 전에 지난 판과 견준다
         df.drop(columns=['키']).to_csv(OUT, index=False, encoding='utf-8-sig')
         print(f'저장: {OUT.relative_to(ROOT)}')
 

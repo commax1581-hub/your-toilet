@@ -41,21 +41,42 @@ function pushRecent(it) {
 const clearAllSaved = () => { BOX.set('fav', []); BOX.set('recent', []); };
 
 /** 저장·최근에 담긴 것 하나를 줄로 그린다(거리는 지금 기준점이 있을 때만) */
+/** 저장해 둔 역이 지금도 있나 — 없으면 **이름이 바뀐 것**이거나 원본에서 빠진 것이다.
+    역은 화장실·가게와 달리 **없어지지 않는다**(노선이 연장되어 늘 뿐이다, 6-34).
+    그래서 사라졌다면 먼저 **개명**을 의심하고, 개명표에 있으면 새 이름으로 이어 준다. */
+function railNow(it) {
+  if (it.k !== 'r' || !RAIL || !RAIL.s) return { st: it.st, state: 'ok' };
+  const key = (n) => `${it.st.op}|${it.st.ln}|${n}`;
+  const find = (n) => RAIL.s.find((s) => `${s.op}|${s.ln}|${s.n}` === key(n));
+  const same = find(it.st.n);
+  if (same) return { st: same, state: 'ok' };
+  const now = (RAIL.renamed || {})[it.st.n];
+  const moved = now && find(now);
+  if (moved) return { st: moved, state: 'renamed', was: it.st.n };
+  return { st: it.st, state: 'gone' };
+}
+
 /** 폐기된 번호인가 — 같은 관리번호에 **다른 시설**이 들어와 번호를 끊은 곳(사례지식 6-33).
     저장해 둔 사람에게 알리지 않으면 **다른 화장실을 보고 찾아간다.** */
 const isRetired = (it) => it.k === 't' && S.index && (S.index.retired || []).includes(it.rec.id);
 
 function savedRow(it, i, where) {
+  const r = railNow(it);
   const m = S.base ? distM(S.base.la, S.base.lo, it.la, it.lo) : null;
-  const dead = isRetired(it);
+  const dead = isRetired(it) || r.state === 'gone';
   const dist = m == null ? '' : `<span class="sdist">${m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`}</span>`;
   const icon = it.k === 'r' ? 'i-train' : it.k === 'p' ? 'i-pin' : 'i-toilet';
-  const sub = it.k === 'r' ? `${esc(lineLabel(it.st))} · ${esc(it.st.src)}`
+  const sub = it.k === 'r'
+    ? (r.state === 'renamed'
+      ? `${esc(lineLabel(r.st))} · <b>${esc(r.was)}역에서 ${esc(r.st.n)}역으로 이름이 바뀌었어요</b>`
+      : `${esc(lineLabel(it.st))} · ${esc(it.st.src)}`)
     : it.k === 'p' ? esc(it.addr || '저장한 자리')
       : esc(shortAddr(it.rec.a));
   return `<div class="srow${it.k === 'r' ? ' rail' : ''}${dead ? ' dead' : ''}" data-${where}="${i}" role="button" tabindex="0">
       <svg class="sic"><use href="#${icon}"/></svg>
-      <div class="stx"><b>${esc(it.n)}</b><span>${dead ? '이 자리에는 다른 시설이 들어왔어요 — 확인이 필요합니다' : sub}</span></div>${dead ? '' : dist}
+      <div class="stx"><b>${esc(r.state === 'renamed' ? `${r.st.n}역` : it.n)}</b><span>${dead
+        ? (r.state === 'gone' ? '지금 자료에 이 역이 없어요 — 이름이 바뀌었는지 확인이 필요합니다'
+          : '이 자리에는 다른 시설이 들어왔어요 — 확인이 필요합니다') : sub}</span></div>${dead ? '' : dist}
       <button class="sdel" data-del="${where}:${i}" aria-label="${esc(it.n)} 지우기"><svg><use href="#i-x"/></svg></button>
     </div>`;
 }
@@ -66,7 +87,10 @@ function savedRow(it, i, where) {
 async function openSaved(it) {
   await Promise.all([loadIndex(), loadRail()]);
   if (it.k === 't') return openDetail(it.rec, S.base ? distM(S.base.la, S.base.lo, it.rec.la, it.rec.lo) : null);
-  if (it.k === 'r') return openRailDetail(it.st, S.base ? distM(S.base.la, S.base.lo, it.st.la, it.st.lo) : null);
+  if (it.k === 'r') {
+    const st = railNow(it).st;                          // 이름이 바뀌었으면 지금 자료의 역으로 연다
+    return openRailDetail(st, S.base ? distM(S.base.la, S.base.lo, st.la, st.lo) : null);
+  }
   S.mode = 'other';
   S.query = null;
   S.base = { la: it.la, lo: it.lo, addr: it.addr || '저장한 자리', name: it.n };

@@ -145,8 +145,11 @@ def main():
                      't': toilets})
 
     rows.sort(key=lambda x: (x['n'], x['ln']))
+    # 개명표를 함께 싣는다 — 저장해 둔 역이 **이름만 바뀐 것**이면 앱이 새 이름으로 이어 준다(6-34).
+    # 역은 없어지지 않으므로, 이 표에도 없이 사라진 이름은 앱이 "확인 필요"로 알린다.
     data = {'date': {'국가철도공단': '2025-06-30', '서울교통공사': '2026-02-12'},
-            'count': len(rows), 'toilets': sum(len(x['t']) for x in rows), 's': rows}
+            'count': len(rows), 'toilets': sum(len(x['t']) for x in rows),
+            'renamed': RENAMED, 's': rows}
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     kb = OUT.stat().st_size / 1024
