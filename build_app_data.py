@@ -19,6 +19,7 @@ from collections import Counter, defaultdict
 from difflib import SequenceMatcher
 from pathlib import Path
 import pandas as pd
+import build_registry as br
 from campus_coords import kind, MIN_GROUP
 from geocode_toilets import core
 from hours import parse as parse_hours
@@ -244,6 +245,9 @@ def main():
     stamp = snap.name
     shown_n = sum(len(v) for v in tiles.values())
     index = {'date': f'{stamp[:4]}-{stamp[4:6]}-{stamp[6:]}', 'tile': TILE, 'count': shown_n, 'toilets': len(d),
+             # 폐기된 영구번호 — 같은 관리번호에 다른 시설이 들어와 번호를 끊은 것(사례지식 6-33).
+             # 앱은 이 번호로 저장해 둔 곳을 "없어진 곳"으로 알려 준다(작은 목록이라 색인에 함께 싣는다).
+             'retired': sorted(br.load().get('retired', {})),
              'tiles': {f'{ty}_{tx}': len(v) for (ty, tx), v in sorted(tiles.items())}}
     (OUT / 'index.json').write_text(json.dumps(index, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 

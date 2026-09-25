@@ -135,7 +135,9 @@ def propose(raw_file):
     # 행정구역 개편으로 주소 표기만 바뀐 것과 가르려고 **좌표 이동**을 함께 본다(2026-09-25 리허설에서 발견).
     item = ch.groupby('관리번호')['항목'].apply(lambda v: set('·'.join(v).split('·')))
     both = {m for m, s in item.items() if '이름' in s and '주소' in s}
-    swapped = [x for x in moved_far if x['관리번호'] in both]
+    # 판정은 **제안**까지만 한다. 이름·주소가 함께 바뀌고 좌표가 1km 넘게 뛰었으면 거의 확실히 다른 시설이지만,
+    # 번호를 폐기하는 일은 되돌리기 어려워 마지막 결정은 사람이 한다(결정 칸).
+    swapped = [{**x, '결정': '다른 시설' if x['이동m'] >= 1000 else '같은 시설'} for x in moved_far if x['관리번호'] in both]
     hr_changed = set(ch.loc[ch['항목'].str.contains('개방시간'), '관리번호'])
     hrs = [(r['관리번호'], r['화장실명'], r['개방시간상세'], parse_hours(r['개방시간'], r['개방시간상세'])) for r in cur.to_dict('records')
            if r['관리번호'] in targets or r['관리번호'] in hr_changed]
@@ -151,7 +153,7 @@ def propose(raw_file):
              f'2. 새로 생긴 좌표 실패·대략, 도로명·지번 엇갈림 {len(newly_bad):,}곳 — new_bad_coords.csv (원천 오류 신고 또는 data/address_overrides.csv)',
              f'3. 좌표가 {MOVE_LIMIT}m 넘게 움직인 곳 {len(moved_far):,} — moved_coords.csv (핀이 조용히 이동하지 않게 확인)',
              f'4. 읽지 못한 개방시간 표기 {len(unread):,}곳 — unread_hours.csv (자주 나오면 hours.py 규칙 + test_hours.py)',
-             f'5. **같은 번호, 다른 시설** 의심 {len(swapped):,}곳 — swapped_ids.csv (이름·주소가 함께 바뀌고 좌표도 멀리 이동 → 번호 재사용일 수 있다)',
+             f'5. **같은 번호, 다른 시설** 의심 {len(swapped):,}곳 — swapped_ids.csv (결정 칸: 다른 시설 → 옛 번호 폐기·새 번호 / 같은 시설 → 그대로)',
              '', f'반영: `python update.py --publish {out.relative_to(ROOT).as_posix()}`']
     # 품질 지표(갱신마다 기록해 추세를 본다)
     from hours import parse as _ph
@@ -175,7 +177,10 @@ def propose(raw_file):
 
     newly_bad[['관리번호', '화장실명', '소재지도로명주소', '소재지지번주소', '좌표정확도', '검증결과', '확인필요', '좌표비고']].to_csv(out / 'new_bad_coords.csv', index=False, encoding='utf-8-sig')
     pd.DataFrame(moved_far, columns=['관리번호', '화장실명', '이동m', '주소', '지난등급', '이번등급', '처리', '지도']).to_csv(out / 'moved_coords.csv', index=False, encoding='utf-8-sig')
-    pd.DataFrame(swapped, columns=['관리번호', '화장실명', '이동m', '주소', '지난등급', '이번등급', '처리', '지도']).to_csv(out / 'swapped_ids.csv', index=False, encoding='utf-8-sig')
+    for x in swapped:                                     # 옛 이름·주소를 함께 적어 사람이 눈으로 가를 수 있게
+        old = prev_geo.loc[x['관리번호']]
+        x['옛이름'], x['옛주소'] = old.get('화장실명', ''), old.get('소재지도로명주소', '') or old.get('소재지지번주소', '')
+    pd.DataFrame(swapped, columns=['관리번호', '결정', '화장실명', '옛이름', '이동m', '주소', '옛주소', '지난등급', '이번등급', '지도']).to_csv(out / 'swapped_ids.csv', index=False, encoding='utf-8-sig')
     pd.DataFrame(unread, columns=['관리번호', '화장실명', '개방시간상세', '이유']).to_csv(out / 'unread_hours.csv', index=False, encoding='utf-8-sig')
     with open(out / 'report.md', 'a', encoding='utf-8') as f:
         f.write('\n'.join(lines) + '\n')
@@ -191,7 +196,21 @@ def publish(d):
         du.apply_review(d)                                  # 결정 칸이 '이어받기'인 짝만
     raw = pd.read_csv(d / 'toilets_raw.csv', dtype=str, encoding='utf-8-sig').fillna('')
     reg = br.load()
-    new, gone = br.assign(reg, raw['관리번호'], date.today().isoformat())
+    today = date.today().isoformat()
+    # **같은 번호, 다른 시설** — 사람이 '다른 시설'로 결정한 것만 옛 번호를 폐기하고 새 번호를 준다.
+    # 원천 관리번호가 영원하다는 보장이 없기 때문이다(사례지식 6-33). assign보다 먼저 해야 새 번호가 제대로 붙는다.
+    sw = d / 'swapped_ids.csv'
+    retired = 0
+    if sw.exists() and sw.stat().st_size > 3:
+        for r in pd.read_csv(sw, dtype=str).fillna('').to_dict('records'):
+            if r.get('결정', '').strip() != '다른 시설':
+                continue
+            n = br.retire(reg, r['관리번호'], {'옛이름': r.get('옛이름', ''), '옛주소': r.get('옛주소', ''),
+                                              '새이름': r.get('화장실명', ''), '새주소': r.get('주소', '')}, today)
+            if n:
+                retired += 1
+                print(f"  번호 폐기: {r.get('옛이름', '')} → {n} (새 시설: {r.get('화장실명', '')}, {r['이동m']}m 이동)")
+    new, gone = br.assign(reg, raw['관리번호'], today)
     br.save(reg)
     stamp = d.name.split('_')[-1]
     snap = ROOT / 'data' / 'snapshots' / stamp
@@ -200,7 +219,7 @@ def publish(d):
     g = pd.read_csv(d / 'toilets_geo.csv', dtype=str, encoding='utf-8-sig').fillna('').drop(columns=['처리', '확인필요'])
     g.insert(0, '영구번호', g['관리번호'].map(reg['by_mng']))
     g.to_csv(snap / 'toilets_geo.csv', index=False, encoding='utf-8-sig')
-    print(f'대장: 새 번호 {new:,}, 숨김 {gone:,} · 기준본 저장 data/snapshots/{stamp}/')
+    print(f'대장: 새 번호 {new:,}, 숨김 {gone:,}, 폐기 {retired:,} · 기준본 저장 data/snapshots/{stamp}/')
     subprocess.run([sys.executable, str(ROOT / 'campus_coords.py')], check=True)   # 새로 몰린 곳 포함 캠퍼스 건물 좌표 다시(캐시 재사용)
     subprocess.run([sys.executable, str(ROOT / 'verify_locations.py')], check=True)  # 도로명·지번 어긋남·필지 번지 불일치 검증(T11·T12)
 

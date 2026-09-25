@@ -41,16 +41,21 @@ function pushRecent(it) {
 const clearAllSaved = () => { BOX.set('fav', []); BOX.set('recent', []); };
 
 /** 저장·최근에 담긴 것 하나를 줄로 그린다(거리는 지금 기준점이 있을 때만) */
+/** 폐기된 번호인가 — 같은 관리번호에 **다른 시설**이 들어와 번호를 끊은 곳(사례지식 6-33).
+    저장해 둔 사람에게 알리지 않으면 **다른 화장실을 보고 찾아간다.** */
+const isRetired = (it) => it.k === 't' && S.index && (S.index.retired || []).includes(it.rec.id);
+
 function savedRow(it, i, where) {
   const m = S.base ? distM(S.base.la, S.base.lo, it.la, it.lo) : null;
+  const dead = isRetired(it);
   const dist = m == null ? '' : `<span class="sdist">${m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`}</span>`;
   const icon = it.k === 'r' ? 'i-train' : it.k === 'p' ? 'i-pin' : 'i-toilet';
   const sub = it.k === 'r' ? `${esc(lineLabel(it.st))} · ${esc(it.st.src)}`
     : it.k === 'p' ? esc(it.addr || '저장한 자리')
       : esc(shortAddr(it.rec.a));
-  return `<div class="srow${it.k === 'r' ? ' rail' : ''}" data-${where}="${i}" role="button" tabindex="0">
+  return `<div class="srow${it.k === 'r' ? ' rail' : ''}${dead ? ' dead' : ''}" data-${where}="${i}" role="button" tabindex="0">
       <svg class="sic"><use href="#${icon}"/></svg>
-      <div class="stx"><b>${esc(it.n)}</b><span>${sub}</span></div>${dist}
+      <div class="stx"><b>${esc(it.n)}</b><span>${dead ? '이 자리에는 다른 시설이 들어왔어요 — 확인이 필요합니다' : sub}</span></div>${dead ? '' : dist}
       <button class="sdel" data-del="${where}:${i}" aria-label="${esc(it.n)} 지우기"><svg><use href="#i-x"/></svg></button>
     </div>`;
 }

@@ -433,3 +433,6 @@ body.hastab .body{padding-bottom:calc(4.5rem + var(--safe-b))}
   .bar .home{padding:0 9px}
   .bar{gap:7px}
 }
+.srow.dead{background:var(--shut-soft);border-style:dashed}
+.srow.dead .stx b{text-decoration:line-through;color:var(--sub)}
+.srow.dead .stx span{color:var(--warn);font-weight:700}
