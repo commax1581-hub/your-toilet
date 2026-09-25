@@ -6,7 +6,7 @@ import hashlib, re, sys
 from pathlib import Path
 
 APP = Path(__file__).parent / 'app'
-FILES = ['style.css', 'hours.js', 'app.js', 'detail.js', 'mapview.js', 'rail.js']
+FILES = ['style.css', 'hours.js', 'app.js', 'detail.js', 'mapview.js', 'rail.js', 'saved.js']
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 

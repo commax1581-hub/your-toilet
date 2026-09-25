@@ -119,6 +119,7 @@ ${rec.dy ? ' · ' : ''}번호 ${esc(rec.id)}${rec.ids ? ` · 합친 등록 ${rec
       <div class="dfix"><b>정보가 틀렸나요?</b><br>① 위 관리기관에 전화 ② <span id="d-gov">해당 시군구 홈페이지</span> ③ <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터포털 오류 신고</a>
         <div class="dsub">정보는 각 지자체가 관리하니, 틀린 내용은 관리기관에 알려 주세요.</div></div>
     </div>`;
+  markDetail({ k: 't', n: rec.n, la: rec.la, lo: rec.lo, rec });
   go('detail');
   $('#detail-body').scrollTop = 0;
   sigunguHome(rec.a).then((g) => {

@@ -1,6 +1,7 @@
 /* 가장 가까운 화장실 — 1단계: 첫 화면 → 위치 확정(핀) → 가까운 목록
    데이터: app/data/index.json(칸 목록) + app/data/t/<행>_<열>.json(0.05도 ≈ 5km 칸)
-   규칙은 docs/앱구현-시작점.md 4·5장. 위치는 저장하지 않는다(화면 안에서만 쓴다). */
+   규칙은 docs/앱구현-시작점.md 4·5장. 지금 위치는 저장하지 않는다(화면 안에서만 쓴다).
+   사용자가 스스로 담은 것(저장한 곳·최근 본 곳)만 기기 안에 남는다 — saved.js, 결정 6-28. */
 'use strict';
 
 const TILE = 0.05;              // 지도 칸 크기(도)
@@ -47,12 +48,31 @@ function go(name, fromPop) {
   S.screen = name;
   document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('on', el.id === `s-${name}`));
   if (name === 'pin' && map) setTimeout(() => map.relayout(), 0);
+  if (name === 'saved') renderSaved();
+  if (name === 'recent') renderRecent();
+  syncTabs(name);
   if (name === 'search') setTimeout(() => $('#q').focus(), 60);
   if (!fromPop) {
     if (same) history.replaceState({ s: name }, '');
     else history.pushState({ s: name }, '');
   }
 }
+/* 하단 메뉴 — 목록·저장·최근·알아보기에서만 보인다(첫 화면·핀·검색·상세·지도에는 없다).
+   상세와 지도는 '깊이 들어간 화면'이라 탭을 두면 돌아가는 길이 두 개가 되어 헷갈린다. */
+const TABBED = { list: 'near', saved: 'saved', recent: 'recent', info: 'info' };
+function syncTabs(name) {
+  const bar = $('#tabbar');
+  bar.hidden = !TABBED[name];
+  bar.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.tab === TABBED[name]));
+  document.body.classList.toggle('hastab', !!TABBED[name]);
+}
+$('#tabbar').onclick = async (e) => {
+  const b = e.target.closest('button[data-tab]');
+  if (!b) return;
+  if (b.dataset.tab === 'near') return S.base ? showList() : go('home');
+  go(b.dataset.tab);
+};
+
 history.replaceState({ s: 'home' }, '');
 window.addEventListener('popstate', (e) => go((e.state && e.state.s) || 'home', true));
 document.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => go(b.dataset.go)));
@@ -74,7 +94,7 @@ function background(dark) {
 
 
 /* ── 보기 설정 — 어두운 모드·글씨 크기 ─────────
-   설정만 저장한다(위치는 저장하지 않는다). 기본은 기기 설정을 따름. */
+   기본은 기기 설정을 따름. 저장하는 것은 설정과 **사용자가 스스로 담은 것**뿐(saved.js). */
 const PREF = {
   get(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
@@ -93,7 +113,25 @@ function applyPrefs() {
   if (map) setTimeout(() => map.relayout(), 0);
 }
 
+/** 지금 보고 있는 상세(화장실 또는 역) — 별 버튼과 '최근 본 곳'이 함께 본다 */
+function markDetail(it) {
+  S.cur = it;
+  pushRecent(it);
+  paintFav();
+}
+function paintFav() {
+  const b = $('#b-fav');
+  if (!b || !S.cur) return;
+  const on = isFav(S.cur);
+  b.classList.toggle('on', on);
+  b.innerHTML = `<svg><use href="#${on ? 'i-star-on' : 'i-star'}"/></svg>${on ? '저장됨' : '저장'}`;
+}
+$('#b-fav').onclick = () => { if (S.cur) { toggleFav(S.cur); paintFav(); } };
+
 $('#b-set').onclick = () => $('#s-set').classList.add('on');
+$('#b-set2').onclick = () => $('#s-set').classList.add('on');
+$('#b-pre').onclick = (e) => preloadArea(e.currentTarget);
+$('#b-clearall').onclick = (e) => { clearAllSaved(); e.currentTarget.textContent = '지웠습니다'; };
 document.querySelectorAll('#s-set [data-close]').forEach((b) => (b.onclick = () => $('#s-set').classList.remove('on')));
 $('#seg-theme').onclick = (e) => { const b = e.target.closest('button[data-v]'); if (b) { PREF.set('theme', b.dataset.v); applyPrefs(); } };
 $('#seg-size').onclick = (e) => { const b = e.target.closest('button[data-v]'); if (b) { PREF.set('size', b.dataset.v); applyPrefs(); if (S.screen === 'list') showList(); } };
@@ -313,6 +351,7 @@ let searchJob = 0, searchTimer = null, lastQuery = '';
 function pickPlace(p) {
   S.base = { la: p.la, lo: p.lo, addr: p.name, sub: p.addr };
   S.query = { name: p.name, la: p.la, lo: p.lo };      // 이름으로 찾아온 곳 — 목록 맨 위에 그 장소의 화장실을 먼저 보여 준다
+  pushRecent({ k: 'p', n: p.name, addr: p.addr || p.name, la: p.la, lo: p.lo });   // 같은 주소를 또 치지 않게
   openPin('other', p);
 }
 

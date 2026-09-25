@@ -131,6 +131,7 @@ function openRailDetail(st, m) {
       <div class="dfix"><b>정보가 틀렸나요?</b><br>① <b>${esc(st.op)}</b>(역 운영기관)에 알리기 ② <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터포털 오류 신고</a>
         <div class="dsub">역 화장실은 <b>지자체가 아니라 운영기관</b>이 관리합니다.</div></div>
     </div>`;
+  markDetail({ k: 'r', n: `${st.n}역`, la: st.la, lo: st.lo, st });
   go('detail');
   $('#detail-body').scrollTop = 0;
 }

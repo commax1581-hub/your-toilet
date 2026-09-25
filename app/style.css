@@ -338,3 +338,33 @@ html[data-size] .card .n{white-space:normal;display:-webkit-box;-webkit-line-cla
 :root[data-theme="dark"]{ --src-bg:#12272e; --src-soft:#1b3d47; --src-line:#25545f; --src-ink:#bdeef8; }
 .mpin.rail{background:var(--src-soft);color:var(--src-ink);border:1.6px solid var(--src-line)}
 :root[data-theme="dark"] .mpin.rail{border-color:var(--src-ink)}
+
+/* ── 하단 메뉴 넷 ──────────────────────────
+   급할 때 쓰는 앱이라 넷을 넘기지 않는다(6-28). 44px 이상 · 아이폰 아래 여백(safe-area)까지 덮는다. */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;background:var(--paper);
+  border-top:1px solid var(--line);padding-bottom:var(--safe-b)}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-height:3.25rem;border:0;background:none;color:var(--sub);font:inherit;font-size:0.6875rem;font-weight:700;
+  padding:6px 2px;cursor:pointer}
+.tabbar button svg{width:1.375rem;height:1.375rem}
+.tabbar button.on{color:var(--brand)}
+body.hastab .body{padding-bottom:calc(4.5rem + var(--safe-b))}
+
+/* 저장한 곳 · 최근 본 곳 */
+.body.saved{padding:12px}
+.ssec{font-size:0.8125rem;color:var(--sub);margin:16px 2px 8px;font-weight:800}
+.ssec span{color:var(--brand)}
+.srow{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);
+  border-radius:14px;padding:11px 12px;margin-bottom:8px;cursor:pointer;min-height:3rem}
+.srow.rail{background:var(--src-bg);border-color:var(--src-line)}
+.srow .sic{width:1.375rem;height:1.375rem;color:var(--sub);flex:none}
+.srow.rail .sic{color:var(--src-ink)}
+.stx{min-width:0;flex:1}
+.stx b{display:block;font-weight:800;font-size:0.9375rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stx span{display:block;font-size:0.75rem;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sdist{font-weight:800;font-size:0.8125rem;white-space:nowrap}
+.sdel{border:0;background:none;color:var(--sub);font-size:1rem;min-width:2.75rem;min-height:2.75rem;cursor:pointer}
+.sempty{background:var(--soft);border-radius:14px;padding:16px;font-size:0.8125rem;color:var(--sub);line-height:1.7}
+.sfoot{margin-top:18px;font-size:0.75rem;color:var(--sub);line-height:1.7}
+.infoacts{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.bar .home.on{color:var(--brand)}

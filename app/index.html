@@ -12,7 +12,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=5409ba6c">
+<link rel="stylesheet" href="style.css?v=c7d09d58">
 <script>
   /* 저장된 보기 설정을 그리기 전에 입힌다(깜빡임 방지). 기기 설정을 따르는 것이 기본. */
   try {
@@ -54,6 +54,11 @@
   <symbol id="i-gate" viewBox="0 0 24 24"><rect x="3" y="6" width="4" height="13" rx="1.4" fill="none" stroke="currentColor" stroke-width="2"/><rect x="17" y="6" width="4" height="13" rx="1.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 11h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 11v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
   <symbol id="i-exit" viewBox="0 0 24 24"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 12h9M17.5 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5.3l3.4 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.8L12 16.9 6.7 19.6l1.1-5.8L3.5 9.7l5.9-.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-star-on" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.8L12 16.9 6.7 19.6l1.1-5.8L3.5 9.7l5.9-.8z" fill="currentColor"/></symbol>
+  <symbol id="i-near" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.6" fill="currentColor"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4.5h6a2.5 2.5 0 0 1 2 1 2.5 2.5 0 0 1 2-1h6v14h-6a2.5 2.5 0 0 0-2 1 2.5 2.5 0 0 0-2-1H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3.5v12M7.5 11l4.5 4.5 4.5-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </defs></svg>
 
@@ -154,6 +159,7 @@
     <div class="bar">
       <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
       <div class="grow"><div class="t">화장실 정보</div><div class="s" id="dt-s"></div></div>
+      <button class="home" id="b-fav"><svg><use href="#i-star"/></svg>저장</button>
       <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
     </div>
     <div class="body" id="detail-body"></div>
@@ -167,6 +173,11 @@
       <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
     </div>
     <div class="body info">
+      <div class="infoacts">
+        <button class="btn ghost" id="b-set2"><svg><use href="#i-gear"/></svg>보기 설정 — 어둡게 · 글씨 크기</button>
+        <button class="btn ghost" id="b-pre"><svg><use href="#i-down"/></svg>미리 받아 두기 (오프라인)</button>
+        <div class="dsub"><b>지하에서는 인터넷이 잘 안 됩니다.</b> 지금 보고 있는 둘레를 미리 받아 두면 신호가 없어도 목록이 열립니다(지도는 카카오 서버라 저장할 수 없습니다).</div>
+      </div>
       <h3>이 앱은</h3>
       <p>행정안전부 <b>공중화장실정보</b>(공공데이터포털)로, 지금 있는 자리에서 <b>가장 가까운 공중·개방화장실</b>을 찾아 줍니다. 비영리 개인 제작이며 공식 서비스가 아닙니다.</p>
 
@@ -220,7 +231,9 @@
       </ul>
 
       <h3>위치와 개인정보</h3>
-      <p>위치는 <b>이 화면에서 찾는 데만</b> 씁니다 — 저장하지도, 어디로 보내지도 않습니다. 저장하는 것은 <b>보기 설정</b>(밝게/어둡게·글씨 크기)뿐입니다.</p>
+      <p>지금 위치는 <b>이 화면에서 찾는 데만</b> 쓰고 <b>어디로도 보내지 않습니다.</b>
+      <b>저장한 곳·최근 본 곳</b>과 보기 설정은 <b>이 휴대폰 안에만</b> 남습니다 — 서버로 보내지 않으며, 각 화면에서 <b>한 번에 지울 수 있습니다.</b>
+      <button class="linklike" id="b-clearall">저장한 곳·최근 본 곳 모두 지우기</button></p>
 
       <h3>정보가 틀렸다면</h3>
       <p>원본은 각 지자체가 관리합니다. 상세 화면 아래의 <b>관리기관 전화</b>·<b>시군구 홈페이지</b>·<b>공공데이터포털 오류 신고</b>로 알려 주시면 고쳐집니다.</p>
@@ -229,6 +242,34 @@
       실제와 다를 수 있습니다. 시설 상태·개방 시간은 관리기관에 확인해 주세요.</p>
     </div>
   </section>
+
+  <!-- ⑨ 저장한 곳 -->
+  <section class="screen" id="s-saved">
+    <div class="bar">
+      <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+      <div class="grow"><div class="t">저장한 곳</div><div class="s">이 휴대폰 안에만 남습니다</div></div>
+      <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+    </div>
+    <div class="body saved" id="saved-body"></div>
+  </section>
+
+  <!-- ⑩ 최근 본 곳 -->
+  <section class="screen" id="s-recent">
+    <div class="bar">
+      <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+      <div class="grow"><div class="t">최근 본 곳</div><div class="s">20개까지 · 이 휴대폰 안에만</div></div>
+      <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+    </div>
+    <div class="body saved" id="recent-body"></div>
+  </section>
+
+  <!-- 하단 메뉴 — 자주 쓰는 넷(첫 화면·상세·지도에는 두지 않는다) -->
+  <nav class="tabbar" id="tabbar" hidden>
+    <button data-tab="near"><svg><use href="#i-near"/></svg>가까운 곳</button>
+    <button data-tab="saved"><svg><use href="#i-star"/></svg>저장한 곳</button>
+    <button data-tab="recent"><svg><use href="#i-clock"/></svg>최근 본 곳</button>
+    <button data-tab="info"><svg><use href="#i-book"/></svg>알아보기</button>
+  </nav>
 
   <!-- 보기 설정 — 어두운 모드·글씨 크기 -->
   <div class="sheet" id="s-set">
@@ -259,9 +300,10 @@
 
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6516210bcdd3c0a50b562ea3dedda4a3&libraries=services&autoload=false" onerror="window.__kakaoFail=true"></script>
 <script src="hours.js?v=f8a06c08"></script>
-<script src="app.js?v=e5b68520"></script>
-<script src="detail.js?v=89bbe22e"></script>
-<script src="rail.js?v=87775d25"></script>
+<script src="app.js?v=2fc91782"></script>
+<script src="detail.js?v=73451bfd"></script>
+<script src="saved.js?v=8e458333"></script>
+<script src="rail.js?v=64335d6e"></script>
 <script src="mapview.js?v=bafed3f0"></script>
 </body>
 </html>

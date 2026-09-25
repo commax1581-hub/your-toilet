@@ -1,10 +1,10 @@
 /* 오프라인 — 한 번 본 화면과 지도 칸은 인터넷이 없어도 열린다.
    껍데기(화면 파일)는 받아 두고, 지도 칸은 본 것만 쌓되 80개까지만 둔다(용량 폭주 방지).
    카카오 지도는 남의 서버라 저장할 수 없다 → 오프라인에서는 목록·상세만 된다(앱이 이미 그렇게 견딘다). */
-const SHELL = 'shell-v2';
+const SHELL = 'shell-v3';
 const TILES = 'tiles-v1';
 const KEEP = 80;
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'hours.js', 'detail.js', 'mapview.js', 'rail.js',
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'hours.js', 'detail.js', 'mapview.js', 'rail.js', 'saved.js',
   'icon.svg', 'icon-180.png', 'icon-192.png', 'manifest.webmanifest',
   'img/bg_day_blue_1080.webp', 'img/bg_evening_1080.webp', 'img/bg_night_1080.webp',
   'data/index.json', 'data/holidays.json', 'data/gov_sites.json', 'data/rail.json'];
