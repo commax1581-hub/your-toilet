@@ -105,6 +105,37 @@ def propose(raw_file):
     newly_bad = t[(t['좌표정확도'].isin(['C', 'X']) & ~t['관리번호'].isin(retry)) | (t['확인필요'].fillna('') != '')]
     fixed = t[t['관리번호'].isin(retry) & t['좌표정확도'].isin(SHOWN)]
     ch = pd.read_csv(out / 'changes.csv', dtype=str).fillna('')
+
+    # 좌표가 **조용히 멀리 움직인 곳** — 지난 기준본과 대조한다.
+    # 이름·주소가 그대로인데 핀만 옮겨 가면 사용자는 헛걸음을 하고도 이유를 모른다(T31에서 이 계산이 빠져 있었다).
+    def _xy(la, lo):
+        try:
+            return (float(la), float(lo))
+        except (TypeError, ValueError):
+            return None
+
+    moved = []
+    for r in geo.to_dict('records'):
+        m = r['관리번호']
+        if m not in prev_geo.index:
+            continue
+        now_xy, old_xy = _xy(r['위도'], r['경도']), _xy(prev_geo.at[m, '위도'], prev_geo.at[m, '경도'])
+        if not now_xy or not old_xy:
+            continue
+        d = gt.dist_m(now_xy, old_xy)
+        if d > MOVE_LIMIT:
+            moved.append({'관리번호': m, '화장실명': r['화장실명'], '이동m': round(d),
+                          '주소': r['소재지도로명주소'] or r['소재지지번주소'],
+                          '지난등급': prev_geo.at[m, '좌표정확도'], '이번등급': r['좌표정확도'], '처리': r['처리'],
+                          '지도': f"https://map.kakao.com/link/map/{r['화장실명']},{r['위도']},{r['경도']}"})
+    moved_far = sorted(moved, key=lambda x: -x['이동m'])
+
+    # **같은 번호, 다른 시설** — 관리번호는 그대로인데 이름과 주소가 함께 바뀌고 좌표까지 멀리 옮겨 갔다면
+    # 지자체가 번호를 **다시 쓴 것**일 수 있다. 그러면 우리 영구번호(공유 링크)가 엉뚱한 곳을 가리킨다.
+    # 행정구역 개편으로 주소 표기만 바뀐 것과 가르려고 **좌표 이동**을 함께 본다(2026-09-25 리허설에서 발견).
+    item = ch.groupby('관리번호')['항목'].apply(lambda v: set('·'.join(v).split('·')))
+    both = {m for m, s in item.items() if '이름' in s and '주소' in s}
+    swapped = [x for x in moved_far if x['관리번호'] in both]
     hr_changed = set(ch.loc[ch['항목'].str.contains('개방시간'), '관리번호'])
     hrs = [(r['관리번호'], r['화장실명'], r['개방시간상세'], parse_hours(r['개방시간'], r['개방시간상세'])) for r in cur.to_dict('records')
            if r['관리번호'] in targets or r['관리번호'] in hr_changed]
@@ -120,6 +151,7 @@ def propose(raw_file):
              f'2. 새로 생긴 좌표 실패·대략, 도로명·지번 엇갈림 {len(newly_bad):,}곳 — new_bad_coords.csv (원천 오류 신고 또는 data/address_overrides.csv)',
              f'3. 좌표가 {MOVE_LIMIT}m 넘게 움직인 곳 {len(moved_far):,} — moved_coords.csv (핀이 조용히 이동하지 않게 확인)',
              f'4. 읽지 못한 개방시간 표기 {len(unread):,}곳 — unread_hours.csv (자주 나오면 hours.py 규칙 + test_hours.py)',
+             f'5. **같은 번호, 다른 시설** 의심 {len(swapped):,}곳 — swapped_ids.csv (이름·주소가 함께 바뀌고 좌표도 멀리 이동 → 번호 재사용일 수 있다)',
              '', f'반영: `python update.py --publish {out.relative_to(ROOT).as_posix()}`']
     # 품질 지표(갱신마다 기록해 추세를 본다)
     from hours import parse as _ph
@@ -142,6 +174,8 @@ def propose(raw_file):
     lines += ['', f'## 표본 검수 {len(rows)}곳 — sample_check.csv (지도·로드뷰 링크, 틀리면 결정 칸에 "숨김")']
 
     newly_bad[['관리번호', '화장실명', '소재지도로명주소', '소재지지번주소', '좌표정확도', '검증결과', '확인필요', '좌표비고']].to_csv(out / 'new_bad_coords.csv', index=False, encoding='utf-8-sig')
+    pd.DataFrame(moved_far, columns=['관리번호', '화장실명', '이동m', '주소', '지난등급', '이번등급', '처리', '지도']).to_csv(out / 'moved_coords.csv', index=False, encoding='utf-8-sig')
+    pd.DataFrame(swapped, columns=['관리번호', '화장실명', '이동m', '주소', '지난등급', '이번등급', '처리', '지도']).to_csv(out / 'swapped_ids.csv', index=False, encoding='utf-8-sig')
     pd.DataFrame(unread, columns=['관리번호', '화장실명', '개방시간상세', '이유']).to_csv(out / 'unread_hours.csv', index=False, encoding='utf-8-sig')
     with open(out / 'report.md', 'a', encoding='utf-8') as f:
         f.write('\n'.join(lines) + '\n')
