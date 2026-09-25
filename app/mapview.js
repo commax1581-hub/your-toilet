@@ -3,7 +3,9 @@
    지도를 옮기면 "이 지역에서 다시 찾기"가 뜬다(마음대로 다시 찾지 않는다 — 사용자가 누를 때만). */
 'use strict';
 
-let map2 = null, overlays = [], baseDot = null, cardIdx = 0, mapGroups = [], mapRails = [], ignoreMove = true;
+/* 핀과 아래 카드는 **같은 배열 하나**(mapItems)를 본다.
+   전에는 역 핀을 overlays 앞쪽에 따로 넣어 `selectCard(i)`가 엉뚱한 핀을 켰다(T26). */
+let map2 = null, overlays = [], baseDot = null, cardIdx = 0, mapItems = [], ignoreMove = true;
 
 function pinHtml(g, i, now) {
   const open = g.list.some((r) => ['open', 'soon'].includes(cardState(r, now).k));
@@ -26,7 +28,10 @@ async function openMap() {
     return;
   }
   const now = new Date(), base = S.base;
-  mapGroups = S.groups || [];
+  // 지자체 묶음과 역을 **거리순 한 줄**로 세운다(목록과 같은 차례)
+  mapItems = (S.groups || []).map((g) => ({ t: 'g', m: g.m, g }))
+    .concat((S.rails || []).map((x) => ({ t: 'r', m: x.m, st: x.st })))
+    .sort((a, b) => a.m - b.m);
   cardIdx = 0;
   const center = new kakao.maps.LatLng(base.la, base.lo);
   if (!map2) {
@@ -39,7 +44,7 @@ async function openMap() {
     map2.relayout();
     map2.setCenter(center);
   }
-  $('#map-s').textContent = `${hhmm(now)} 기준 · ${mapGroups.length + (S.rails || []).length}곳${S.openOnly ? ' · 지금 열림만' : ''}${filterOn() ? ' · 거르는 중' : ''}`;
+  $('#map-s').textContent = `${hhmm(now)} 기준 · ${mapItems.length}곳${S.openOnly ? ' · 지금 열림만' : ''}${filterOn() ? ' · 거르는 중' : ''}`;
   $('#b-again').hidden = true;
   const mf = $('#b-mfilter');                              // 목록과 지도가 다른 개수로 보이지 않게 필터를 알린다
   mf.hidden = !(S.openOnly || filterOn());
@@ -52,28 +57,23 @@ async function openMap() {
   baseDot = new kakao.maps.Circle({ center, radius: 6, strokeWeight: 3, strokeColor: '#fff', fillColor: '#2563eb', fillOpacity: 1 });
   baseDot.setMap(map2);
 
-  /* 역 안 화장실도 지도에 올린다 — 목록에 있는데 지도에 없으면 두 화면이 다른 말을 한다(T21).
-     핀 색·모양을 달리해 **출처가 다르다는 것**을 지도에서도 알 수 있게 한다(6-27). */
-  mapRails = (S.rails || []);
-  mapRails.forEach((x, i) => {
+  mapItems.forEach((it, i) => {
     const el = document.createElement('div');
-    el.innerHTML = `<div class="mpin rail" data-r="${i}"><svg><use href="#i-train"/></svg>
-        <span class="lab">${esc(x.st.n)}역<small>${x.m < 1000 ? `${Math.round(x.m)}m` : `${(x.m / 1000).toFixed(1)}km`}</small></span></div>`;
-    el.firstElementChild.onclick = () => openRailDetail(x.st, x.m);
-    const ov = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(x.st.la, x.st.lo), content: el, yAnchor: 1, clickable: true });
-    ov.setMap(map2);
-    overlays.push(ov);
-  });
-
-  mapGroups.forEach((g, i) => {
-    const pos = new kakao.maps.LatLng(g.list[0].la, g.list[0].lo);
-    const el = document.createElement('div');
-    el.innerHTML = pinHtml(g, i, now);
+    if (it.t === 'r') {
+      // 역은 핀 모양·색을 달리해 **출처가 다르다는 것**을 지도에서도 알 수 있게 한다(6-27)
+      el.innerHTML = `<div class="mpin rail${i === cardIdx ? ' on' : ''}" data-i="${i}"><svg><use href="#i-train"/></svg>
+          <span class="lab">${esc(it.st.n)}역<small>${it.m < 1000 ? `${Math.round(it.m)}m` : `${(it.m / 1000).toFixed(1)}km`}</small></span></div>`;
+    } else {
+      el.innerHTML = pinHtml(it.g, i, now);
+    }
     el.firstElementChild.onclick = () => selectCard(i, true);
+    const pos = it.t === 'r' ? new kakao.maps.LatLng(it.st.la, it.st.lo)
+      : new kakao.maps.LatLng(it.g.list[0].la, it.g.list[0].lo);
     const ov = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true });
     ov.setMap(map2);
     overlays.push(ov);
   });
+
   /* 확대 수준은 **반경으로** 정한다. 모든 핀을 담는 자동 맞춤(setBounds)은 멀리 있는 한 곳 때문에
      지도가 너무 멀어져 핀이 작아지고(레벨 7), 그 뒤 억지로 당기면 핀이 화면 밖으로 밀려 사라졌다. */
   ignoreMove = true;
@@ -81,31 +81,41 @@ async function openMap() {
   map2.setLevel(S.radius <= 300 ? 3 : S.radius <= 500 ? 4 : S.radius <= 1000 ? 5 : S.radius <= 2000 ? 6 : 7);
   setTimeout(() => { ignoreMove = false; $('#b-again').hidden = true; }, 700);
 
-  // 아래 카드 — 좌우로 넘기면 지도가 따라간다
-  $('#mapcards').innerHTML = mapGroups.map((g, i) => {
-    const r = g.list[0], k = KINDS[r.t] || KINDS[0], st = statePill(r, now);
+  // 아래 카드 — 좌우로 넘기면 지도가 따라간다(역도 같은 줄에 선다)
+  $('#mapcards').innerHTML = mapItems.map((it, i) => {
+    const dist = it.m < 1000 ? `${Math.round(it.m)}m` : `${(it.m / 1000).toFixed(1)}km`;
+    if (it.t === 'r') {
+      const st = it.st, s = railState(st, now), t0 = st.t[0] || {};
+      return `<div class="mcard rail" data-i="${i}">
+          <div class="h"><b><span class="ln">${esc(lineLabel(st))}</span>${esc(st.n)}역</b><span class="d">${dist}</span></div>
+          <div class="meta"><span class="badge"><svg class="ic"><use href="#i-train"/></svg>${esc(st.src)}</span>${s.html}</div>
+          <div class="a">${esc(t0.f || '')}${t0.f ? ' · ' : ''}개찰구 ${t0.g ? '안' : '밖'}${t0.x ? ` · ${esc(t0.x)}번 출구` : ''}</div>
+        </div>`;
+    }
+    const g = it.g, r = g.list[0], k = KINDS[r.t] || KINDS[0], st = statePill(r, now);
     const name = g.list.length > 1 ? `${groupName(g.list)}` : r.n;
     return `<div class="mcard" data-i="${i}">
-        <div class="h"><b>${esc(name)}</b><span class="d">${g.m < 1000 ? `${Math.round(g.m)}m` : `${(g.m / 1000).toFixed(1)}km`}</span></div>
+        <div class="h"><b>${esc(name)}</b><span class="d">${dist}</span></div>
         <div class="meta"><span class="pill ${k.c}"><svg><use href="${k.i}"/></svg>${k.l}</span>${st.html}</div>
         <div class="a">${esc(shortAddr(r.a))}</div>
       </div>`;
   }).join('');
   $('#mapcards').querySelectorAll('.mcard').forEach((c) => (c.onclick = () => {
-    const g = mapGroups[+c.dataset.i];
-    openDetail(g.list[0], g.m);
+    const it = mapItems[+c.dataset.i];
+    if (it.t === 'r') openRailDetail(it.st, it.m);
+    else openDetail(it.g.list[0], it.m);
   }));
   $('#mapcards').onscroll = () => {                       // 넘긴 카드에 맞춰 지도를 움직인다
     const box = $('#mapcards'), i = Math.round(box.scrollLeft / (box.firstElementChild.offsetWidth + 10));
-    if (i !== cardIdx && mapGroups[i]) selectCard(i, false);
+    if (i !== cardIdx && mapItems[i]) selectCard(i, false);
   };
 }
 
 /** 카드·핀 고르기 — 핀에서 누르면 카드를 그리로, 카드를 넘기면 지도를 그리로 */
 function selectCard(i, fromPin) {
   cardIdx = i;
-  const g = mapGroups[i];
-  if (!g) return;
+  const it = mapItems[i];
+  if (!it) return;
   overlays.forEach((o, j) => {
     const el = o.getContent().firstElementChild;
     if (el) el.classList.toggle('on', j === i);
@@ -115,7 +125,8 @@ function selectCard(i, fromPin) {
     box.scrollTo({ left: i * (box.firstElementChild.offsetWidth + 10), behavior: 'smooth' });
   }
   ignoreMove = true;                                      // 카드를 넘겨서 움직인 것은 "지도를 옮겼다"가 아니다
-  map2.panTo(new kakao.maps.LatLng(g.list[0].la, g.list[0].lo));
+  map2.panTo(it.t === 'r' ? new kakao.maps.LatLng(it.st.la, it.st.lo)
+    : new kakao.maps.LatLng(it.g.list[0].la, it.g.list[0].lo));
   setTimeout(() => { ignoreMove = false; }, 600);
 }
 

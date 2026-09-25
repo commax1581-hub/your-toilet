@@ -51,12 +51,15 @@ function savedRow(it, i, where) {
   return `<div class="srow${it.k === 'r' ? ' rail' : ''}" data-${where}="${i}" role="button" tabindex="0">
       <svg class="sic"><use href="#${icon}"/></svg>
       <div class="stx"><b>${esc(it.n)}</b><span>${sub}</span></div>${dist}
-      <button class="sdel" data-del="${where}:${i}" aria-label="지우기">✕</button>
+      <button class="sdel" data-del="${where}:${i}" aria-label="${esc(it.n)} 지우기"><svg><use href="#i-x"/></svg></button>
     </div>`;
 }
 
-/** 담긴 것을 눌렀을 때 — 화장실·역은 상세로, 자리는 그 자리에서 다시 찾기 */
+/** 담긴 것을 눌렀을 때 — 화장실·역은 상세로, 자리는 그 자리에서 다시 찾기.
+    **먼저 데이터를 갖춘다.** 하단 탭이 생기면서 목록을 거치지 않고 바로 들어올 수 있게 됐는데,
+    상세 화면은 기준일(index.json·rail.json)을 읽는다 — 없으면 아무 일도 일어나지 않았다(T25). */
 async function openSaved(it) {
+  await Promise.all([loadIndex(), loadRail()]);
   if (it.k === 't') return openDetail(it.rec, S.base ? distM(S.base.la, S.base.lo, it.rec.la, it.rec.lo) : null);
   if (it.k === 'r') return openRailDetail(it.st, S.base ? distM(S.base.la, S.base.lo, it.st.la, it.st.lo) : null);
   S.mode = 'other';
@@ -76,9 +79,9 @@ function renderSaved() {
       : '<div class="sempty">집·회사처럼 <b>자주 가는 자리</b>를 저장해 두면, 그 둘레 화장실을 한 번에 볼 수 있어요.</div>'}
     <h3 class="ssec">저장한 화장실 ${spots.length ? `<span>${spots.length}</span>` : ''}</h3>
     ${spots.length ? spots.map((x) => savedRow(x, list.indexOf(x), 'fav')).join('')
-      : '<div class="sempty">화장실 정보 화면에서 <b>☆ 저장</b>을 누르면 여기에 담깁니다.</div>'}
-    <div class="sfoot"><b>이 휴대폰 안에만 남습니다.</b> 서버로 보내지 않고, 아래에서 한 번에 지울 수 있어요.
-      ${list.length ? '<button class="linklike" id="b-clearfav">저장한 곳 모두 지우기</button>' : ''}</div>`;
+      : '<div class="sempty">화장실 정보 화면에서 오른쪽 위 <b>저장</b>을 누르면 여기에 담깁니다.</div>'}
+    <div class="sfoot"><b>이 휴대폰 안에만 남습니다.</b> 서버로 보내지 않습니다.</div>
+    ${list.length ? '<button class="btn ghost danger" id="b-clearfav"><svg><use href="#i-trash"/></svg>저장한 곳 모두 지우기</button>' : ''}`;
   bindSaved(body, 'fav', list);
   if ($('#b-savehere')) {
     $('#b-savehere').onclick = () => {
@@ -86,7 +89,7 @@ function renderSaved() {
       renderSaved();
     };
   }
-  if ($('#b-clearfav')) $('#b-clearfav').onclick = () => { BOX.set('fav', []); renderSaved(); };
+  if ($('#b-clearfav')) $('#b-clearfav').onclick = (e) => askClear(e.currentTarget, '저장한 곳', () => { BOX.set('fav', []); renderSaved(); });
 }
 
 function renderRecent() {
@@ -94,11 +97,25 @@ function renderRecent() {
   const body = $('#recent-body');
   body.innerHTML = list.length
     ? list.map((x, i) => savedRow(x, i, 'rec')).join('')
-      + `<div class="sfoot"><b>이 휴대폰 안에만 남습니다.</b> 서버로 보내지 않습니다.
-         <button class="linklike" id="b-clearrec">최근 본 곳 지우기</button></div>`
+      + `<div class="sfoot"><b>이 휴대폰 안에만 남습니다.</b> 서버로 보내지 않습니다.</div>
+         <button class="btn ghost danger" id="b-clearrec"><svg><use href="#i-trash"/></svg>최근 본 곳 지우기</button>`
     : '<div class="sempty">본 화장실과 찾은 자리가 여기에 <b>20개까지</b> 남습니다. 다시 찾을 때 주소를 또 치지 않아도 돼요.</div>';
   bindSaved(body, 'rec', list);
-  if ($('#b-clearrec')) $('#b-clearrec').onclick = () => { BOX.set('recent', []); renderRecent(); };
+  if ($('#b-clearrec')) $('#b-clearrec').onclick = (e) => askClear(e.currentTarget, '최근 본 곳', () => { BOX.set('recent', []); renderRecent(); });
+}
+
+/** 지우기는 되돌릴 수 없다 — 버튼을 한 번 더 누르게 한다(따로 창을 띄우지 않고 그 자리에서) */
+function askClear(btn, what, run) {
+  if (btn.dataset.ask) return run();
+  btn.dataset.ask = '1';
+  btn.classList.add('armed');
+  btn.innerHTML = `<svg><use href="#i-trash"/></svg>정말 지울까요? 한 번 더 누르면 ${what}이 모두 지워집니다`;
+  setTimeout(() => {
+    if (!btn.isConnected) return;
+    delete btn.dataset.ask;
+    btn.classList.remove('armed');
+    btn.innerHTML = `<svg><use href="#i-trash"/></svg>${what} 모두 지우기`;
+  }, 4000);
 }
 
 function bindSaved(body, where, list) {
@@ -133,7 +150,7 @@ async function preloadArea(btn) {
   btn.disabled = true;
   let done = 0;
   for (const k of keys) {
-    await fetch(`data/t/${k}.json`).catch(() => {});
+    await fetch(tileUrl(k, idx)).catch(() => {});
     btn.textContent = `받는 중… ${++done}/${keys.length}`;
   }
   await fetch('data/rail.json').catch(() => {});

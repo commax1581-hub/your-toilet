@@ -110,14 +110,14 @@ function openDetail(rec, m) {
     <div class="dsec"><h3>관리기관</h3>
       <div class="dorg"><b>${esc(rec.o || '표기 없음')}</b>
         ${tel ? `<a class="btn ghost" href="tel:${tel}"><svg><use href="#i-tel"/></svg>${esc(rec.tel)}</a>` : '<span class="dsub">전화번호가 없습니다</span>'}</div>
-      <div class="dsub">지금 열려 있는지, 시설이 그대로인지는 관리기관이 가장 정확합니다.</div>
+      <div class="dsub">지금 열려 있는지, 시설이 그대로인지는 <b>원천데이터 관리기관</b>이 가장 정확합니다.</div>
     </div>
     <div class="dsec"><h3>이 정보는</h3>
       <div class="dsub">출처 행정안전부 공중화장실정보(공공데이터포털) · 공공데이터 기준일 ${S.index.date}${rec.dy ? ` · 지자체가 적은 정보 기준 <b>${rec.dy}년</b>` : ''}
 ${rec.dy ? ' · ' : ''}번호 ${esc(rec.id)}${rec.ids ? ` · 합친 등록 ${rec.ids.length}건` : ''}
         ${old ? '<br><b>정보가 오래됐습니다.</b> 지금과 다를 수 있어요.' : ''}</div>
       <div class="dfix"><b>정보가 틀렸나요?</b><br>① 위 관리기관에 전화 ② <span id="d-gov">해당 시군구 홈페이지</span> ③ <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터포털 오류 신고</a>
-        <div class="dsub">정보는 각 지자체가 관리하니, 틀린 내용은 관리기관에 알려 주세요.</div></div>
+        <div class="dsub">이 화장실의 <b>원천데이터 관리기관</b>은 위에 적힌 곳입니다. 틀린 내용은 그곳에 알려야 고쳐집니다.</div></div>
     </div>`;
   markDetail({ k: 't', n: rec.n, la: rec.la, lo: rec.lo, rec });
   go('detail');

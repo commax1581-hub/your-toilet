@@ -12,7 +12,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=c7d09d58">
+<link rel="stylesheet" href="style.css?v=0dc1f88e">
 <script>
   /* 저장된 보기 설정을 그리기 전에 입힌다(깜빡임 방지). 기기 설정을 따르는 것이 기본. */
   try {
@@ -59,6 +59,10 @@
   <symbol id="i-near" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.6" fill="currentColor"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4.5h6a2.5 2.5 0 0 1 2 1 2.5 2.5 0 0 1 2-1h6v14h-6a2.5 2.5 0 0 0-2 1 2.5 2.5 0 0 0-2-1H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3.5v12M7.5 11l4.5 4.5 4.5-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10.5 18.5h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4l-9 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 4 18.5v-12A1.5 1.5 0 0 1 5.5 5H10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </defs></svg>
 
@@ -80,6 +84,7 @@
         </button>
       </div>
       <div class="msg" id="home-msg"></div>
+      <div class="homefav" id="home-fav" hidden></div>
       <button class="infolink" data-go="info">이 앱과 데이터 알아보기</button>
     </div>
   </section>
@@ -90,7 +95,7 @@
       <div class="line">
         <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
         <button class="findbar" id="b-tosearch"><svg><use href="#i-search"/></svg><span id="pin-q">주소 · 건물 이름으로 찾기</span></button>
-        <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+        <button class="home" data-go="home"><svg><use href="#i-home"/></svg><span>처음</span></button>
       </div>
       <div class="s" id="pin-s">지도를 움직여 핀을 정확한 자리에 맞춰 주세요</div>
     </div>
@@ -121,7 +126,7 @@
           <button type="submit" class="go">검색</button>
         </form>
       </div>
-      <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+      <button class="home" data-go="home"><svg><use href="#i-home"/></svg><span>처음</span></button>
     </div>
     <div class="body" id="sug"><div class="note">예: <b>여의도 한강공원</b>, <b>서울역</b>, <b>세종대로 110</b>. 찾은 곳에 핀을 놓고 반경을 고를 수 있어요.</div></div>
   </section>
@@ -131,8 +136,8 @@
     <div class="bar">
       <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
       <div class="grow"><div class="t">가까운 화장실</div><div class="s" id="list-s"></div></div>
-      <button class="home go-map" id="b-map"><svg><use href="#i-map"/></svg>지도로 보기</button>
-      <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+      <button class="home go-map" id="b-map"><svg><use href="#i-map"/></svg><span>지도로 보기</span></button>
+      <button class="home" data-go="home"><svg><use href="#i-home"/></svg><span>처음</span></button>
     </div>
     <div class="body" id="list-body"></div>
   </section>
@@ -142,8 +147,8 @@
     <div class="bar">
       <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
       <div class="grow"><div class="t">지도로 보기</div><div class="s" id="map-s"></div></div>
-      <button class="home" id="b-list"><svg><use href="#i-list"/></svg>목록</button>
-      <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+      <button class="home" id="b-list"><svg><use href="#i-list"/></svg><span>목록</span></button>
+      <button class="home" data-go="home"><svg><use href="#i-home"/></svg><span>처음</span></button>
     </div>
     <div class="mapwrap">
       <div id="map2"></div>
@@ -160,7 +165,7 @@
       <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
       <div class="grow"><div class="t">화장실 정보</div><div class="s" id="dt-s"></div></div>
       <button class="home" id="b-fav"><svg><use href="#i-star"/></svg>저장</button>
-      <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+      <button class="home" data-go="home"><svg><use href="#i-home"/></svg><span>처음</span></button>
     </div>
     <div class="body" id="detail-body"></div>
   </section>
@@ -170,16 +175,26 @@
     <div class="bar">
       <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
       <div class="grow"><div class="t">알아보기</div><div class="s" id="info-s"></div></div>
-      <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+      <button class="home" data-go="home"><svg><use href="#i-home"/></svg><span>처음</span></button>
     </div>
     <div class="body info">
       <div class="infoacts">
         <button class="btn ghost" id="b-set2"><svg><use href="#i-gear"/></svg>보기 설정 — 어둡게 · 글씨 크기</button>
+        <button class="btn ghost" id="b-inst"><svg><use href="#i-phone"/></svg>홈 화면에 앱 아이콘 추가</button>
         <button class="btn ghost" id="b-pre"><svg><use href="#i-down"/></svg>미리 받아 두기 (오프라인)</button>
         <div class="dsub"><b>지하에서는 인터넷이 잘 안 됩니다.</b> 지금 보고 있는 둘레를 미리 받아 두면 신호가 없어도 목록이 열립니다(지도는 카카오 서버라 저장할 수 없습니다).</div>
       </div>
       <h3>이 앱은</h3>
-      <p>행정안전부 <b>공중화장실정보</b>(공공데이터포털)로, 지금 있는 자리에서 <b>가장 가까운 공중·개방화장실</b>을 찾아 줍니다. 비영리 개인 제작이며 공식 서비스가 아닙니다.</p>
+      <p>지금 있는 자리에서 <b>가장 가까운 화장실</b>을 찾아 줍니다. 공공데이터포털에 공개된 자료 <b>둘</b>을 씁니다 —
+      행정안전부 <b>공중화장실정보</b>(지자체가 관리)와 <b>역 안 화장실</b> 자료(철도 운영기관이 관리). 비영리 개인 제작이며 공식 서비스가 아닙니다.</p>
+
+      <h3>원천데이터 관리기관</h3>
+      <p>이 앱은 자료를 <b>만들지 않고 보여 주기만</b> 합니다. 내용을 고칠 수 있는 곳은 <b>원천데이터 관리기관</b>입니다.</p>
+      <table>
+        <tr><td><b>공중·개방화장실</b></td><td><b>지자체</b>(시·군·구) — 상세 화면에 관리기관과 전화가 있습니다</td></tr>
+        <tr><td><b>역 안 화장실</b></td><td><b>철도 운영기관</b> — 국가철도공단·서울교통공사</td></tr>
+      </table>
+      <p>그래서 <b>두 자료의 값을 섞지 않습니다.</b> 섞으면 정보가 틀렸을 때 <b>어느 기관에 알려야 하는지</b> 알 수 없기 때문입니다.</p>
 
       <h3>무엇을 보여 주나</h3>
       <table>
@@ -226,7 +241,7 @@
         <li><b>역 자료에 없는 것.</b> 국가철도공단 자료에는 <b>여는 시간과 변기 수가 아예 없습니다</b>(칸 자체가 없습니다). 그래서 "보통 첫차~막차"로만 안내합니다 — 없다는 뜻이 아닙니다.
           <b>대전·광주 도시철도</b>는 아직 넣지 못했습니다.</li>
         <li><b>백화점·마트 같은 민간 건물</b>은 신고된 곳만 들어옵니다. 실제로는 있어도 목록에 없을 수 있습니다.</li>
-        <li><b>정보가 오래된 곳</b>이 있습니다. 지자체가 적은 기준 연도를 상세에서 보여 줍니다.</li>
+        <li><b>정보가 오래된 곳</b>이 있습니다. 관리기관이 적은 기준 연도를 상세에서 보여 줍니다.</li>
         <li>구글 지도는 국내에서 <b>도보 길찾기</b>를 제공하지 않고 장소 이름도 없어 좌표로 열립니다. 네이버 거리뷰는 링크로 바로 열 수 없습니다.</li>
       </ul>
 
@@ -236,9 +251,11 @@
       <button class="linklike" id="b-clearall">저장한 곳·최근 본 곳 모두 지우기</button></p>
 
       <h3>정보가 틀렸다면</h3>
-      <p>원본은 각 지자체가 관리합니다. 상세 화면 아래의 <b>관리기관 전화</b>·<b>시군구 홈페이지</b>·<b>공공데이터포털 오류 신고</b>로 알려 주시면 고쳐집니다.</p>
+      <p>원본은 <b>각 원천데이터 관리기관</b>이 관리합니다. 상세 화면 아래의 <b>관리기관 전화</b>·<b>시군구 홈페이지</b>·<b>공공데이터포털 오류 신고</b>로 알려 주시면 고쳐집니다.
+      역 안 화장실은 지자체가 아니라 <b>철도 운영기관</b>에 알려야 고쳐집니다.</p>
 
-      <p class="dim">출처 행정안전부 공중화장실정보(공공데이터포털) · 배경 그림은 AI로 만들었습니다 · 지도 카카오맵<br>
+      <p class="dim">출처 행정안전부 공중화장실정보 · 국가철도공단 역사 화장실 · 서울교통공사 역사공중화장실정보(모두 공공데이터포털)<br>
+      배경 그림은 AI로 만들었습니다 · 지도 카카오맵<br>
       실제와 다를 수 있습니다. 시설 상태·개방 시간은 관리기관에 확인해 주세요.</p>
     </div>
   </section>
@@ -248,7 +265,7 @@
     <div class="bar">
       <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
       <div class="grow"><div class="t">저장한 곳</div><div class="s">이 휴대폰 안에만 남습니다</div></div>
-      <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+      <button class="home" data-go="home"><svg><use href="#i-home"/></svg><span>처음</span></button>
     </div>
     <div class="body saved" id="saved-body"></div>
   </section>
@@ -258,7 +275,7 @@
     <div class="bar">
       <button class="back" data-back aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
       <div class="grow"><div class="t">최근 본 곳</div><div class="s">20개까지 · 이 휴대폰 안에만</div></div>
-      <button class="home" data-go="home"><svg><use href="#i-home"/></svg>처음</button>
+      <button class="home" data-go="home"><svg><use href="#i-home"/></svg><span>처음</span></button>
     </div>
     <div class="body saved" id="recent-body"></div>
   </section>
@@ -270,6 +287,19 @@
     <button data-tab="recent"><svg><use href="#i-clock"/></svg>최근 본 곳</button>
     <button data-tab="info"><svg><use href="#i-book"/></svg>알아보기</button>
   </nav>
+
+  <!-- 홈 화면에 추가 안내 -->
+  <div class="sheet" id="s-inst">
+    <div class="dim" data-close></div>
+    <div class="panel">
+      <h2>홈 화면에 앱 아이콘 추가</h2>
+      <p class="instb" id="inst-b"></p>
+      <ol class="inststeps" id="inst-steps"></ol>
+      <button class="btn ghost" id="inst-ext" hidden><svg><use href="#i-out"/></svg>브라우저로 열기</button>
+      <p class="dsub">아이콘을 더하면 <b>주소를 치지 않고</b> 바로 열립니다. 인터넷이 약한 곳에서도 받아 둔 자료로 열립니다.</p>
+      <button class="btn main" data-close>알겠어요</button>
+    </div>
+  </div>
 
   <!-- 보기 설정 — 어두운 모드·글씨 크기 -->
   <div class="sheet" id="s-set">
@@ -300,10 +330,11 @@
 
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=6516210bcdd3c0a50b562ea3dedda4a3&libraries=services&autoload=false" onerror="window.__kakaoFail=true"></script>
 <script src="hours.js?v=f8a06c08"></script>
-<script src="app.js?v=2fc91782"></script>
-<script src="detail.js?v=73451bfd"></script>
-<script src="saved.js?v=8e458333"></script>
-<script src="rail.js?v=64335d6e"></script>
-<script src="mapview.js?v=bafed3f0"></script>
+<script src="mobile.js?v=c5f172e8"></script>
+<script src="saved.js?v=180ef814"></script>
+<script src="rail.js?v=b1c52325"></script>
+<script src="app.js?v=a68a7dfd"></script>
+<script src="detail.js?v=d4d87eec"></script>
+<script src="mapview.js?v=230fd83a"></script>
 </body>
 </html>

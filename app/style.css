@@ -30,6 +30,8 @@ button{font-family:inherit}
 .bar .grow{min-width:0;flex:1}
 .bar .t{font-weight:800;font-size:1rem}
 .bar .s{color:var(--sub);font-size:0.75rem}
+/* 좁은 화면 × 큰 글씨에서 제목이 **한 글자씩** 쪼개지던 것 — 줄이면서 말줄임으로 끊는다(T29) */
+.bar .t,.bar .s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar .back{border:0;background:transparent;padding:6px;margin-left:-6px;color:var(--ink);cursor:pointer}
 .bar .back svg{width:1.375rem;height:1.375rem;display:block}
 .bar.col{display:block;padding-bottom:8px}
@@ -305,7 +307,8 @@ html[data-size] .card .n{white-space:normal;display:-webkit-box;-webkit-line-cla
 .railbox{background:var(--src-bg);border:1px solid var(--src-line);border-radius:16px;overflow:hidden;
   margin-bottom:8px;width:100%;text-align:left;cursor:pointer;display:block}
 .railbox .rhead{background:var(--src-soft);color:var(--src-ink);display:flex;align-items:center;gap:6px;
-  padding:7px 12px;font-size:0.75rem;font-weight:800}
+  padding:7px 12px;font-size:0.75rem;font-weight:800;white-space:nowrap}
+.railbox .rhead .who{overflow:hidden;text-overflow:ellipsis}
 .railbox .rhead svg{width:0.9375rem;height:0.9375rem}
 .railbox .rhead .who{margin-left:auto}
 .railbox .rbody{padding:11px 12px}
@@ -368,3 +371,65 @@ body.hastab .body{padding-bottom:calc(4.5rem + var(--safe-b))}
 .sfoot{margin-top:18px;font-size:0.75rem;color:var(--sub);line-height:1.7}
 .infoacts{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
 .bar .home.on{color:var(--brand)}
+
+/* 역 카드 안의 길찾기 · 같은 역 꼬리표 */
+.rgo{display:flex;gap:8px;margin-top:9px}
+.rgo .btn.sm{flex:1;min-height:2.75rem;font-size:0.8125rem;padding:8px 10px;margin:0}
+.rsame{margin-top:6px;font-size:0.75rem;color:var(--sub)}
+.chiphint{font-size:0.75rem;color:var(--sub);align-self:center;margin-left:2px;word-break:keep-all;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 지도 아래 역 카드 */
+.mcard.rail{background:var(--src-bg);border-color:var(--src-line)}
+.mcard.rail .badge{display:inline-flex;align-items:center;gap:4px;font-size:0.6875rem;font-weight:800;
+  color:var(--src-ink);background:var(--src-soft);padding:3px 7px;border-radius:6px}
+.mcard.rail .badge svg{width:0.875rem;height:0.875rem}
+/* 지우기 버튼 — 되돌릴 수 없으니 한 번 더 묻는다 */
+.btn.danger{color:var(--shut);border-color:var(--line);margin-top:10px}
+.btn.danger.armed{border-color:var(--shut);background:var(--shut-soft);font-weight:800}
+/* 첫 화면의 저장한 곳 바로가기 */
+.homefav{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:10px 0 2px}
+.hf{display:inline-flex;align-items:center;gap:5px;min-height:2.75rem;padding:8px 13px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.22);color:#fff;font:inherit;
+  font-size:0.8125rem;font-weight:700;backdrop-filter:blur(8px);cursor:pointer;max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hf svg{width:1rem;height:1rem;flex:none}
+.hf.more{background:transparent}
+/* 검색 제안의 역 */
+.sug.rail{background:var(--src-bg);border-color:var(--src-line)}
+.sug.rail .wc.on{color:var(--src-ink)}
+.sug.rail .wc svg{width:0.875rem;height:0.875rem;vertical-align:-.13em}
+
+/* ── 앱 안 브라우저 안내 · 홈 화면에 추가 ───────────
+   문구는 짧게 끊어 쓰고 `keep-all`로 낱말이 쪼개지지 않게 한다(작은 화면에서 어중간한 줄바꿈 방지). */
+.inapp{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;gap:9px;
+  padding:10px 12px calc(10px + env(safe-area-inset-top,0px));background:var(--warn-soft);color:var(--ink);
+  border-bottom:1px solid var(--line);font-size:0.8125rem;line-height:1.5;word-break:keep-all}
+.inapp .ic{width:1.25rem;height:1.25rem;color:var(--warn);flex:none}
+.inapp span{flex:1;min-width:0}
+.inapp .go{flex:none;min-height:2.75rem;padding:8px 12px;border:0;border-radius:10px;
+  background:var(--brand);color:#fff;font:inherit;font-size:0.8125rem;font-weight:800;cursor:pointer}
+.inapp .x{flex:none;min-width:2.75rem;min-height:2.75rem;border:0;background:none;color:var(--sub);cursor:pointer}
+.inapp .x svg{width:1rem;height:1rem}
+.instchip{position:fixed;left:12px;right:12px;bottom:calc(4.75rem + var(--safe-b));z-index:55;
+  display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:16px;background:var(--paper);
+  border:1px solid var(--line);box-shadow:0 8px 24px rgba(15,32,43,.18);word-break:keep-all}
+.instchip .ic{width:1.625rem;height:1.625rem;color:var(--brand);flex:none}
+.instchip span{flex:1;min-width:0;font-size:0.8125rem;line-height:1.45}
+.instchip b{display:block;font-weight:800}
+.instchip small{color:var(--sub);font-size:0.75rem}
+.instchip .go{min-height:2.75rem;padding:8px 14px;border:0;border-radius:10px;background:var(--brand);
+  color:#fff;font:inherit;font-weight:800;font-size:0.8125rem;cursor:pointer}
+.instchip .x{min-width:2.75rem;min-height:2.75rem;border:0;background:none;color:var(--sub);cursor:pointer}
+.instchip .x svg{width:1rem;height:1rem}
+.instb{font-size:0.75rem;color:var(--sub);margin:0 0 8px}
+.inststeps{margin:0 0 12px;padding:0;list-style:none;font-size:0.9375rem;line-height:1.9;word-break:keep-all}
+.inststeps li{margin-bottom:2px}
+[hidden]{display:none !important}          /* .btn 등이 display를 정해 hidden이 먹지 않던 것 */
+
+/* 아주 좁은 화면에서는 머리 단추의 글자를 접고 아이콘만 남긴다 — 제목이 설 자리를 준다 */
+@media (max-width:360px){
+  .chiphint{display:none}                  /* 좁은 화면에서는 칩 옆 설명을 접는다(두 줄로 밀린다) */
+  .bar .home span,.bar .home .lbl{display:none}
+  .bar .home{padding:0 9px}
+  .bar{gap:7px}
+}

@@ -27,6 +27,7 @@ const S = {                      // 화면 상태(저장하지 않음)
   query: null,                   // 검색으로 고른 장소 {name, la, lo}
   openOnly: true,                // 기본은 "지금 열림"만
   f: { bell: 0, acc: 0, dp: 0, kid: 0, ft: '' },   // 안심·장애인·기저귀·어린이·시설 종류
+  gate: 0,                       // 역 화장실 중 "개찰구 밖만"(표 없이 들어갈 수 있는 곳) — 밖이 80%다
   index: null,
   holidays: new Set(),
   tiles: new Map(),
@@ -48,6 +49,7 @@ function go(name, fromPop) {
   S.screen = name;
   document.querySelectorAll('.screen').forEach((el) => el.classList.toggle('on', el.id === `s-${name}`));
   if (name === 'pin' && map) setTimeout(() => map.relayout(), 0);
+  if (name === 'home') homeFav();
   if (name === 'saved') renderSaved();
   if (name === 'recent') renderRecent();
   syncTabs(name);
@@ -118,13 +120,14 @@ function markDetail(it) {
   S.cur = it;
   pushRecent(it);
   paintFav();
+  setTimeout(installNudge, 1200);                       // 한 곳을 본 뒤에 조용히 한 번만 권한다
 }
 function paintFav() {
   const b = $('#b-fav');
   if (!b || !S.cur) return;
   const on = isFav(S.cur);
   b.classList.toggle('on', on);
-  b.innerHTML = `<svg><use href="#${on ? 'i-star-on' : 'i-star'}"/></svg>${on ? '저장됨' : '저장'}`;
+  b.innerHTML = `<svg><use href="#${on ? 'i-star-on' : 'i-star'}"/></svg><span>${on ? '저장됨' : '저장'}</span>`;
 }
 $('#b-fav').onclick = () => { if (S.cur) { toggleFav(S.cur); paintFav(); } };
 
@@ -137,6 +140,19 @@ $('#seg-theme').onclick = (e) => { const b = e.target.closest('button[data-v]');
 $('#seg-size').onclick = (e) => { const b = e.target.closest('button[data-v]'); if (b) { PREF.set('size', b.dataset.v); applyPrefs(); if (S.screen === 'list') showList(); } };
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (PREF.get('theme', 'auto') === 'auto') applyPrefs(); });
 applyPrefs();
+initMobile();                                           // 앱 안 브라우저 안내 · 홈 화면에 추가
+
+/** 첫 화면의 저장한 곳 바로가기 — 담아 둔 자리가 있으면 위치를 잡기 전에도 바로 간다 */
+function homeFav() {
+  const box = $('#home-fav');
+  const list = (typeof favs === 'function' ? favs() : []).filter((x) => x.k === 'p').slice(0, 3);
+  box.hidden = !list.length;
+  if (!list.length) return;
+  box.innerHTML = list.map((x, i) => `<button class="hf" data-hf="${i}"><svg><use href="#i-star-on"/></svg>${esc(x.n)}</button>`).join('')
+    + '<button class="hf more" data-go="saved">저장한 곳</button>';
+  box.querySelectorAll('[data-hf]').forEach((b) => (b.onclick = () => openSaved(list[+b.dataset.hf])));
+  box.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => go(b.dataset.go)));
+}
 
 function homeMsg(t) {
   const el = $('#home-msg');
@@ -160,6 +176,11 @@ async function fetchIndex() {
   return idx;
 }
 
+/** 지도 칸 주소에 **기준일**을 붙인다.
+    붙이지 않으면 서비스워커가 한 번 저장한 칸을 계속 쓰고, **갱신을 해도 옛 데이터가 남는다**(T28).
+    기준일이 바뀌면 주소가 바뀌어 새로 받고, 서비스워커가 옛 기준일 저장본을 통째로 지운다. */
+const tileUrl = (k, idx) => `data/t/${k}.json?v=${(idx && idx.date) || '0'}`;
+
 /** 기준점이 든 칸 + 둘레 8칸 (반경이 칸보다 작아도 칸 경계에 있을 수 있다) */
 async function nearby(la, lo) {
   const idx = await loadIndex();
@@ -169,7 +190,7 @@ async function nearby(la, lo) {
     for (let dc = -1; dc <= 1; dc++) {
       const k = `${r0 + dr}_${c0 + dc}`;
       if (!idx.tiles[k]) continue;
-      if (!S.tiles.has(k)) S.tiles.set(k, fetch(`data/t/${k}.json`).then((r) => r.json()));
+      if (!S.tiles.has(k)) S.tiles.set(k, fetch(tileUrl(k, idx)).then((r) => r.json()));
       jobs.push(S.tiles.get(k).then((recs) => out.push(...recs)));
     }
   }
@@ -192,7 +213,7 @@ async function nearbySmall(la, lo, meters) {
   for (const r of rows) for (const c of cols) {
     const k = `${r}_${c}`;
     if (!idx.tiles[k]) continue;
-    if (!S.tiles.has(k)) S.tiles.set(k, fetch(`data/t/${k}.json`).then((x) => x.json()));
+    if (!S.tiles.has(k)) S.tiles.set(k, fetch(tileUrl(k, idx)).then((x) => x.json()));
     jobs.push(S.tiles.get(k).then((recs) => out.push(...recs)));
   }
   await Promise.all(jobs);
@@ -355,21 +376,48 @@ function pickPlace(p) {
   openPin('other', p);
 }
 
+/** 검색 제안 맨 위의 역 — 역 이름으로 찾는 사람은 대개 그 역에서 화장실을 찾는 사람이다.
+    카카오 결과를 고른 뒤 목록에서 만나게 하지 말고, **치는 순간 보여 준다.** */
+function railSug(q) {
+  const key = nameCore(q);
+  if (!RAIL || key.length < 2) return [];
+  return RAIL.s.filter((st) => nameCore(`${st.n}역`).includes(key)).slice(0, 3);
+}
+
 function showSug(list, q) {
   const box = $('#sug');
+  const rs = railSug(q);
+  const rsHtml = rs.map((st, i) => `<button class="sug rail" data-r="${i}">
+      <b><span class="ln">${esc(lineLabel(st))}</span>${esc(st.n)}역</b>
+      <span>${esc(st.op)} · 역 안 ${st.t.length}곳</span>
+      <span class="wc on"><svg class="ic"><use href="#i-train"/></svg>${esc(st.src)} 제공</span></button>`).join('');
   if (!list.length) {
-    box.innerHTML = `<div class="note"><b>'${esc(q)}'로 찾은 곳이 없어요</b><br>
+    box.innerHTML = rsHtml + `<div class="note"><b>'${esc(q)}'로 찾은 곳이 없어요</b><br>
       건물·역·공원 이름이나 <b>도로명 주소</b>로 찾아 보세요. 예) 서울역, 여의도 한강공원, 세종대로 110</div>`;
+    bindRailSug(box, rs);
     return;
   }
-  box.innerHTML = list.map((p, i) => `<button class="sug" data-i="${i}"><b>${esc(p.name)}</b>
+  box.innerHTML = rsHtml + list.map((p, i) => `<button class="sug" data-i="${i}"><b>${esc(p.name)}</b>
     <span>${p.cat ? `${esc(p.cat)} · ` : ''}${esc(p.addr)}</span>
     <span class="wc" id="wc-${i}">화장실 확인 중…</span></button>`).join('');
-  box.querySelectorAll('.sug').forEach((b) => (b.onclick = () => pickPlace(list[+b.dataset.i])));
+  box.querySelectorAll('.sug[data-i]').forEach((b) => (b.onclick = () => pickPlace(list[+b.dataset.i])));
+  bindRailSug(box, rs);
   markToilets(list);                                   // 결과를 먼저 띄우고, 화장실 정보는 뒤이어 채운다
 }
 
 /** 업종 이름 — `가정,생활 > 백화점 > 롯데백화점`처럼 끝이 브랜드일 때가 많아 한 칸 앞(종류)을 쓴다 */
+/** 제안에서 역을 고르면 그 역을 기준점으로 잡고 상세까지 바로 연다 */
+function bindRailSug(box, rs) {
+  box.querySelectorAll('.sug[data-r]').forEach((b) => (b.onclick = async () => {
+    const st = rs[+b.dataset.r];
+    S.mode = 'other';
+    S.base = { la: st.la, lo: st.lo, addr: `${lineLabel(st)} ${st.n}역`, name: `${st.n}역` };
+    S.query = { name: `${st.n}역`, la: st.la, lo: st.lo };
+    pushRecent({ k: 'r', n: `${st.n}역`, la: st.la, lo: st.lo, st });
+    await showList();
+  }));
+}
+
 function catName(d) {
   if (d.category_group_name) return d.category_group_name;
   const p = String(d.category_name || '').split('>').map((x) => x.trim()).filter(Boolean);
@@ -469,7 +517,7 @@ function passFilter(r) {
   if (f.ft && r.ft !== f.ft) return false;
   return true;
 }
-const filterOn = () => !!(S.f.bell || S.f.acc || S.f.dp || S.f.kid || S.f.ft);
+const filterOn = () => !!(S.f.bell || S.f.acc || S.f.dp || S.f.kid || S.f.ft || S.gate);
 
 /** 역 카드도 같은 잣대로 거른다.
     다만 **국가철도공단은 시설 정보를 주지 않는다** — 정보가 없는 것을 "없음"으로 읽어 지우면 안 되지만,
@@ -477,7 +525,8 @@ const filterOn = () => !!(S.f.bell || S.f.acc || S.f.dp || S.f.kid || S.f.ft);
     종류 필터(공중·개방·간이·이동)는 역 화장실에 해당하는 값이 없으므로 켜져 있으면 뺀다. */
 function passRail(st, now) {
   if (S.openOnly && !['open', 'likely'].includes(railState(st, now).k)) return false;
-  if (S.f.ft) return false;
+  if (S.gate && st.t.every((x) => x.g)) return false;    // "개찰구 밖만" — 밖에 한 곳도 없으면 뺀다
+  if (S.f.ft) return S.f.ft === '역';                    // 종류를 '역'으로 고르면 **역이 답이다**(T27)
   if (!(S.f.bell || S.f.acc || S.f.dp || S.f.kid)) return true;
   return st.t.some((x) => x.m !== undefined
     && (!S.f.bell || x.bl === 1)
@@ -485,12 +534,13 @@ function passRail(st, now) {
     && (!S.f.dp || x.dp[0] + x.dp[1] > 0)
     && (!S.f.kid || x.ch[0] + x.ch[1] > 0));
 }
-const clearFilter = () => { S.f = { bell: 0, acc: 0, dp: 0, kid: 0, ft: '' }; };
+const clearFilter = () => { S.f = { bell: 0, acc: 0, dp: 0, kid: 0, ft: '' }; S.gate = 0; };
 
 function chipRows() {
   const c = (on, label, attr) => `<span class="chip${on ? ' on' : ''}" ${attr}>${label}</span>`;
   return `<div class="chips">${c(S.openOnly, '지금 열림', 'id="c-open"')}
       ${[300, 500, 1000].map((r) => c(S.radius === r, r < 1000 ? `${r}m` : '1km', `data-r="${r}"`)).join('')}</div>
+    ${S.railsNear ? `<div class="chips">${c(S.gate, '개찰구 밖만', 'id="c-gate"')}<span class="chiphint">표 없이 들어갈 수 있는 역 화장실</span></div>` : ''}
     <div class="chips">${c(S.f.bell, '안심', 'data-f="bell"')}${c(S.f.acc, '장애인', 'data-f="acc"')}
       ${c(S.f.dp, '기저귀', 'data-f="dp"')}${c(S.f.kid, '어린이', 'data-f="kid"')}
       ${filterOn() ? '<span class="chip clear" id="c-clear">거르기 끄기</span>' : ''}</div>
@@ -668,7 +718,7 @@ async function showList(quiet) {
   const now = new Date(), base = S.base;
   const [recs] = await Promise.all([nearby(base.la, base.lo), loadRail()]);
   const idx = S.index;
-  $('#list-s').textContent = `${hhmm(now)} 기준 · 공공데이터 ${idx.date}`;
+  // 기준일이 둘이다(지자체 자료·역 자료) — 하나만 적으면 역 정보의 기준일이 감춰진다
 
   // 거리 → 같은 좌표끼리 묶기
   const withD = recs.map((r) => ({ r, m: distM(base.la, base.lo, r.la, r.lo) })).sort((a, b) => a.m - b.m);
@@ -677,6 +727,9 @@ async function showList(quiet) {
     && (!openOnly || ['open', 'soon'].includes(cardState(x.r, now).k)));
 
   // 역 안 화장실 — 출처가 다른 별개 데이터를 **거리순 그대로** 섞는다(먼저 거리, 그다음 성격 · 6-27)
+  S.railsNear = railNear(base.la, base.lo, S.radius).length > 0;   // 칩("개찰구 밖만")을 보일지 결정
+  // 머리글은 **짧게**(좁은 화면에서 세 줄로 접힌다). 기준일이 둘이라는 것은 맨 아래와 알아보기에서 밝힌다
+  $('#list-s').textContent = `${hhmm(now)} 기준 · 자료 ${idx.date}`;
   const rails = railNear(base.la, base.lo, S.radius).filter((x) => passRail(x.st, now));
   /* 역 이름으로 찾아온 사람에게 "역은 공공데이터에 없어요"라고 말하면 안 된다 —
      이제 역 안 화장실을 갖고 있다. 그 역이 가까이 잡히면 안내 문구를 바꾼다(T21의 교훈: 두 화면이 다른 말을 하면 안 된다). */
@@ -685,6 +738,8 @@ async function showList(quiet) {
   for (const x of rails) {
     const key = nameCore(`${x.st.n}역`);
     x.also = key && withD.some((y) => y.m <= 250 && nameCore(y.r.n).includes(key));
+    // 같은 이름의 역이 목록에 둘 이상이면(노선이 다른 것) 중복으로 오해하지 않게 꼬리표를 단다
+    x.sameName = rails.filter((y) => y.st.n === x.st.n).length > 1;
   }
   const railHit = S.query && rails.find((x) => {
     if (x.m > 250) return false;
@@ -703,14 +758,14 @@ async function showList(quiet) {
       + `<div class="secline">둘레 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</div>`
     : (S.query && railHit
       ? `<div class="nohit"><b>${esc(S.query.name)}의 화장실은 아래 <span class="ln">${esc(lineLabel(railHit.st))}</span> 상자에 있어요</b>
-           역 화장실은 <b>지자체가 아니라 운영기관</b>(${esc(railHit.st.src)})이 관리해, 지자체 목록과 <b>따로</b> 보여 드립니다.</div>`
+           역 화장실은 <b>지자체가 아니라 철도 운영기관</b>(${esc(railHit.st.src)})이 관리해 <b>따로</b> 보여 드립니다.</div>`
       : S.query
       ? `<div class="nohit">${PRIVATE_BIG.test(S.query.name)
             ? `<b>${esc(S.query.name)}에는 등록된 화장실이 없어요</b>
                백화점·마트 같은 <b>민간 건물</b>은 지자체에 신고된 곳만 공공데이터에 들어옵니다. 실제로는 있을 수 있으니 <b>안내 데스크에 물어보세요.</b>`
             : TRANSPORT.test(S.query.name)
               ? `<b>${esc(S.query.name)}은(는) 공공데이터에 없어요</b>
-                 역·터미널 화장실은 <b>운영기관(코레일·교통공사 등)이 관리</b>해 지자체 공중화장실 목록에서 빠지는 일이 잦습니다.
+                 역·터미널 화장실은 <b>철도 운영기관이 관리</b>해 지자체 공중화장실 목록에서 빠지는 일이 잦습니다.
                  <b>역 안에는 대개 화장실이 있으니</b> 역 안내도를 봐 주세요.`
               : `<b>'${esc(S.query.name)}' 이름으로 등록된 곳은 없어요</b>
                  그 안에 있는 화장실이 <b>다른 이름으로</b> 등록돼 있을 수 있습니다 — 아래 목록을 봐 주세요.`}
@@ -728,8 +783,9 @@ async function showList(quiet) {
 
   const head = `<div class="basebar"><b><svg class="ic"><use href="#i-pin"/></svg>${esc(base.name || shortAddr(base.addr))}<span class="r">${base.name ? `${esc(shortAddr(base.addr))} · ` : ''}이 위치에서 ${S.radius < 1000 ? `${S.radius}m` : '1km'} 안</span></b><button id="b-change">위치 바꾸기</button></div>
     ${chipRows()}`;
-  const foot = `<div class="foot">출처 행정안전부 공중화장실정보(공공데이터포털) · 기준일 ${idx.date}<br>
-    실제와 다를 수 있습니다. 시설 상태·개방 시간은 관리기관에 확인해 주세요.<br>
+  const foot = `<div class="foot">출처 행정안전부 공중화장실정보 · 기준일 ${idx.date}
+    ${S.railsNear && RAIL && RAIL.date ? `<br>역 안 화장실 — 국가철도공단 ${RAIL.date['국가철도공단']} · 서울교통공사 ${RAIL.date['서울교통공사']}` : ''}<br>
+    실제와 다를 수 있습니다. 시설 상태·개방 시간은 <b>원천데이터 관리기관</b>에 확인해 주세요.<br>
     <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터 오류 신고</a>
     · <button class="linklike" data-go2="info">알아보기</button></div>`;
 
@@ -759,7 +815,7 @@ async function showList(quiet) {
     }
     const cards = [...groups.values()].map((g, i) => ({ m: g.m,
       html: g.list.length > 1 ? groupHtml(g.list, g.m, now, i) : cardHtml(g.list[0], g.m, now) }))
-      .concat(rails.map((x, i) => ({ m: x.m, html: railCard(x.st, x.m, now, i, x.also) })))
+      .concat(rails.map((x, i) => ({ m: x.m, html: railCard(x.st, x.m, now, i, x.also, x.sameName) })))
       .sort((a, b) => a.m - b.m).map((x) => x.html).join('');
     const hidden = inR(S.radius, false).length - shown.length;
     body.innerHTML = head + hitHtml + cards
@@ -772,7 +828,8 @@ async function showList(quiet) {
       const x = byId.get(c.dataset.id);
       if (x) openDetail(x.r, x.m);
     }));
-    body.querySelectorAll('[data-rail]').forEach((c) => (c.onclick = () => {
+    body.querySelectorAll('[data-rail]').forEach((c) => (c.onclick = (e) => {
+      if (e.target.closest('[data-stop]')) return;        // 카드 안 길찾기·입구 보기는 그 링크대로
       const x = rails[+c.dataset.rail];
       if (x) openRailDetail(x.st, x.m);
     }));
@@ -784,6 +841,7 @@ async function showList(quiet) {
   body.querySelectorAll('[data-go2]').forEach((b) => (b.onclick = () => go(b.dataset.go2)));
   $('#b-change').onclick = () => go(S.mode === 'gps' ? 'pin' : 'pin');
   $('#c-open').onclick = () => { S.openOnly = !S.openOnly; showList(); };
+  if ($('#c-gate')) $('#c-gate').onclick = () => { S.gate = S.gate ? 0 : 1; showList(); };
   body.querySelectorAll('.chip[data-r]').forEach((c) => (c.onclick = () => { S.radius = +c.dataset.r; showList(); }));   // 목록에서 바로 반경 바꾸기
   body.querySelectorAll('.chip[data-f]').forEach((c) => (c.onclick = () => { S.f[c.dataset.f] = S.f[c.dataset.f] ? 0 : 1; showList(); }));
   body.querySelectorAll('.chip[data-ft]').forEach((c) => (c.onclick = () => { S.f.ft = c.dataset.ft; showList(); }));
@@ -812,9 +870,10 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 
-loadIndex().then((idx) => {      // 알아보기 머리에 지금 데이터의 수치를 적는다
+Promise.all([loadIndex(), loadRail()]).then(([idx, rail]) => {   // 알아보기 머리에 지금 데이터의 수치를 적는다
   const el = $('#info-s');
-  if (el) el.textContent = `화장실 ${idx.toilets.toLocaleString()}곳 · 공공데이터 기준일 ${idx.date}`;
+  if (el) el.textContent = `화장실 ${idx.toilets.toLocaleString()}곳 · 기준일 ${idx.date}`
+    + (rail && rail.count ? ` · 역 ${rail.count.toLocaleString()}곳 ${rail.date['국가철도공단']}` : '');
 });
 
 loadIndex();     // 첫 화면을 보는 동안 칸 목록을 미리 받아 둔다

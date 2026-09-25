@@ -1,10 +1,13 @@
 /* 오프라인 — 한 번 본 화면과 지도 칸은 인터넷이 없어도 열린다.
    껍데기(화면 파일)는 받아 두고, 지도 칸은 본 것만 쌓되 80개까지만 둔다(용량 폭주 방지).
    카카오 지도는 남의 서버라 저장할 수 없다 → 오프라인에서는 목록·상세만 된다(앱이 이미 그렇게 견딘다). */
-const SHELL = 'shell-v3';
-const TILES = 'tiles-v1';
+const SHELL = 'shell-v4';
+/* 지도 칸은 **기준일마다 다른 서랍**에 담는다(`tiles-2026-09-22`).
+   전에는 서랍 이름이 고정이라, 한 번 저장한 칸을 갱신 뒤에도 계속 썼다(T28).
+   새 기준일이 들어오면 옛 서랍은 통째로 버린다. */
+const TILES = 'tiles-';
 const KEEP = 80;
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'hours.js', 'detail.js', 'mapview.js', 'rail.js', 'saved.js',
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'hours.js', 'detail.js', 'mapview.js', 'rail.js', 'saved.js', 'mobile.js',
   'icon.svg', 'icon-180.png', 'icon-192.png', 'manifest.webmanifest',
   'img/bg_day_blue_1080.webp', 'img/bg_evening_1080.webp', 'img/bg_night_1080.webp',
   'data/index.json', 'data/holidays.json', 'data/gov_sites.json', 'data/rail.json'];
@@ -15,9 +18,18 @@ self.addEventListener('install', (e) => {
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys()
-    .then((ks) => Promise.all(ks.filter((k) => k !== SHELL && k !== TILES).map((k) => caches.delete(k))))
+    .then((ks) => Promise.all(ks.filter((k) => k !== SHELL && !k.startsWith(TILES)).map((k) => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
+
+let dropped = '';
+/** 기준일이 바뀌면 옛 기준일 서랍을 버린다(한 번만) */
+async function dropOldTiles(keep) {
+  if (dropped === keep) return;
+  dropped = keep;
+  const ks = await caches.keys();
+  await Promise.all(ks.filter((k) => k.startsWith(TILES) && k !== keep).map((k) => caches.delete(k)));
+}
 
 async function trim(cache) {
   const keys = await cache.keys();
@@ -29,7 +41,9 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;   // 카카오 등 남의 서버는 건드리지 않는다
 
   if (url.pathname.includes('/data/t/')) {                                     // 지도 칸: 저장본 먼저, 없으면 받아서 저장
-    e.respondWith(caches.open(TILES).then(async (c) => {
+    const name = TILES + (url.searchParams.get('v') || '0');
+    e.respondWith(caches.open(name).then(async (c) => {
+      dropOldTiles(name);
       const hit = await c.match(e.request);
       if (hit) return hit;
       const res = await fetch(e.request);

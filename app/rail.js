@@ -64,16 +64,23 @@ function railSeat(t) {
     <div class="rwhere">${esc(t.w || '자세한 위치가 적혀 있지 않아요')}${t.s ? ` · ${t.s.split('').join(' · ')}` : ''}</div>`;
 }
 
-function railCard(st, m, now, i, also) {
+function railCard(st, m, now, i, also, sameName) {
   const s = railState(st, now);
   const gongdan = st.src === '국가철도공단';
+  const nm = `${lineLabel(st)} ${st.n}역`;
+  const ll = `${st.la},${st.lo}`;
   return `<div class="railbox" data-rail="${i}">
-      <div class="rhead"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실 · 운영기관 제공<span class="who">${esc(st.src)}</span></div>
+      <div class="rhead"><svg class="ic"><use href="#i-train"/></svg>역 안 화장실<span class="who">${esc(st.src)}</span></div>
       <div class="rbody">
         <div class="rh"><b><span class="ln">${esc(lineLabel(st))}</span>${esc(st.n)}역</b>${distHtml(m)}</div>
+        ${sameName ? '<div class="rsame">같은 역이지만 <b>노선이 달라</b> 화장실이 따로 있어요</div>' : ''}
         ${st.t.map(railSeat).join('')}
         <div class="meta">${s.html}</div>
-        ${also ? `<div class="ralso"><svg class="ic"><use href="#i-wc"/></svg> 이 역은 <b>지자체 목록에도</b> 있어요 — 아래 흰 카드에서 변기 수·전화를 볼 수 있습니다.</div>` : ''}
+        ${also ? '<div class="ralso"><svg class="ic"><use href="#i-wc"/></svg> 이 역은 <b>지자체 자료에도</b> 있어요 — 아래 흰 카드에서 변기 수·전화를 볼 수 있습니다.</div>' : ''}
+        <div class="rgo">
+          <a class="btn main sm" href="https://map.kakao.com/link/to/${encodeURIComponent(nm)},${ll}" target="_blank" rel="noopener" data-stop><svg><use href="#i-walk"/></svg>길찾기</a>
+          <a class="btn ghost sm" href="https://map.kakao.com/link/roadview/${ll}" target="_blank" rel="noopener" data-stop><svg><use href="#i-eye"/></svg>입구 보기</a>
+        </div>
         ${gongdan ? '<div class="rnone"><svg class="ic"><use href="#i-q"/></svg> 이 출처는 <b>여는 시간과 변기 수를 제공하지 않습니다.</b> 없다는 뜻이 아닙니다.</div>' : ''}
       </div>
     </div>`;
@@ -128,8 +135,8 @@ function openRailDetail(st, m) {
     <div class="dsec"><h3>이 정보는</h3>
       <div class="dsub">출처 <b>${esc(st.src)}</b>(공공데이터포털) · 기준일 ${(RAIL.date || {})[st.src] || ''}${t0.ry ? ` · 리모델링 ${esc(t0.ry)}년` : ''}<br>
         지자체 공중화장실 데이터와 <b>합치지 않고 따로</b> 보여 줍니다. 두 출처의 값을 섞으면, 틀렸을 때 <b>누구에게 알려야 할지</b> 알 수 없기 때문입니다.</div>
-      <div class="dfix"><b>정보가 틀렸나요?</b><br>① <b>${esc(st.op)}</b>(역 운영기관)에 알리기 ② <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터포털 오류 신고</a>
-        <div class="dsub">역 화장실은 <b>지자체가 아니라 운영기관</b>이 관리합니다.</div></div>
+      <div class="dfix"><b>정보가 틀렸나요?</b><br>① <b>${esc(st.op)}</b>(원천데이터 관리기관)에 알리기 ② <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터포털 오류 신고</a>
+        <div class="dsub">역 화장실의 <b>원천데이터 관리기관</b>은 철도 운영기관입니다 — 지자체에 알리면 고쳐지지 않습니다.</div></div>
     </div>`;
   markDetail({ k: 'r', n: `${st.n}역`, la: st.la, lo: st.lo, st });
   go('detail');
