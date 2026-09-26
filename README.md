@@ -45,11 +45,12 @@ python -m http.server 8000 --directory app     # http://localhost:8000
 7. `python campus_coords.py` — 캠퍼스·단지 건물 좌표(`data/coord_overrides.csv`)
 8. `python verify_locations.py [--naver-sample 300]` — 도로명·지번 어긋남, 필지 번지 불일치, **시설 이름으로 찾기** → `data/location_fixes.csv`
    - 검수 시트: `python make_check_sheet.py`
-9. `python build_app_data.py` — 앱 데이터(지도 칸 파일, `app/data/`)
-10. `python check_data.py` — 불변조건 검사(실패면 배포하지 않음)
-11. `python audit_data.py` — 내용 정밀 점검(고치지 않고 보고만)
-12. `python fetch_holidays.py` — 공휴일(1년에 한 번)
-13. `python build_gov_links.py` — 시군구 홈페이지(오류 신고 안내용)
+9. `python build_sgg_codes.py` — 자치단체코드 → **법정동 시군구코드**(`data/sgg_codes.json`). 구청 안내를 이름이 아니라 코드로 찾기 위해 — **`build_app_data.py`보다 먼저**(T32)
+10. `python build_app_data.py` — 앱 데이터(지도 칸 파일, `app/data/`). 시군구청 누리집도 이때 `../공통지식/기준자료/행정구역/시군구_누리집.json`에서 `app/data/gov_sites.json`으로 복사한다
+11. `python check_data.py` — 불변조건 검사(실패면 배포하지 않음)
+12. `python audit_data.py` — 내용 정밀 점검(고치지 않고 보고만)
+13. `python fetch_holidays.py` — 공휴일(1년에 한 번)
+14. `python build_gov_links.py` — 시군구청 누리집을 **새로 모을 때만**. 결과는 공통지식의 `시군구_누리집.json`(시군구코드 키, 267곳)에 둔다 — 세 프로젝트가 같은 목록을 쓴다
 
 ## 역 안 화장실
 
@@ -69,7 +70,7 @@ python build_rail_app.py      # 앱 데이터 app/data/rail.json (212KB · 역 8
 ```
 python update.py                                   # 수집 → 변경 분류 → 바뀐 곳만 정제·좌표 → 제안 + 보고서
 python update.py --publish data/processed/update_<날짜>   # 사람이 확인한 뒤 반영
-python build_app_data.py && python check_data.py && python golden.py
+python build_sgg_codes.py && python build_app_data.py && python check_data.py && python golden.py
 python bump_version.py                             # 그리고 commit → push (자동 배포)
 ```
 - 보고서의 **사람이 볼 목록 5가지**를 본다. 특히 **`swapped_ids.csv`**(같은 번호, 다른 시설)는 결정 칸을 채워야 반영된다 — 원천이 관리번호를 재사용하면 **우리 영구번호가 다른 화장실을 가리킨다**(사례지식 6-33).
