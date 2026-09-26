@@ -2,7 +2,7 @@
 검사: 영구번호 중복·대장에 없음(합친 번호 포함) / 시설 종류가 사전에 있는 값인지·대체 비율 / 좌표가 국내 범위·자기 칸 안 / 표시 기준(구분·등급) / 개방시간 구조 / 필수 칸 / 파일 크기·개수 / 공휴일 목록 / 지난 판 대비 급감
 실행: python check_data.py [--prev 지난 index.json]
 """
-import argparse, glob, json, math, re, sys
+import argparse, csv, glob, json, math, re, sys
 from pathlib import Path
 from datetime import date
 
@@ -17,6 +17,57 @@ HHMM = re.compile(r'^([01]\d|2[0-4])[0-5]\d$')
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 fails, warns = [], []
+
+
+def check_dong():
+    """주소의 **법정동**이 가리키는 구와, 우리가 배정한 시군구코드가 어긋난 행을 찾는다.
+
+    배정은 원천의 `개방자치단체코드`(관리 지자체)에서 온다. 그게 주소보다 먼저 새 구로 갈리는 게 보통이지만(T32),
+    **드물게 관리 지자체가 실제 소재지와 다른 행**이 있다(인천 서구 시천동 화장실이 서해구 소관으로 적힌 식).
+    증거는 주소 캐시의 법정동코드 — **그 행 자신의 주소**에서 나온 값이라 가장 강하다.
+    일반구는 자치단체가 아니므로 **양쪽 다 모시로 올려** 견준다(그러지 않으면 특례시 전체가 어긋남으로 잡힌다).
+    고치는 것이 아니라 **보여 주기만** 한다 — 원천이 맞을 수도 있다.
+    """
+    cache_p, sgg_p = ROOT / 'data' / 'processed' / 'address_cache.json', ROOT / 'data' / 'sgg_codes.json'
+    reg = ROOT.parent / '공통지식' / '기준자료' / '행정구역' / '행정구역_시군구.csv'
+    snaps = sorted((ROOT / 'data' / 'snapshots').iterdir()) if (ROOT / 'data' / 'snapshots').exists() else []
+    if not (cache_p.exists() and sgg_p.exists() and reg.exists() and snaps):
+        return
+    names = {r['시군구코드']: r['시군구명']
+             for r in csv.DictReader(reg.read_text(encoding='utf-8-sig').splitlines())}
+
+    def 자치단체로(code):
+        nm, up = names.get(code, ''), code[:4] + '0'
+        return up if nm.endswith('구') and '시' in nm and up in names else code
+
+    cache = json.loads(cache_p.read_text(encoding='utf-8'))
+    table = json.loads(sgg_p.read_text(encoding='utf-8'))
+    시도들 = {r['시도명'] for r in csv.DictReader(reg.read_text(encoding='utf-8-sig').splitlines())}
+    본 = 0
+    어긋 = []
+    with (snaps[-1] / 'toilets_geo.csv').open(encoding='utf-8-sig', newline='') as f:
+        for r in csv.DictReader(f):
+            ours = table.get(r['개방자치단체코드'])
+            if not ours:
+                continue
+            for addr in (r['소재지도로명주소'].strip(), r['소재지지번주소'].strip()):
+                # **시도로 시작하는 온전한 주소만** 견준다. '없음'이나 '용당동 172-4'처럼 시도가 없는 주소는
+                # 정제가 엉뚱한 곳을 가리키기 쉽고(주소 '없음'이 군산시로 나온 행이 있다), 그런 행은 위의
+                # '시도 어긋남' 경고가 이미 잡는다. 잡음을 섞으면 이 경고를 아무도 보지 않게 된다.
+                if not addr.split(' ')[0] in 시도들:
+                    continue
+                v = cache.get(f"{r['코드시도']}|{r['코드시군구']}|{addr}") if addr else None
+                if isinstance(v, dict) and v.get('행정구역코드'):
+                    본 += 1
+                    row = 자치단체로(v['행정구역코드'][:5])
+                    if row != 자치단체로(ours):
+                        어긋.append((r.get('번호') or r.get('고유번호', ''), names.get(ours, ours), names.get(row, row), (addr or '')[:34]))
+                    break
+    if 어긋:
+        warns.append(f'주소의 법정동과 배정 코드가 어긋난 행 {len(어긋)}/{본:,} — **어느 쪽이 틀렸는지는 열어 봐야 안다** '
+                     f'(원천의 관리 지자체가 소재지와 다른 경우 · 주소 정제가 틀린 경우 둘 다 있다. 고치지 않고 보여만 준다): '
+                     + ' · '.join(f'{a[3]} → 배정 {a[1]}, 주소 {a[2]}' for a in 어긋[:3]))
+    print(f'  주소 법정동으로 견준 행 {본:,} · 어긋남 {len(어긋)}')
 
 
 def check_hours(h, rid):
@@ -112,6 +163,7 @@ def main(data=DATA, prev=None):
             warns.append(f'주소의 시도와 코드의 시도가 어긋난 카드 {len(odd)} — 원천의 자치단체코드 오류일 수 있다(앱은 주소를 따른다)')
         print(f'  시군구 {len(set(r.get("sgg") for r in every)):,}종 · 구청 안내 {len(gov):,}곳'
               + (f' · 시도 어긋남 {len(odd)}' if odd else ''))
+    check_dong()
 
     rail = data / 'rail.json'                                # 역 안 화장실 — 본 데이터와 합치지 않고 잇는 별개 파일
     if not rail.exists():
