@@ -37,7 +37,7 @@ def main(data=DATA, prev=None):
     reg = json.loads((ROOT / 'data' / 'id_registry.json').read_text(encoding='utf-8'))
     known = set(reg['by_mng'].values())
     files = glob.glob(str(data / 't' / '*.json'))
-    seen, total, big = set(), 0, []
+    seen, total, big, every = set(), 0, [], []
     ftc = {}
     for f in files:
         key = Path(f).stem
@@ -46,6 +46,7 @@ def main(data=DATA, prev=None):
         if kb > MAX_FILE_KB:
             big.append(f'{key} {kb:.0f}KB')
         recs = json.loads(Path(f).read_text(encoding='utf-8'))
+        every += recs                                   # 칸을 넘어서 보는 검사용(시군구코드 등)
         if idx['tiles'].get(key) != len(recs):
             fails.append(f'칸 {key}: index {idx["tiles"].get(key)} ≠ 파일 {len(recs)}')
         for r in recs:
@@ -94,6 +95,24 @@ def main(data=DATA, prev=None):
         years, now = json.loads(hol.read_text(encoding='utf-8')), str(date.today().year)
         if now not in years:
             fails.append(f'holidays.json에 {now}년 없음 — python fetch_holidays.py')
+    # 시군구코드(sgg)와 구청 안내 — 행정구역 개편이면 이름은 옛것이라도 코드는 새 구를 가리켜야 한다(T32)
+    gov_p = data / 'gov_sites.json'
+    if gov_p.exists():
+        gov = json.loads(gov_p.read_text(encoding='utf-8'))
+        no_code = [r for r in every if not r.get('sgg')]
+        no_gov = [r for r in every if r.get('sgg') and r['sgg'] not in gov]
+        if no_code:
+            fails.append(f'시군구코드가 없는 카드 {len(no_code):,} — python build_sgg_codes.py')
+        if no_gov:
+            fails.append(f'구청 안내를 못 찾는 카드 {len(no_gov):,}(코드 {len(set(r["sgg"] for r in no_gov))}종) — gov_sites.json에 더한다')
+        sido = {c: v.get('시도', '') for c, v in gov.items()}
+        odd = [r for r in every if r.get('sgg') and sido.get(r['sgg'])
+               and r['a'].split()[:1] and r['a'].split()[0] != sido[r['sgg']] and r['a'].split()[0].endswith(('시', '도'))]
+        if odd:
+            warns.append(f'주소의 시도와 코드의 시도가 어긋난 카드 {len(odd)} — 원천의 자치단체코드 오류일 수 있다(앱은 주소를 따른다)')
+        print(f'  시군구 {len(set(r.get("sgg") for r in every)):,}종 · 구청 안내 {len(gov):,}곳'
+              + (f' · 시도 어긋남 {len(odd)}' if odd else ''))
+
     rail = data / 'rail.json'                                # 역 안 화장실 — 본 데이터와 합치지 않고 잇는 별개 파일
     if not rail.exists():
         fails.append('rail.json 없음 — python build_rail.py && python build_rail_app.py')

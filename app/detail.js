@@ -47,17 +47,23 @@ function facBig(rec) {
     + '</div>';
 }
 
-/** 주소로 시군구 홈페이지 찾기(오류 신고 안내) */
-async function sigunguHome(addr) {
+/** 이 화장실의 시군구청 — **이름이 아니라 코드로** 찾는다.
+
+    전에는 주소 글자에서 시군구 이름을 읽어 찾았는데, 행정구역이 개편되면 **주소의 이름과 실제 구가 달라진다**
+    (인천 옛 중구 → 제물포구·영종구로 갈림). 이름으로는 가를 수 없어 그 구들이 안내를 못 받았다(T32).
+    이제 카드마다 `sgg`(법정동 시군구코드)가 있고, 목록도 그 코드를 키로 쓴다. */
+async function sigunguHome(rec) {
   if (!govSites) govSites = await fetch('data/gov_sites.json').then((r) => r.json()).catch(() => ({}));
-  const p = String(addr || '').split(' ');
-  for (const key of Object.keys(govSites)) {
-    const part = key.split(' ');
-    if (p[0] && part[0] && p[0].slice(0, 2) === part[0].slice(0, 2) && p.slice(1, 4).includes(part[1])) {
-      return { 기관: govSites[key].기관, 홈페이지: govSites[key].홈페이지 };
-    }
+  const byCode = rec && rec.sgg ? govSites[rec.sgg] : null;
+  const p = String((rec && rec.a) || '').split(' ');
+  /* 다만 **시도까지 어긋나면 주소를 따른다.** 코드는 원천의 '관리 지자체'라 드물게 틀린다
+     (목포·부산 화장실이 양산시 소관으로 적힌 행이 3곳 있었다). 다른 시도의 기관을 안내하면
+     사용자가 가장 혼란스럽다. 같은 시도 안에서 이름과 다른 것은 **개편이므로 코드를 믿는다.** */
+  if (byCode && byCode.시도 && p[0] && p[0] !== byCode.시도) {
+    const byName = Object.values(govSites).find((v) => v.시도 === p[0] && p.slice(1, 4).includes(v.시군구));
+    if (byName) return { 기관: byName.기관, 홈페이지: byName.홈페이지, 비고: byName.비고 || '' };
   }
-  return null;
+  return byCode ? { 기관: byCode.기관, 홈페이지: byCode.홈페이지, 비고: byCode.비고 || '' } : null;
 }
 
 function openDetail(rec, m) {
@@ -123,8 +129,9 @@ ${rec.dy ? ' · ' : ''}번호 ${esc(rec.id)}${rec.ids ? ` · 합친 등록 ${rec
   markDetail({ k: 't', n: rec.n, la: rec.la, lo: rec.lo, rec });
   go('detail');
   $('#detail-body').scrollTop = 0;
-  sigunguHome(rec.a).then((g) => {
+  sigunguHome(rec).then((g) => {
     const el = $('#d-gov');
-    if (g && el) el.outerHTML = `<a href="${g.홈페이지}" target="_blank" rel="noopener">${esc(g.기관)} 홈페이지</a>`;
+    if (g && el) el.outerHTML = `<a href="${g.홈페이지}" target="_blank" rel="noopener">${esc(g.기관)} 홈페이지</a>`
+      + (g.비고 ? `<span class="dsub"> ${esc(g.비고)}</span>` : '');
   });
 }

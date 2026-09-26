@@ -26,6 +26,7 @@ from hours import parse as parse_hours
 from report_geo import WIDE
 
 ROOT = Path(__file__).parent
+SGG = {}
 OUT = ROOT / 'app' / 'data'
 TILE = 0.05
 KIND = {'공중화장실': 0, '개방화장실': 1, '간이화장실': 2, '이동화장실': 3}   # 이동식도 표시하되 '위치가 바뀔 수 있어요'(사용자 결정 2026-09-23)
@@ -115,6 +116,9 @@ def place_ok(r):
 
 def main():
     snap = max((ROOT / 'data' / 'snapshots').iterdir())
+    # 자치단체코드 → 법정동 시군구코드(`build_sgg_codes.py`가 만든다)
+    global SGG
+    SGG = json.loads((ROOT / 'data' / 'sgg_codes.json').read_text(encoding='utf-8')) if (ROOT / 'data' / 'sgg_codes.json').exists() else {}
     geo = pd.read_csv(snap / 'toilets_geo.csv', dtype=str, encoding='utf-8-sig').fillna('')
     raw = pd.read_csv(snap / 'toilets_raw.csv', dtype=str, encoding='utf-8-sig').fillna('')
     df = geo.merge(raw.drop(columns=['개방자치단체코드', '구분명', '화장실명', '소재지도로명주소', '소재지지번주소']), on='관리번호', how='left')
@@ -190,7 +194,10 @@ def main():
                'c': [num(r['남성용-어린이용대변기수']) + num(r['남성용-어린이용소변기수']), num(r['여성용-어린이용대변기수'])],
                'dp': 1 if r['기저귀교환대유무'] == 'Y' else 0, 'bl': 1 if r['비상벨설치여부'] == 'Y' else 0,
                'cc': 1 if r['화장실입구CCTV설치유무'] == 'Y' else 0, 'o': r['관리기관명'], 'tel': r['전화번호'],
-               'g': 'P' if r['좌표정확도'] == 'P' else r['좌표정확도'].replace('B산', 'B')}
+               'g': 'P' if r['좌표정확도'] == 'P' else r['좌표정확도'].replace('B산', 'B'),
+               # 시군구코드(법정동 5자리) — **이름이 아니라 코드로** 구청을 찾기 위해(T32).
+               # 행정구역이 개편되면 주소의 이름과 실제 구가 달라진다(인천 옛 중구 → 제물포구·영종구).
+               'sgg': SGG.get(r['개방자치단체코드'], '')}
         if wide[i]:
             rec['w'] = wide[i]
         if r['좌표정확도'] == 'P':
@@ -229,7 +236,14 @@ def main():
                 seen[sig] = rec
         tiles[key] = list(seen.values())
 
-    gov = ROOT / 'data' / 'gov_sites.json'                    # 오류 신고 안내용 시군구 홈페이지 — 앱이 읽는다
+    # 오류 신고 안내용 시·구청 누리집 — **공통지식의 기준자료**를 쓴다(세 프로젝트가 같은 목록을 본다).
+    # 키는 시군구코드. 없으면 프로젝트 사본으로 물러선다.
+    shared = ROOT.parent / '공통지식' / '기준자료' / '행정구역' / '시군구_누리집.json'
+    gov = ROOT / 'data' / 'gov_sites.json'
+    if shared.exists():
+        (ROOT / 'data' / 'gov_sites.json').write_text(
+            json.dumps(json.loads(shared.read_text(encoding='utf-8'))['누리집'], ensure_ascii=False, indent=1), encoding='utf-8')
+        print(f'  시·구청 누리집: 공통지식 기준자료에서 가져옴')
     if gov.exists():
         OUT.mkdir(parents=True, exist_ok=True)
         shutil.copy2(gov, OUT / 'gov_sites.json')
