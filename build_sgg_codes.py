@@ -10,12 +10,19 @@
 **만드는 법** — 자치단체코드마다 증거를 모아 으뜸을 고른다.
 1. **주소 캐시의 법정동코드**(도로명주소 API가 준 `행정구역코드` 앞 5자리) — 가장 강한 증거
 2. 캐시에 없으면 **주소의 시군구 이름**을 공통지식 코드표의 **현재 이름과만** 맞춘다(옛 이름은 세지 않는다)
+3. 으뜸이 **일반구**(수원시팔달구 등)면 **모시로 올린다** — 일반구는 자치단체가 아니고, 자치단체코드는 시 하나를 가리킨다.
+   올리지 않으면 수원시 전체가 '팔달구'가 된다(다수결의 부작용). **구청 안내는 어느 쪽이든 수원시청이라 앱에서는 안 보인다.**
 
-  python build_sgg_codes.py           만들고 저장
+**어디에 쓰나**: 이 저장소는 `data/sgg_codes.json`(납작한 표)을 쓰고, 같은 내용을 공통지식
+`기준자료/행정구역/자치단체코드_시군구코드.json`(겉포장 있음)에 함께 써 **다른 프로젝트도 쓰게** 한다.
+공공데이터에는 자치단체코드만 있고 법정동코드는 없는 경우가 많다.
+
+  python build_sgg_codes.py           만들고 저장(저장소 + 공통지식)
   python build_sgg_codes.py --check   지금 표를 주소 이름과 대조만(고치지 않음)
 """
 import argparse, csv, json, sys
 from collections import Counter, defaultdict
+from datetime import date
 from pathlib import Path
 import pandas as pd
 
@@ -23,6 +30,7 @@ ROOT = Path(__file__).parent
 REG = ROOT.parent / '공통지식' / '기준자료' / '행정구역' / '행정구역_시군구.csv'
 CACHE = ROOT / 'data' / 'processed' / 'address_cache.json'
 OUT = ROOT / 'data' / 'sgg_codes.json'
+SHARED = REG.parent / '자치단체코드_시군구코드.json'
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
@@ -57,21 +65,54 @@ def build():
         if len(p) >= 2 and (p[0], p[1]) in by_name:
             ev_name[code][by_name[(p[0], p[1])]] += 1
 
-    table, how, miss = {}, Counter(), []
+    def 자치단체로(sgg):
+        """일반구면 모시 코드로 올린다(41115 수원시팔달구 → 41110 수원시)."""
+        nm = by_code.get(sgg, ('', ''))[1]
+        up = sgg[:4] + '0'
+        return up if nm.endswith('구') and '시' in nm and up in by_code else sgg
+
+    table, how, miss, rolled = {}, Counter(), [], []
     for code in sorted(set(geo['개방자치단체코드'])):
         if ev_cache[code]:
-            table[code] = ev_cache[code].most_common(1)[0][0]
+            got = ev_cache[code].most_common(1)[0][0]
             how['캐시(법정동코드)'] += 1
         elif ev_name[code]:
-            table[code] = ev_name[code].most_common(1)[0][0]
+            got = ev_name[code].most_common(1)[0][0]
             how['주소 이름'] += 1
         else:
             miss.append(code)
+            continue
+        up = 자치단체로(got)
+        if up != got:
+            rolled.append(f'{code} {by_code[got][1]}→{by_code[up][1]}')
+        table[code] = up
     print(f'기준본 {stamp} · 자치단체코드 {len(set(geo["개방자치단체코드"]))} · 정함 {len(table)} {dict(how)}')
     if miss:
         print(f'  못 정함 {len(miss)}: {", ".join(miss[:8])} — 주소 캐시를 채운 뒤 다시 돌린다')
+    if rolled:
+        print(f'  일반구 → 모시로 올림 {len(rolled)}곳: {" · ".join(rolled[:4])} …')
     OUT.write_text(json.dumps(table, ensure_ascii=False, indent=0), encoding='utf-8')
     print(f'저장: {OUT.relative_to(ROOT)}')
+    # 덮은 범위를 스스로 말하게 — 일반구는 자치단체가 아니므로 분모에서 뺀다
+    자치단체 = {c for c, (_, nm) in by_code.items() if not (nm.endswith('구') and '시' in nm)}
+    빠짐 = sorted(자치단체 - set(table.values()))
+    print(f'  덮은 자치단체 {len(set(table.values()))}/{len(자치단체)}' + (f' · 빠짐 {", ".join(by_code[c][1] for c in 빠짐)}' if 빠짐 else ''))
+    SHARED.write_text(json.dumps({
+        '설명': '행안부 **자치단체코드**(7자리) → **시군구코드**(법정동 5자리). 공공데이터에 자치단체코드만 있고 법정동코드가 없을 때 잇는 표.',
+        '확인일': date.today().isoformat(),
+        '기준본': f'화장실 프로젝트 공중화장실 기준본 {stamp}(행 {len(geo):,})',
+        '만든 법': '자치단체코드마다 ① 주소 캐시의 법정동코드 앞 5자리 ② 없으면 주소의 시군구 이름을 **현재 이름과만** 맞춘 결과의 으뜸. 일반구는 모시로 올림 — 화장실 build_sgg_codes.py',
+        '주의': [
+            f'**전국 표가 아니다.** 공중화장실을 관리하는 자치단체 {len(table)}곳 — 전국 자치단체 {len(자치단체)}곳(일반구 39 제외) 중 {len(set(table.values()))}곳({len(set(table.values()))/len(자치단체)*100:.0f}%).'
+            + (f' 빠진 곳: {", ".join(f"{by_code[c][0]} {by_code[c][1]}" for c in 빠짐)} — 원본에 행이 아예 없다(화장실을 제출하지 않은 자치단체).' if 빠짐 else '')
+            + ' 없는 코드는 그 원천에서 같은 방법으로 더한다',
+            '**값은 자치단체(시·군·구) 단위다.** 일반구(수원시팔달구 등)는 자치단체가 아니라 모시로 올렸다 — 일반구까지 알아야 하면 그 행의 주소를 직접 법정동코드로 정제한다',
+            '**드물게 다른 시도 기관이 관리자로 적힌 행이 있다**(목포 화장실이 양산시 소관). 시도가 어긋나면 주소를 따른다',
+            '자치단체코드는 **개방자치단체코드**(공공데이터 표준)와 같은 체계다. 행정표준코드의 기관코드와 혼동하지 않는다',
+        ],
+        '대응': table,
+    }, ensure_ascii=False, indent=1), encoding='utf-8')
+    print(f'저장: 공통지식/기준자료/행정구역/{SHARED.name}')
     return table, by_code, geo
 
 
