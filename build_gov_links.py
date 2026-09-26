@@ -9,10 +9,15 @@
   ② **기관 이름이 '청'으로 끝나는가** — '다이소 강북구청사거리점'(점)·'NH농협은행 칠곡군청출장소'(소)를 막는다
   ③ **첫 화면을 열어 제목에 시군구 이름이 있는가** — 죽은 주소·옛 주소를 막는다(동해 http 404 → https만 열림)
 
-**판정은 셋이다 — 통과 · 버림 · 보류.** ③은 남의 서버에 달렸다. 처음 267곳에 걸었을 때 19곳이 걸렸는데 **대부분 우리 쪽 잘못**이었다
-(동시 접속 시간초과 · 지자체 인증서 · 자바스크립트로 그리는 빈 제목 · 일반구 이름 `창원시진해구`를 `창원시청`과 맞추려 한 것 · `전주시 대표사이트`).
-**못 열린 것을 틀린 것으로 세면 멀쩡한 것을 고치려 든다**(6-39의 교훈) → 시간초과·인증서·빈 제목은 **보류**로 따로 세고,
-이름 비교는 **모시 어간**('창원시진해구'→'창원')으로 한다.
+**판정은 셋이다 — 통과 · 버림 · 보류.** 기준 표 267곳에 걸어 보며 **거르기를 세 번 고쳤다.** 겪은 것을 그대로 남긴다.
+1. **동시 8갈래·12초**는 멀쩡한 곳을 시간초과로 떨어뜨렸다 → 3갈래·25초. 지자체 인증서가 어긋난 곳도 많다(제목만 읽고 덧말에 남긴다).
+2. **② 가 `통영시청 제1청사`(진짜 시청)를 버렸다** → 부속 표현(`본청`·`제1청사`·`청사`·`별관`)을 떼고 '청'을 본다. `출장소`는 떼지 않는다(은행이 그렇게 붙는다).
+3. **① 이 진짜 구청 20곳을 버렸다** — 관청이 `go.kr`만 쓰는 게 아니다: `junggu.seoul.kr` · `dong.daegu.kr` · `nowon.kr` · `suseong.kr` ·
+   `ycg.kr`(예천군) · `okjc.net`(제천시 — **`jecheon.go.kr`로 넘어가는 옛 주소**) → ①은 **넘어간 최종 주소**로 보고,
+   `go.kr`이 아닌 `.kr`은 **버림이 아니라 보류**로 둔다(사람이 본다). 장사 도메인(`co.kr`·`or.kr`·`.com`·`.net`·SNS·블로그)만 버린다.
+
+**③은 문(gate)이 아니라 확인이다.** 이 환경에서 267곳 중 **100곳 남짓이 안 열린다**(강남·성남 같은 큰 곳도 시간초과·TLS).
+**못 열린 것을 틀린 것으로 세면 멀쩡한 것을 고치려 든다**(6-39의 교훈). 이름 비교는 **모시 어간**('창원시진해구'→'창원')으로 한다.
 
 **표를 말없이 덮지 않는다.** 기준 표(`공통지식/기준자료/행정구역/시군구_누리집.json`)에는 사람이 손으로 고친 것과 그 기록이 들어 있다.
 이 스크립트는 **후보**를 `data/gov_sites_candidates.json`에 쓰고 **표와 다른 곳만 보여 준다** — 반영은 사람이 한다.
@@ -31,7 +36,10 @@ ROOT = Path(__file__).parent
 OUT = ROOT / 'data' / 'gov_sites_candidates.json'
 TABLE = ROOT.parent / '공통지식' / '기준자료' / '행정구역' / '시군구_누리집.json'
 SGG = ROOT / 'data' / 'sgg_codes.json'
-UA = {'User-Agent': 'Mozilla/5.0 (toilet-map gov link check)'}
+UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'ko-KR,ko;q=0.9', 'Connection': 'close'}
+requests.packages.urllib3.disable_warnings()       # 인증서 어긋난 지자체가 많다 — 덧말로 남기고 경고는 끈다
 URL = 'https://naverapihub.apigw.ntruss.com/search/v1/local'
 H = {'X-NCP-APIGW-API-KEY-ID': env('NAVER_CLIENT_ID'), 'X-NCP-APIGW-API-KEY': env('NAVER_CLIENT_SECRET')}
 if hasattr(sys.stdout, 'reconfigure'):
@@ -60,10 +68,25 @@ def search(q):
     return []
 
 
+# 장사·개인 도메인 — 여기 걸리면 관청이 아니다
+장사 = ('.co.kr', '.or.kr', '.ne.kr', '.pe.kr', '.re.kr', '.ac.kr', '.hs.kr', '.ms.kr', '.es.kr', '.sc.kr')
+
+
 def 관청_도메인(link):
-    """① 주소가 관청 도메인인가 — go.kr 계열만 받는다."""
+    """① 주소가 관청 도메인인가 — '통과'·'보류'·'버림'.
+
+    관청은 `go.kr`만 쓰지 않는다: `junggu.seoul.kr`·`dong.daegu.kr`·`nowon.kr`·`ycg.kr`(예천군)이 모두 진짜다.
+    그래서 **`go.kr`이면 통과, 그 밖의 `.kr`이면 보류(사람이 본다), 장사 도메인·그 밖은 버림**으로 나눈다.
+    **넘어간 최종 주소로 보는 게 맞다** — `okjc.net`은 `jecheon.go.kr`로 넘어가는 제천시의 옛 주소다.
+    """
     host = re.sub(r'^https?://', '', link).split('/')[0].split(':')[0].lower()
-    return host.endswith('.go.kr') or host == 'go.kr'
+    if host.endswith('.go.kr') or host == 'go.kr':
+        return '통과'
+    if host.endswith(장사):
+        return '버림'
+    if host.endswith('.kr'):
+        return '보류'
+    return '버림'
 
 
 # 관청 이름에 흔히 붙는 부속 표현 — 떼고 나서 '청'으로 끝나야 한다
@@ -102,7 +125,7 @@ def 첫화면_제목(link):
                 break
             r.encoding = r.apparent_encoding or r.encoding
             m = re.search(r'<title[^>]*>(.*?)</title>', r.text, re.S | re.I)
-            return u, (re.sub(r'\s+', ' ', m.group(1)).strip() if m else ''), ('' if verify else '인증서 어긋남')
+            return r.url, (re.sub(r'\s+', ' ', m.group(1)).strip() if m else ''), ('' if verify else '인증서 어긋남')
     return None, '', why or '열리지 않음'
 
 
@@ -116,19 +139,29 @@ def 이름_어간(sgg):
 
 
 def 거르기(sgg, title, link):
-    """세 가지를 걸어 (판정, 까닭, 열린 주소, 첫화면 제목)을 돌려준다.
+    """세 가지를 걸어 (판정, 까닭, 최종 주소, 첫화면 제목)을 돌려준다.
 
-    판정: '통과' · '버림'(우리가 판단할 수 있고 틀렸다) · '보류'(남의 서버 사정으로 판단 못 한다)
+    판정: '통과' · '버림'(우리가 판단할 수 있고 틀렸다) · '보류'(판단할 근거가 모자란다 — 사람이 본다)
+    순서: ② 이름(망 없이) → 열어 보기 → ① 최종 주소 → ③ 제목. **①을 최종 주소로 보려면 먼저 열어야 한다.**
     """
     if not link.startswith('http'):
         return '버림', '주소가 아님', link, ''
-    if not 관청_도메인(link):
-        return '버림', f'① 관청 도메인 아님({re.sub(r"^https?://", "", link).split("/")[0]})', link, ''
     if not 청으로_끝나나(title):
         return '버림', f"② 이름이 '청'으로 끝나지 않음({title})", link, ''
+
     opened, page, 덧말 = 첫화면_제목(link)
+    도메인 = 관청_도메인(opened or link)
+    if 도메인 == '버림':                                   # 장사·SNS 도메인 — 열리든 말든 관청이 아니다
+        host = re.sub(r'^https?://', '', opened or link).split('/')[0]
+        return '버림', f'① 관청 도메인 아님({host})', opened or link, page
     if not opened:
-        return '보류', f'③ 첫 화면을 열지 못함({page})', link, ''
+        return '보류', f'③ 첫 화면을 열지 못함({덧말}) — 브라우저로 본다', link, ''
+    if 도메인 == '보류':
+        어긋 = 이름_어간(sgg) not in re.sub(r'\s+', '', page) if page.strip() else True
+        host = re.sub(r'^https?://', '', opened).split('/')[0]
+        if 어긋:
+            return '보류', f'① go.kr이 아닌 .kr({host}) — 제목으로도 확인되지 않음', opened, page
+        return '통과', f'① go.kr이 아니지만 제목이 맞다({host})' + (f' · {덧말}' if 덧말 else ''), opened, page
     if not page.strip():
         return '보류', '③ 제목이 비어 있음(자바스크립트로 그리는 곳)', opened, ''
     납작 = re.sub(r'\s+', '', page)
