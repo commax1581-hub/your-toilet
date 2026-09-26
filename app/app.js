@@ -491,7 +491,18 @@ async function doSearch(q, auto) {
   }, { size: 12 });
 }
 
-$('#f-search').onsubmit = (e) => { e.preventDefault(); $('#q').blur(); doSearch($('#q').value); };
+/* 휴대폰 자판의 '검색'(돋보기)으로 보낼 때 **글자가 겹쳐 적히는** 일이 있었다 — '서해구' → '서해구서해구'(T34).
+   한글 입력기가 아직 조립 중인 글자를 갖고 있는데 `blur()`로 입력칸을 떠나면, 입력기가 그 글자를 **한 번 더 확정해**
+   입력칸에 붙인다(안드로이드 크롬). → 보낼 값을 **먼저 붙잡고**, 떠난 뒤에 입력칸을 그 값으로 되돌린다.
+   입력기가 뒤늦게 붙이는 경우까지 있어 다음 차례(setTimeout 0)에 한 번 더 본다. */
+$('#f-search').onsubmit = (e) => {
+  e.preventDefault();
+  const q = $('#q').value;
+  $('#q').blur();
+  $('#q').value = q;
+  setTimeout(() => { if ($('#q').value !== q) $('#q').value = q; }, 0);
+  doSearch(q);
+};
 $('#q').oninput = (e) => {                                     // 글자를 멈추면 자동으로 찾는다(조립 중에는 기다린다)
   clearTimeout(searchTimer);
   if (e.isComposing) return;
