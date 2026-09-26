@@ -18,6 +18,12 @@
 
 **③은 문(gate)이 아니라 확인이다.** 이 환경에서 267곳 중 **100곳 남짓이 안 열린다**(강남·성남 같은 큰 곳도 시간초과·TLS).
 **못 열린 것을 틀린 것으로 세면 멀쩡한 것을 고치려 든다**(6-39의 교훈). 이름 비교는 **모시 어간**('창원시진해구'→'창원')으로 한다.
+게다가 **제목에 이름이 없는 관청도 있다** — 동해시청의 첫 화면 제목은 `대표홈페이지`다. 그래서 ③으로 **버리는 것은 제목이 다른 시군구를
+가리킬 때뿐**이고(목포 화장실이 양산시청으로 가는 식), 그냥 이름이 없으면 **보류**다.
+
+**보류는 다른 환경의 기록으로 풀 수 있다.** 공통지식 `시군구_누리집_확인_<날짜>.json`은 267곳을 다른 환경에서 연 기록이다
+(장학금 세션, 2026-09-26: 열림·제목 있음 227 · 제목 없음 40). `--verify`는 우리가 못 연 곳을 이 기록으로 확인해 **통과(기록)**로 돌린다.
+환경마다 열리는 곳이 다르다는 것 자체가 사실이므로, **누가 언제 어디서 열었는지**를 함께 적는다.
 
 **표를 말없이 덮지 않는다.** 기준 표(`공통지식/기준자료/행정구역/시군구_누리집.json`)에는 사람이 손으로 고친 것과 그 기록이 들어 있다.
 이 스크립트는 **후보**를 `data/gov_sites_candidates.json`에 쓰고 **표와 다른 곳만 보여 준다** — 반영은 사람이 한다.
@@ -25,8 +31,9 @@
   python build_gov_links.py            후보 모으기(네이버 키 필요) + 기준 표와 대조
   python build_gov_links.py --verify   찾지 않고, 지금 기준 표 267곳에 ①②③를 그대로 걸어 본다(연 1회 점검)
 """
-import argparse, json, re, sys, time
+import argparse, csv, json, re, sys, time
 from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
 from pathlib import Path
 import pandas as pd
 import requests
@@ -36,6 +43,9 @@ ROOT = Path(__file__).parent
 OUT = ROOT / 'data' / 'gov_sites_candidates.json'
 TABLE = ROOT.parent / '공통지식' / '기준자료' / '행정구역' / '시군구_누리집.json'
 SGG = ROOT / 'data' / 'sgg_codes.json'
+공통 = ROOT.parent / '공통지식' / '기준자료' / '행정구역'
+확인기록 = sorted(공통.glob('시군구_누리집_확인_*.json'))
+시군구표 = 공통 / '행정구역_시군구.csv'
 UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'ko-KR,ko;q=0.9', 'Connection': 'close'}
@@ -138,6 +148,21 @@ def 이름_어간(sgg):
     return re.sub(r'(특별자치도|특별자치시|광역시|특별시|시|군|구|도)$', '', last) or last
 
 
+@lru_cache(maxsize=1)
+def 어간들():
+    """전국 시군구 이름의 어간 — 한 번만 읽는다."""
+    rows = csv.DictReader(시군구표.read_text(encoding='utf-8-sig').splitlines())
+    return frozenset(이름_어간(r['시군구명']) for r in rows)
+
+
+def 다른_시군구(page, 우리):
+    """제목이 **다른 시군구**를 가리키나 — ③으로 버리는 것은 이때뿐이다(목포 화장실이 양산시청으로 가는 식)."""
+    납작 = re.sub(r'\s+', '', page)
+    남 = 어간들() - {우리}
+    걸린 = [n for n in 남 if len(n) >= 2 and n in 납작]
+    return 걸린[0] if 걸린 else ''
+
+
 def 거르기(sgg, title, link):
     """세 가지를 걸어 (판정, 까닭, 최종 주소, 첫화면 제목)을 돌려준다.
 
@@ -165,8 +190,12 @@ def 거르기(sgg, title, link):
     if not page.strip():
         return '보류', '③ 제목이 비어 있음(자바스크립트로 그리는 곳)', opened, ''
     납작 = re.sub(r'\s+', '', page)
-    if 이름_어간(sgg) not in 납작 and re.sub(r'\s+', '', sgg.split()[-1]) not in 납작:
-        return '버림', f'③ 첫 화면 제목에 시군구 이름 없음({page[:40]})', opened, page
+    우리 = 이름_어간(sgg)
+    if 우리 not in 납작 and re.sub(r'\s+', '', sgg.split()[-1]) not in 납작:
+        남 = 다른_시군구(page, 우리)
+        if 남:
+            return '버림', f'③ 제목이 다른 시군구를 가리킨다({남} · {page[:34]})', opened, page
+        return '보류', f'③ 제목에 이름이 없다({page[:34]}) — 관청도 그런 곳이 있다(동해시청=대표홈페이지)', opened, page
     return '통과', 덧말, opened, page
 
 
@@ -203,9 +232,35 @@ def verify():
         res = list(ex.map(하나, 표.items()))
     버림 = [(c, v, why) for c, v, 판정, why in res if 판정 == '버림']
     보류 = [(c, v, why) for c, v, 판정, why in res if 판정 == '보류']
-    print(f'통과 {len(res) - len(버림) - len(보류)}/{len(res)} · 버림 {len(버림)} · 보류 {len(보류)}')
+
+    # 우리가 못 연 곳은 **다른 환경의 기록**으로 확인한다 — 환경마다 열리는 곳이 다르다
+    풀림 = []
+    if 확인기록:
+        기록본 = json.loads(확인기록[-1].read_text(encoding='utf-8'))
+        기록, 날짜 = 기록본['결과'], 기록본.get('확인일', 확인기록[-1].stem)
+        남은보류 = []
+        for c, v, why in 보류:
+            r = 기록.get(c) or {}
+            제목 = (r.get('제목') or '').strip()
+            우리 = 이름_어간(v.get('시군구') or v.get('시도', ''))
+            납작 = re.sub(r'\s+', '', 제목)
+            if str(r.get('결과', '')).startswith('열림·제목 있음') and 제목 and (우리 in 납작 or re.sub(r'\s+', '', v.get('시군구') or '') in 납작):
+                풀림.append((c, v, 제목))
+            else:
+                if not r:
+                    덧 = ' · 기록에 없음'
+                elif 제목:
+                    덧 = f' · 기록({날짜})은 열렸지만 제목에 이름이 없다({제목[:24]})'
+                else:
+                    덧 = f' · 기록({날짜})에서도 제목이 없다 — 브라우저 단계로 열면 나온다'
+                남은보류.append((c, v, why + 덧))
+        보류 = 남은보류
+        print(f'기록({확인기록[-1].name})으로 보류를 푼 곳 {len(풀림)}')
+    print(f'통과 {len(res) - len(버림) - len(보류)}/{len(res)}'
+          + (f'(이 환경 {len(res) - len(버림) - len(보류) - len(풀림)} + 기록 {len(풀림)})' if 풀림 else '')
+          + f' · 버림 {len(버림)} · 보류 {len(보류)}')
     for 제목, 묶음 in (('버림 — 고쳐야 한다', 버림),
-                      ('보류 — 우리가 판단 못 했다(느림·인증서·빈 제목). 브라우저로 직접 본다', 보류)):
+                      ('보류 — 우리도 기록도 제목을 못 봤다. 브라우저(자바스크립트 그리는 단계)로 열면 대개 나온다', 보류)):
         if not 묶음:
             continue
         print()
