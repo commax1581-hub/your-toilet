@@ -116,7 +116,7 @@ function openDetail(rec, m) {
     </div>
     <div class="dsec"><h3>관리기관</h3>
       <div class="dorg"><b>${esc(rec.o || '표기 없음')}</b>
-        ${tel ? `<a class="btn ghost" href="tel:${tel}"><svg><use href="#i-tel"/></svg>${esc(rec.tel)}</a>` : '<span class="dsub">전화번호가 없습니다</span>'}</div>
+        ${tel ? `<a class="btn ghost" href="tel:${tel}"><svg><use href="#i-tel"/></svg>${esc(rec.tel)}</a>` : '<span class="dsub">출처에 전화번호가 없습니다</span>'}</div>
       <div class="dsub">지금 열려 있는지, 시설이 그대로인지는 <b>원천데이터 관리기관</b>이 가장 정확합니다.</div>
     </div>
     <div class="dsec"><h3>이 정보는</h3>
