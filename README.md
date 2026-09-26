@@ -50,7 +50,7 @@ python -m http.server 8000 --directory app     # http://localhost:8000
 11. `python check_data.py` — 불변조건 검사(실패면 배포하지 않음)
 12. `python audit_data.py` — 내용 정밀 점검(고치지 않고 보고만)
 13. `python fetch_holidays.py` — 공휴일(1년에 한 번)
-14. `python build_gov_links.py` — 시군구청 누리집을 **새로 모을 때만**. 결과는 공통지식의 `시군구_누리집.json`(시군구코드 키, 267곳)에 둔다 — 세 프로젝트가 같은 목록을 쓴다
+14. `python build_gov_links.py` — 시군구청 누리집을 **새로 모을 때만**. 기준 목록은 공통지식 `시군구_누리집.json`(시군구코드 키, 267곳) — 세 프로젝트가 같이 쓴다. 이 스크립트는 **후보**만 `data/gov_sites_candidates.json`에 쓰고 **기준 표와 다른 곳을 보여 준다**(반영은 사람이). 네이버 지역검색이 `○○구청`에 가게를 주므로 **세 가지로 거른다** — 관청 도메인 · 이름이 '청'으로 끝남 · 첫 화면 제목에 시군구 이름(T33)
 
 ## 역 안 화장실
 
@@ -80,7 +80,8 @@ python bump_version.py                             # 그리고 commit → push (
 
 ```
 python backup_data.py [--prune]   # 비공개 저장소로. 핵심은 매번 · 캐시는 월 1회(.gz) · 중복은 담지 않음
-python check_links.py             # 외부 링크 생존(시군구 홈페이지 219곳 + 고정 링크)
+python check_links.py             # 외부 링크 생존(시군구 홈페이지 267곳 + 고정 링크)
+python build_gov_links.py --verify   # 누리집이 정말 그 구청인지(연 1회) — 살아 있다고 맞는 건 아니다(T33)
 python check_docs.py              # 문서끼리·문서와 코드가 어긋나지 않았는지
 ```
 

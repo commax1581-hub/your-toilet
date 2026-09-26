@@ -49,7 +49,8 @@ def main():
         return
 
     gov = json.loads((ROOT / 'data' / 'gov_sites.json').read_text(encoding='utf-8'))
-    items = [(k, v['홈페이지']) for k, v in gov.items()]
+    # 키가 시군구코드라 그대로 쓰면 읽기 어렵다 — 이름을 붙여 보여 준다(T32 뒤 코드 키로 바뀜)
+    items = [(f"{k} {v.get('시도','')} {v.get('시군구','')}".strip(), v['홈페이지']) for k, v in gov.items()]
     print(f'\n■ 시군구 홈페이지 {len(items)}곳 (동시 4)')
     with ThreadPoolExecutor(max_workers=4) as ex:
         first = list(ex.map(lambda it: (it[0], it[1], hit(it[1])), items))
