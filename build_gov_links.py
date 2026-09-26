@@ -4,10 +4,16 @@
 
 **네이버는 '○○구청'으로 찾으면 근처 가게를 준다.** 267곳 중 12곳이 다이소·버거킹·하나은행·카페·식당·인스타그램·블로그였다
 (2026-09-26 장학금 세션이 전수 열어 제목을 확인하고 고쳤다 — 사례지식 6-40). 이름에 '강북'이 들어가면 통과시킨 탓이다.
-→ 후보마다 **세 가지**를 거른다. 하나라도 어긋나면 버리고 **왜 버렸는지 남긴다.**
-  ① 주소가 **관청 도메인**(`*.go.kr`)인가 — linktr.ee·instagram.com·blog.naver.com·happy700.or.kr을 막는다
+→ 후보마다 **네 가지**를 거른다. 하나라도 어긋나면 버리고 **왜 버렸는지 남긴다.** 싼 것부터 본다.
+  ④ **네이버가 준 갈래(category)가 `공공,사회기관`인가** — 가장 싸고 가장 강하다(망도, 여는 것도 필요 없다).
+     `다이소 강북구청사거리점`=쇼핑,유통>종합생활용품 · `버거킹 서귀포시청점`=양식>햄버거 · `카페마일로 거제시청점`=카페,디저트>카페
+     · `강북구청사거리`=도로시설>교차로. **고친 12곳이 전부 여기서 막힌다**(2026-09-27에 찾음).
   ② **기관 이름이 '청'으로 끝나는가** — '다이소 강북구청사거리점'(점)·'NH농협은행 칠곡군청출장소'(소)를 막는다
+  ① 넘어간 **최종 주소**가 **관청 도메인**(`*.go.kr`)인가 — linktr.ee·instagram.com·blog.naver.com·happy700.or.kr을 막는다
   ③ **첫 화면을 열어 제목에 시군구 이름이 있는가** — 죽은 주소·옛 주소를 막는다(동해 http 404 → https만 열림)
+
+**진짜 기관인데 누리집이 비어 있는 경우를 가게로 메우지 않는다.** `거제시청`은 갈래가 `공공,사회기관>시청`인데 `link`가 비어 있어,
+옛 코드가 다음 후보로 내려가 **카페마일로 거제시청점**을 집었다. → 그런 곳은 **'누리집 없음'으로 따로 보고**한다. 사람이 채울 일이지 가게를 넣을 일이 아니다.
 
 **판정은 셋이다 — 통과 · 버림 · 보류.** 기준 표 267곳에 걸어 보며 **거르기를 세 번 고쳤다.** 겪은 것을 그대로 남긴다.
 1. **동시 8갈래·12초**는 멀쩡한 곳을 시간초과로 떨어뜨렸다 → 3갈래·25초. 지자체 인증서가 어긋난 곳도 많다(제목만 읽고 덧말에 남긴다).
@@ -28,7 +34,8 @@
 **표를 말없이 덮지 않는다.** 기준 표(`공통지식/기준자료/행정구역/시군구_누리집.json`)에는 사람이 손으로 고친 것과 그 기록이 들어 있다.
 이 스크립트는 **후보**를 `data/gov_sites_candidates.json`에 쓰고 **표와 다른 곳만 보여 준다** — 반영은 사람이 한다.
 
-  python build_gov_links.py            후보 모으기(네이버 키 필요) + 기준 표와 대조
+  python build_gov_links.py            후보 모으기(네이버 키 필요) + 기준 표와 대조 — ④②①③ 모두 건다
+                                       (④는 수집 때만 쓴다. 기준 표에는 갈래가 없으니 --verify는 ②①③만 건다)
   python build_gov_links.py --verify   찾지 않고, 지금 기준 표 267곳에 ①②③를 그대로 걸어 본다(연 1회 점검)
 """
 import argparse, csv, json, re, sys, time
@@ -80,6 +87,14 @@ def search(q):
 
 # 장사·개인 도메인 — 여기 걸리면 관청이 아니다
 장사 = ('.co.kr', '.or.kr', '.ne.kr', '.pe.kr', '.re.kr', '.ac.kr', '.hs.kr', '.ms.kr', '.es.kr', '.sc.kr')
+
+
+def 관청_갈래(category):
+    """④ 네이버가 준 갈래가 관청인가 — `공공,사회기관>구청`·`>시청`·`>군청`.
+
+    **망도 필요 없고 열 필요도 없는 가장 싼 문**인데 처음에 안 썼다. 우리가 고친 12곳은 모두 쇼핑·음식점·카페·도로시설이었다.
+    """
+    return str(category or '').startswith('공공,사회기관')
 
 
 def 관청_도메인(link):
@@ -202,15 +217,21 @@ def 거르기(sgg, title, link):
 def one(key):
     sido, sgg = key
     name = office_name(sido, sgg)
-    버린것 = []
+    버린것, 누리집없음 = [], []
     for it in search(f'{sido} {name}'):
         title = re.sub(r'<[^>]+>', '', it['title'])
-        link = it.get('link') or ''
+        link, cat = it.get('link') or '', it.get('category') or ''
+        if not 관청_갈래(cat):                                  # ④ 먼저 — 가장 싸다
+            버린것.append(f'{title} [{cat}] — [버림] ④ 갈래가 관청이 아님')
+            continue
+        if not link:                                          # 진짜 기관인데 누리집이 비어 있다 → 가게로 메우지 않는다
+            누리집없음.append(f'{title} [{cat}]')
+            continue
         판정, why, opened, page = 거르기(sgg or sido, title, link)
         if 판정 == '통과':
-            return {'기관': title, '홈페이지': opened, '첫화면제목': page, **({'비고': why} if why else {})}
+            return {'기관': title, '갈래': cat, '홈페이지': opened, '첫화면제목': page, **({'비고': why} if why else {})}
         버린것.append(f'{title} {link} — [{판정}] {why}')
-    return {'못 찾음': 버린것}
+    return {'못 찾음': 버린것, **({'누리집 없음': 누리집없음} if 누리집없음 else {})}
 
 
 def 기준표():
@@ -294,14 +315,15 @@ def main():
     for (a, b), v in zip(keys, res):
         이름 = f'{a} {b}'.strip()
         if '못 찾음' in v:
-            miss.append((이름, v['못 찾음']))
+            miss.append((이름, v))
             continue
         out[이름별코드.get(이름, 이름)] = {'시도': a, '시군구': b, **v}
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding='utf-8')
     print(f'세 가지를 통과한 후보 {len(out)}/{len(keys)} · 저장: {OUT.relative_to(ROOT)}')
-    for 이름, 버린것 in miss:
-        print(f'  못 찾음: {이름}')
-        for b in 버린것[:3]:
+    for 이름, v in miss:
+        빈것 = v.get('누리집 없음') or []
+        print(f'  못 찾음: {이름}' + (f' · **갈래는 관청인데 누리집이 비어 있음**: {", ".join(빈것[:2])} → 공식 누리집을 찾아 손으로 넣는다' if 빈것 else ''))
+        for b in (v.get('못 찾음') or [])[:3]:
             print(f'      버림: {b}')
 
     if TABLE.exists():                                         # 표를 덮지 않고 다른 곳만 보여 준다
