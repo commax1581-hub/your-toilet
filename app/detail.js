@@ -123,7 +123,7 @@ function openDetail(rec, m) {
       <div class="dsub">출처 행정안전부 공중화장실정보(공공데이터포털) · 공공데이터 기준일 ${S.index.date}${rec.dy ? ` · 지자체가 적은 정보 기준 <b>${rec.dy}년</b>` : ''}
 ${rec.dy ? ' · ' : ''}번호 ${esc(rec.id)}${rec.ids ? ` · 합친 등록 ${rec.ids.length}건` : ''}
         ${old ? '<br><b>정보가 오래됐습니다.</b> 지금과 다를 수 있어요.' : ''}</div>
-      <div class="dfix"><b>정보가 틀렸나요?</b><br>① 위 관리기관에 전화 ② <span id="d-gov">해당 시군구 홈페이지</span> ③ <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터포털 오류 신고</a>
+      <div class="dfix"><b>정보가 틀렸나요?</b><br>${tel ? '① 위 관리기관에 전화 ② ' : '① '}<span id="d-gov">해당 시군구 홈페이지</span> ${tel ? '③' : '②'} <a href="https://www.data.go.kr/tcs/opd/ndm/view.do" target="_blank" rel="noopener">공공데이터포털 오류 신고</a>
         <div class="dsub">이 화장실의 <b>원천데이터 관리기관</b>은 위에 적힌 곳입니다. 틀린 내용은 그곳에 알려야 고쳐집니다.</div></div>
     </div>`;
   markDetail({ k: 't', n: rec.n, la: rec.la, lo: rec.lo, rec });
