@@ -1,5 +1,7 @@
 """갱신 변경 분류 — 지난 기준본과 이번 원본을 관리번호로 비교해 신규·삭제·변경을 나누고, 다시 처리할 곳을 정한다.
 착한가격 지도 diff_update.py를 이 데이터에 맞게 고침. 설계: ../공통지식/모듈/공공데이터-파이프라인.md 8장
+판정(짝 찾기·이상 감지·확인 목록 규약)은 **공통지식 `도구/update_rules.py`**에 있다 — 세 프로젝트가 같이 쓴다.
+여기에는 **이 원천의 사정**만 둔다: 비교할 칸(INFO·ADDR), 기준값(LIMITS), 보고서 꼴, 파일 읽고 쓰기.
 원칙: 줄 순서가 아니라 관리번호로 비교(착한가격 #29), "이미 한 곳은 건너뛰기"가 변경을 놓치지 않게 비교 결과로 재처리 대상을 정함(#53)
 
 분류:
@@ -23,6 +25,8 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).parent
+sys.path.insert(0, str(ROOT.parent / '공통지식' / '도구'))
+from update_rules import pairs, over_limits, drop_rate, share, inherit_pairs   # noqa: E402
 REG = ROOT / 'data' / 'id_registry.json'
 SNAP = ROOT / 'data' / 'snapshots'
 ADDR = ['소재지도로명주소', '소재지지번주소']
@@ -55,19 +59,15 @@ def classify(prev, cur):
             changes.append({'관리번호': m, '분류': '기존·변경', '항목': '·'.join(items), '화장실명': b['화장실명'],
                             '이전': ' / '.join(f'{x}={a[x]}' for k in items for x in INFO.get(k, ADDR if k == '주소' else ['개방자치단체코드']) if str(a.get(x, '')) != str(b.get(x, ''))),
                             '이번': ' / '.join(f'{x}={b[x]}' for k in items for x in INFO.get(k, ADDR if k == '주소' else ['개방자치단체코드']) if str(a.get(x, '')) != str(b.get(x, '')))})
-    # 삭제+신규 짝: 같은 이름 + 같은 주소(도로명 없으면 지번)
+    # 삭제+신규 짝: 같은 이름 + 같은 주소(도로명 없으면 지번). **판정은 공통**(update_rules.pairs),
+    # 키를 무엇으로 볼지만 이 프로젝트가 정한다. 일대일 — 맞는 신규가 딱 하나일 때만 짝으로 본다.
     key = lambda r: (ns(r['화장실명']), ns(r['소재지도로명주소'] or r['소재지지번주소']))
-    newkey = {}
-    for m in added:
-        newkey.setdefault(key(c.loc[m]), []).append(m)
-    review, paired_new = [], set()
-    for m in removed:
-        cands = [x for x in newkey.get(key(p.loc[m]), []) if x not in paired_new]
-        if len(cands) == 1:
-            paired_new.add(cands[0])
-            review.append({'이전관리번호': m, '새관리번호': cands[0], '화장실명': c.loc[cands[0], '화장실명'],
-                           '주소': c.loc[cands[0], '소재지도로명주소'] or c.loc[cands[0], '소재지지번주소'],
-                           '추천': '이어받기', '결정': '이어받기'})
+    review = [{'이전관리번호': 옛, '새관리번호': 새, '화장실명': c.loc[새, '화장실명'],
+               '주소': c.loc[새, '소재지도로명주소'] or c.loc[새, '소재지지번주소'],
+               '추천': '이어받기', '결정': '이어받기'}
+              for 옛, 새, _ in pairs({m: p.loc[m] for m in removed}, {m: c.loc[m] for m in added},
+                                    keys=[('이름+주소', key)], one_to_one=True)]
+    paired_new = {r['새관리번호'] for r in review}
     paired_old = {r['이전관리번호'] for r in review}
     for m in added:
         if m not in paired_new:
@@ -81,14 +81,16 @@ def anomalies(prev, cur, ch, n_common):
     out = []
     if set(prev.columns) != set(cur.columns):
         out.append(f'항목 구성 변경: 없어짐 {sorted(set(prev.columns) - set(cur.columns))}, 새로 {sorted(set(cur.columns) - set(prev.columns))}')
-    if len(cur) < len(prev) * (1 - LIMITS['감소율']):
-        out.append(f'전체 {len(prev):,} → {len(cur):,}, {LIMITS["감소율"]:.0%} 넘게 감소')
+    # 기준값 넘었는지 **판정은 공통**(update_rules.over_limits) — 무엇을 재고 뭐라 말할지는 여기서 정한다
     ex = ch[ch['분류'] == '기존·변경']
-    code = ex['항목'].str.contains('자치단체코드').sum()
-    if n_common and code / n_common > LIMITS['코드변경율']:
-        out.append(f'자치단체코드 바뀐 곳 {code:,} ({code / n_common:.1%}) — 행정구역 개편 확인')
-    if n_common and len(ex) / n_common > LIMITS['변경율']:
-        out.append(f'기존 {len(ex):,}곳 변경({len(ex) / n_common:.1%})')
+    code = int(ex['항목'].str.contains('자치단체코드').sum())
+    값 = {'감소율': drop_rate(len(prev), len(cur)),
+          '코드변경율': share(code, n_common),
+          '변경율': share(len(ex), n_common)}
+    말 = {'감소율': f'전체 {len(prev):,} → {len(cur):,}, {LIMITS["감소율"]:.0%} 넘게 감소',
+          '코드변경율': f'자치단체코드 바뀐 곳 {code:,} ({값["코드변경율"]:.1%}) — 행정구역 개편 확인',
+          '변경율': f'기존 {len(ex):,}곳 변경({값["변경율"]:.1%})'}
+    out += [말[이름] for 이름, _, _ in over_limits(값, LIMITS)]
     return out
 
 
@@ -125,13 +127,15 @@ def apply_review(d):
     reg = json.loads(REG.read_text(encoding='utf-8'))
     rv = pd.read_csv(d / 'review.csv', dtype=str, encoding='utf-8-sig').fillna('')
     n = 0
-    for r in rv[rv['결정'] == '이어받기'].itertuples():
-        old_id = reg['by_mng'].get(r.이전관리번호)
+    # 어느 줄이 '이어받기'이고 옛·새 번호가 무엇인지 **읽기는 공통**(update_rules.inherit_pairs).
+    # 화장실 옛 칸 이름(이전관리번호·새관리번호)도 그쪽이 읽어 준다.
+    for 옛번호, 새번호 in inherit_pairs(rv.to_dict('records')):
+        old_id = reg['by_mng'].get(옛번호)
         if not old_id:
             continue
-        wrong = reg['by_mng'].get(r.새관리번호)
-        reg['by_mng'][r.새관리번호] = old_id
-        reg['inherit'][r.새관리번호] = {'from': r.이전관리번호, 'date': date.today().isoformat(), 'dropped': wrong}
+        wrong = reg['by_mng'].get(새번호)
+        reg['by_mng'][새번호] = old_id
+        reg['inherit'][새번호] = {'from': 옛번호, 'date': date.today().isoformat(), 'dropped': wrong}
         reg['hidden'].pop(old_id, None)
         if wrong and wrong != old_id:                      # 대장이 먼저 새 번호를 줬다면 그 번호는 숨김(재사용 금지)
             reg['hidden'].setdefault(wrong, date.today().isoformat())
