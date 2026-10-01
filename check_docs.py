@@ -40,7 +40,10 @@ def read(p): return Path(p).read_text(encoding='utf-8')
 
 tracked = set(subprocess.run(['git', 'ls-files', '-z'], cwd=ROOT, capture_output=True).stdout.decode('utf-8').split('\0'))
 md_files = [README] + sorted(DOCS.glob('*.md')) + sorted(p for p in ROOT.glob('*.md') if p != README)
-modules = [p for p in sorted(DOCS.glob('*.md')) if MODULE_MARK in read(p)[:600]]
+# 모듈은 2026-10-01에 ../공통지식/모듈/로 이사했다. **여기서 모듈 안을 보지 않는다** —
+# 모듈 점검은 공통지식 `도구/check_modules.py`가 한다(형식·링크·코드 이름·신선도).
+# 전에는 DOCS에서 모듈을 찾아 `모듈 0개()`가 계속 찍혔는데 아무도 보지 않았다.
+modules = []
 
 # 1. 링크: 가리키는 파일이 있고 저장소에 올라가 있는지
 untracked = set()
@@ -125,7 +128,8 @@ if ref.exists():
         age = (datetime.date.today() - datetime.date.fromisoformat(m.group(1))).days
         if age > FRESH_DAYS: WARN(f'외부 플랫폼 레퍼런스 마지막 확인이 {age}일 전 → 공식 문서와 대조 필요')
 
-print(f'문서 {len(md_files)}개 · 모듈 {len(modules)}개({", ".join(m.name for m in modules)}) · 버그 {len(rows)}건 검사')
+모듈수 = len(list((ROOT.parent / '공통지식' / '모듈').glob('*.md')))
+print(f'문서 {len(md_files)}개 · 버그 {len(rows)}건 검사 · 모듈 {모듈수}개는 공통지식이 본다(python ../공통지식/도구/check_modules.py)')
 for w in warns: print('  WARN', w)
 for f in fails: print('  FAIL', f)
 if fails:
