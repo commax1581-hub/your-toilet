@@ -50,7 +50,7 @@ python -m http.server 8000 --directory app     # http://localhost:8000
 11. `python check_data.py` — 불변조건 검사(실패면 배포하지 않음)
 12. `python audit_data.py` — 내용 정밀 점검(고치지 않고 보고만)
 13. `python fetch_holidays.py` — 공휴일(1년에 한 번)
-14. `python build_gov_links.py` — 시군구청 누리집을 **새로 모을 때만**. 기준 목록은 공통지식 `시군구_누리집.json`(시군구코드 키, 267곳) — 세 프로젝트가 같이 쓴다. 이 스크립트는 **후보**만 `data/gov_sites_candidates.json`에 쓰고 **기준 표와 다른 곳을 보여 준다**(반영은 사람이). 네이버 지역검색이 `○○구청`에 가게를 주므로 **세 가지로 거른다** — 관청 도메인 · 이름이 '청'으로 끝남 · 첫 화면 제목에 시군구 이름(T33)
+14. `python build_gov_links.py` — 시군구청 누리집을 **새로 모을 때만**. 기준 목록은 공통지식 `시군구_누리집.json`(시군구코드 키, 267곳) — 세 프로젝트가 같이 쓴다. 이 스크립트는 **후보**만 `data/gov_sites_candidates.json`에 쓰고 **기준 표와 다른 곳을 보여 준다**(반영은 사람이). 네이버 지역검색이 `○○구청`에 가게를 주므로 거른다 — **판정 규칙은 공통지식으로 갔다**(`../공통지식/모듈/누리집-검증.md` · `도구/homepage_check.py`의 `judge`). 여기는 **여는 일만** 한다(T33)
 
 ## 역 안 화장실
 

@@ -4,6 +4,11 @@
 
 **네이버는 '○○구청'으로 찾으면 근처 가게를 준다.** 267곳 중 12곳이 다이소·버거킹·하나은행·카페·식당·인스타그램·블로그였다
 (2026-09-26 장학금 세션이 전수 열어 제목을 확인하고 고쳤다 — 사례지식 6-40). 이름에 '강북'이 들어가면 통과시킨 탓이다.
+**판정 규칙은 2026-10-02부터 공통지식에 있다** — `공통지식/모듈/누리집-검증.md`(규칙)와 `도구/homepage_check.py`(`judge`).
+세 프로젝트가 같은 병을 앓아 합쳤다(착한가격 도메인 넘어감 · 화장실 T33 · 장학금 2,933줄). **여기는 '여는 쪽'만 맡는다** —
+열어서 `재료`(최종 주소·상태·제목·본문 글자 수…)를 만들어 넘기면 `judge`가 통과·버림·보류를 돌려준다.
+환경마다 열리는 곳이 달라서(여기는 267곳 중 100곳 남짓 못 연다) **열기와 판정을 갈라 두었다.**
+
 → 후보마다 **네 가지**를 거른다. 하나라도 어긋나면 버리고 **왜 버렸는지 남긴다.** 싼 것부터 본다.
   ④ **네이버가 준 갈래(category)가 `공공,사회기관`인가** — 가장 싸고 가장 강하다(망도, 여는 것도 필요 없다).
      `다이소 강북구청사거리점`=쇼핑,유통>종합생활용품 · `버거킹 서귀포시청점`=양식>햄버거 · `카페마일로 거제시청점`=카페,디저트>카페
@@ -51,6 +56,8 @@ OUT = ROOT / 'data' / 'gov_sites_candidates.json'
 TABLE = ROOT.parent / '공통지식' / '기준자료' / '행정구역' / '시군구_누리집.json'
 SGG = ROOT / 'data' / 'sgg_codes.json'
 공통 = ROOT.parent / '공통지식' / '기준자료' / '행정구역'
+sys.path.insert(0, str(ROOT.parent / '공통지식' / '도구'))
+from homepage_check import judge, 어간                   # noqa: E402 — 판정·이름 맞추기는 공통지식에 있다(모듈 '누리집 검증')
 확인기록 = sorted(공통.glob('시군구_누리집_확인_*.json'))
 시군구표 = 공통 / '행정구역_시군구.csv'
 UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
@@ -85,49 +92,6 @@ def search(q):
     return []
 
 
-# 장사·개인 도메인 — 여기 걸리면 관청이 아니다
-장사 = ('.co.kr', '.or.kr', '.ne.kr', '.pe.kr', '.re.kr', '.ac.kr', '.hs.kr', '.ms.kr', '.es.kr', '.sc.kr')
-
-
-def 관청_갈래(category):
-    """④ 네이버가 준 갈래가 관청인가 — `공공,사회기관>구청`·`>시청`·`>군청`.
-
-    **망도 필요 없고 열 필요도 없는 가장 싼 문**인데 처음에 안 썼다. 우리가 고친 12곳은 모두 쇼핑·음식점·카페·도로시설이었다.
-    """
-    return str(category or '').startswith('공공,사회기관')
-
-
-def 관청_도메인(link):
-    """① 주소가 관청 도메인인가 — '통과'·'보류'·'버림'.
-
-    관청은 `go.kr`만 쓰지 않는다: `junggu.seoul.kr`·`dong.daegu.kr`·`nowon.kr`·`ycg.kr`(예천군)이 모두 진짜다.
-    그래서 **`go.kr`이면 통과, 그 밖의 `.kr`이면 보류(사람이 본다), 장사 도메인·그 밖은 버림**으로 나눈다.
-    **넘어간 최종 주소로 보는 게 맞다** — `okjc.net`은 `jecheon.go.kr`로 넘어가는 제천시의 옛 주소다.
-    """
-    host = re.sub(r'^https?://', '', link).split('/')[0].split(':')[0].lower()
-    if host.endswith('.go.kr') or host == 'go.kr':
-        return '통과'
-    if host.endswith(장사):
-        return '버림'
-    if host.endswith('.kr'):
-        return '보류'
-    return '버림'
-
-
-# 관청 이름에 흔히 붙는 부속 표현 — 떼고 나서 '청'으로 끝나야 한다
-부속 = re.compile(r'\s*(본청|신청사|제\s*\d+\s*청사|청사|별관|본관|민원실)$')
-
-
-def 청으로_끝나나(title):
-    """② 기관 이름이 '청'으로 끝나는가 — '…구청사거리점'(점)·'…군청출장소'(소)를 막는다.
-
-    **'통영시청 제1청사'·'여수시청 본청'은 진짜 시청이다.** 처음엔 이것까지 버렸다(267곳 점검에서 드러남)
-    → 부속 표현을 떼고 본다. '출장소'는 떼지 않는다 — 은행 출장소가 그렇게 붙는다.
-    """
-    name = 부속.sub('', title.strip().rstrip('.')).strip()
-    return name.endswith('청')
-
-
 def 첫화면_제목(link):
     """③ 첫 화면을 열어 <title>을 읽는다. http가 죽고 https만 열리는 곳이 있어 https도 해 본다.
 
@@ -154,64 +118,23 @@ def 첫화면_제목(link):
     return None, '', why or '열리지 않음'
 
 
-def 이름_어간(sgg):
-    """제목과 맞출 어간 — 일반구는 모시로, 꼬리(시·군·구)는 뗀다. '창원시진해구'→'창원' · '전주시완산구'→'전주'"""
-    last = sgg.split()[-1]
-    모시 = re.match(r'(.+?시)[가-힣]+구$', last)
-    if 모시:
-        last = 모시.group(1)
-    return re.sub(r'(특별자치도|특별자치시|광역시|특별시|시|군|구|도)$', '', last) or last
-
-
-@lru_cache(maxsize=1)
-def 어간들():
-    """전국 시군구 이름의 어간 — 한 번만 읽는다."""
-    rows = csv.DictReader(시군구표.read_text(encoding='utf-8-sig').splitlines())
-    return frozenset(이름_어간(r['시군구명']) for r in rows)
-
-
-def 다른_시군구(page, 우리):
-    """제목이 **다른 시군구**를 가리키나 — ③으로 버리는 것은 이때뿐이다(목포 화장실이 양산시청으로 가는 식)."""
-    납작 = re.sub(r'\s+', '', page)
-    남 = 어간들() - {우리}
-    걸린 = [n for n in 남 if len(n) >= 2 and n in 납작]
-    return 걸린[0] if 걸린 else ''
-
-
-def 거르기(sgg, title, link):
-    """세 가지를 걸어 (판정, 까닭, 최종 주소, 첫화면 제목)을 돌려준다.
-
-    판정: '통과' · '버림'(우리가 판단할 수 있고 틀렸다) · '보류'(판단할 근거가 모자란다 — 사람이 본다)
-    순서: ② 이름(망 없이) → 열어 보기 → ① 최종 주소 → ③ 제목. **①을 최종 주소로 보려면 먼저 열어야 한다.**
-    """
-    if not link.startswith('http'):
-        return '버림', '주소가 아님', link, ''
-    if not 청으로_끝나나(title):
-        return '버림', f"② 이름이 '청'으로 끝나지 않음({title})", link, ''
-
+def 재료(sgg, title, link, cat=''):
+    """열어서 judge에 넘길 재료를 만든다. **여는 것이 이 프로젝트의 몫**이다."""
     opened, page, 덧말 = 첫화면_제목(link)
-    도메인 = 관청_도메인(opened or link)
-    if 도메인 == '버림':                                   # 장사·SNS 도메인 — 열리든 말든 관청이 아니다
-        host = re.sub(r'^https?://', '', opened or link).split('/')[0]
-        return '버림', f'① 관청 도메인 아님({host})', opened or link, page
-    if not opened:
-        return '보류', f'③ 첫 화면을 열지 못함({덧말}) — 브라우저로 본다', link, ''
-    if 도메인 == '보류':
-        어긋 = 이름_어간(sgg) not in re.sub(r'\s+', '', page) if page.strip() else True
-        host = re.sub(r'^https?://', '', opened).split('/')[0]
-        if 어긋:
-            return '보류', f'① go.kr이 아닌 .kr({host}) — 제목으로도 확인되지 않음', opened, page
-        return '통과', f'① go.kr이 아니지만 제목이 맞다({host})' + (f' · {덧말}' if 덧말 else ''), opened, page
-    if not page.strip():
-        return '보류', '③ 제목이 비어 있음(자바스크립트로 그리는 곳)', opened, ''
-    납작 = re.sub(r'\s+', '', page)
-    우리 = 이름_어간(sgg)
-    if 우리 not in 납작 and re.sub(r'\s+', '', sgg.split()[-1]) not in 납작:
-        남 = 다른_시군구(page, 우리)
-        if 남:
-            return '버림', f'③ 제목이 다른 시군구를 가리킨다({남} · {page[:34]})', opened, page
-        return '보류', f'③ 제목에 이름이 없다({page[:34]}) — 관청도 그런 곳이 있다(동해시청=대표홈페이지)', opened, page
-    return '통과', 덧말, opened, page
+    본문 = 글자수(opened) if opened else 0
+    return {'기관명': title if title.strip().endswith('청') else office_name(*sgg) if isinstance(sgg, tuple) else sgg,
+            '지역': sgg if isinstance(sgg, str) else '',
+            '주소_입력': link, '주소_최종': opened or '', '상태': 200 if opened else None,
+            '못연_까닭': 덧말 if not opened else '', '제목': page, '본문_글자수': 본문,
+            '갈래': cat, '후보이름': title}
+
+
+def 글자수(_):
+    """본문 글자 수 — 지금은 재지 않는다(제목으로 가려지지 않을 때만 쓰는 보조 증거).
+
+    필요해지면 `첫화면_제목`이 본문까지 돌려주게 고친다. 0은 '재지 않았다'는 뜻으로 쓰지 않는다 → 빈 값.
+    """
+    return ''
 
 
 def one(key):
@@ -221,16 +144,17 @@ def one(key):
     for it in search(f'{sido} {name}'):
         title = re.sub(r'<[^>]+>', '', it['title'])
         link, cat = it.get('link') or '', it.get('category') or ''
-        if not 관청_갈래(cat):                                  # ④ 먼저 — 가장 싸다
-            버린것.append(f'{title} [{cat}] — [버림] ④ 갈래가 관청이 아님')
-            continue
-        if not link:                                          # 진짜 기관인데 누리집이 비어 있다 → 가게로 메우지 않는다
+        m = 재료(sgg or sido, title, link, cat)
+        m['기관명'] = name                                   # 기대하는 이름(○○구청)
+        m['지역'] = sgg or sido
+        판정, 사유, 근거 = judge(m)
+        if 판정 == '통과':
+            return {'기관': title, '갈래': cat, '홈페이지': m['주소_최종'] or link,
+                    '첫화면제목': m['제목'], **({'비고': f'{사유} · {근거}'} if 사유 != '기관명확인' else {})}
+        if 판정 == '누리집없음':
             누리집없음.append(f'{title} [{cat}]')
             continue
-        판정, why, opened, page = 거르기(sgg or sido, title, link)
-        if 판정 == '통과':
-            return {'기관': title, '갈래': cat, '홈페이지': opened, '첫화면제목': page, **({'비고': why} if why else {})}
-        버린것.append(f'{title} {link} — [{판정}] {why}')
+        버린것.append(f'{title} {link} — [{판정} {사유}] {근거}')
     return {'못 찾음': 버린것, **({'누리집 없음': 누리집없음} if 누리집없음 else {})}
 
 
@@ -246,8 +170,11 @@ def verify():
 
     def 하나(kv):
         code, v = kv
-        판정, why, opened, page = 거르기(v.get('시군구') or v.get('시도', ''), v['기관'], v['홈페이지'])
-        return code, v, 판정, why
+        지역 = v.get('시군구') or v.get('시도', '')
+        m = 재료(지역, v['기관'], v['홈페이지'])
+        m['기관명'], m['지역'], m['후보이름'] = v['기관'], 지역, ''
+        판정, 사유, 근거 = judge(m)
+        return code, v, 판정, f'{사유} — {근거}' if 사유 else 근거
 
     with ThreadPoolExecutor(3) as ex:                          # 지자체 서버를 몰아치지 않는다
         res = list(ex.map(하나, 표.items()))
@@ -263,7 +190,7 @@ def verify():
         for c, v, why in 보류:
             r = 기록.get(c) or {}
             제목 = (r.get('제목') or '').strip()
-            우리 = 이름_어간(v.get('시군구') or v.get('시도', ''))
+            우리 = 어간(v.get('시군구') or v.get('시도', ''))
             납작 = re.sub(r'\s+', '', 제목)
             if str(r.get('결과', '')).startswith('열림·제목 있음') and 제목 and (우리 in 납작 or re.sub(r'\s+', '', v.get('시군구') or '') in 납작):
                 풀림.append((c, v, 제목))
