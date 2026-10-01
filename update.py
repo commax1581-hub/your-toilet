@@ -23,6 +23,8 @@ from hours import parse as parse_hours
 from refine_address import code_regions, RANK
 
 ROOT = Path(__file__).parent
+sys.path.insert(0, str(ROOT.parent / '공통지식' / '도구'))
+from same_thing import judge_same                      # noqa: E402 — 동일성 판정은 공통지식에 있다
 P = ROOT / 'data' / 'processed'
 OVR = ROOT / 'data' / 'address_overrides.csv'
 GEO_COLS = ['위도', '경도', '좌표정확도', '좌표출처', '카카오주소', '카카오주소종류', '조회주소', '카카오장소ID', '카카오장소명',
@@ -132,12 +134,26 @@ def propose(raw_file):
 
     # **같은 번호, 다른 시설** — 관리번호는 그대로인데 이름과 주소가 함께 바뀌고 좌표까지 멀리 옮겨 갔다면
     # 지자체가 번호를 **다시 쓴 것**일 수 있다. 그러면 우리 영구번호(공유 링크)가 엉뚱한 곳을 가리킨다.
-    # 행정구역 개편으로 주소 표기만 바뀐 것과 가르려고 **좌표 이동**을 함께 본다(2026-09-25 리허설에서 발견).
+    # **판정은 공통**(공통지식 도구/same_thing.judge_same) — 세 프로젝트가 같은 규칙을 쓴다.
+    #
+    # 여기서 '주소가 바뀌었다'는 **건물관리번호가 바뀐 것**만 친다(착한가격 세션이 찾은 것, 2026-10-02).
+    # 주소 **글자**로 치면 행정구역 개편 때 표기만 바뀐 곳이 전부 '함께 바뀜'으로 걸린다(T32에서 인천 448장이 그랬다).
+    # 이 리허설 자료에서도 글자로 보면 2곳, 건물관리번호로 보면 1곳이다 — 한 곳이 거짓이었다.
     item = ch.groupby('관리번호')['항목'].apply(lambda v: set('·'.join(v).split('·')))
-    both = {m for m, s in item.items() if '이름' in s and '주소' in s}
-    # 판정은 **제안**까지만 한다. 이름·주소가 함께 바뀌고 좌표가 1km 넘게 뛰었으면 거의 확실히 다른 시설이지만,
-    # 번호를 폐기하는 일은 되돌리기 어려워 마지막 결정은 사람이 한다(결정 칸).
-    swapped = [{**x, '결정': '다른 시설' if x['이동m'] >= 1000 else '같은 시설'} for x in moved_far if x['관리번호'] in both]
+    건물 = {m: (str(prev_geo.at[m, '건물관리번호']).strip(), str(r['건물관리번호']).strip())
+           for r in geo.to_dict('records') if (m := r['관리번호']) in prev_geo.index}
+    주소바뀜 = {m for m, (a, b) in 건물.items() if a and b and a != b}
+    이동 = {x['관리번호']: x['이동m'] for x in moved_far}
+    swapped = []
+    for x in moved_far:
+        m = x['관리번호']
+        바뀐 = ({'이름'} if '이름' in item.get(m, set()) else set()) | ({'주소'} if m in 주소바뀜 else set())
+        판정, 사유, 근거 = judge_same(바뀐, 이동.get(m))
+        # **사유로 갈라 보낸다.** 좌표만 움직인 것은 이미 moved_coords.csv가 맡는다 —
+        # 여기(swapped_ids)는 **번호 재사용 의심**, 곧 이름·건물이 함께 바뀐 것만 담는다.
+        if 사유.startswith('이름주소'):
+            swapped.append({**x, '결정': '다른 시설' if 판정 == '다른대상제안' else '같은 시설',
+                            '까닭': f'{사유} — {근거}' if 사유 else 근거})
     hr_changed = set(ch.loc[ch['항목'].str.contains('개방시간'), '관리번호'])
     hrs = [(r['관리번호'], r['화장실명'], r['개방시간상세'], parse_hours(r['개방시간'], r['개방시간상세'])) for r in cur.to_dict('records')
            if r['관리번호'] in targets or r['관리번호'] in hr_changed]
@@ -180,7 +196,7 @@ def propose(raw_file):
     for x in swapped:                                     # 옛 이름·주소를 함께 적어 사람이 눈으로 가를 수 있게
         old = prev_geo.loc[x['관리번호']]
         x['옛이름'], x['옛주소'] = old.get('화장실명', ''), old.get('소재지도로명주소', '') or old.get('소재지지번주소', '')
-    pd.DataFrame(swapped, columns=['관리번호', '결정', '화장실명', '옛이름', '이동m', '주소', '옛주소', '지난등급', '이번등급', '지도']).to_csv(out / 'swapped_ids.csv', index=False, encoding='utf-8-sig')
+    pd.DataFrame(swapped, columns=['관리번호', '결정', '화장실명', '옛이름', '이동m', '주소', '옛주소', '지난등급', '이번등급', '지도', '까닭']).to_csv(out / 'swapped_ids.csv', index=False, encoding='utf-8-sig')
     pd.DataFrame(unread, columns=['관리번호', '화장실명', '개방시간상세', '이유']).to_csv(out / 'unread_hours.csv', index=False, encoding='utf-8-sig')
     with open(out / 'report.md', 'a', encoding='utf-8') as f:
         f.write('\n'.join(lines) + '\n')
