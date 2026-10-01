@@ -8,7 +8,7 @@
   X 실패
 결과: data/processed/toilets_geo.csv, 캐시 data/processed/kakao_cache.json
 실행: python geocode_toilets.py [--limit N]
-설계: ../착한식당/docs/공공데이터-파이프라인.md 6장(좌표 보정 절차)
+설계: ../공통지식/모듈/공공데이터-파이프라인.md 6장(좌표 보정 절차)
 """
 import argparse, json, math, re, sys, threading, time
 from concurrent.futures import ThreadPoolExecutor

@@ -3,7 +3,7 @@
 실행: python check_docs.py
 점검 항목 설명: docs/지식화-프로세스.md 4장
 
-이 프로젝트(화장실)용: 버그 번호는 T#, 재사용 모듈은 ../착한식당/docs에 있으므로 여기서는 링크만 확인한다.
+이 프로젝트(화장실)용: 버그 번호는 T#, 재사용 모듈은 ../공통지식/모듈에 있으므로 여기서는 링크만 확인한다(2026-10-01 이사).
 """
 import datetime, glob, re, subprocess, sys
 from pathlib import Path
@@ -15,7 +15,7 @@ BUGS = DOCS / '버그이력.md'
 README = ROOT / 'README.md'
 MODULE_MARK = '> **모듈 문서:**'
 # 버그 분류 → 그 버그를 원칙으로 흡수해야 하는 모듈 (새 버그가 모듈에 반영됐는지 경고)
-ABSORB = {}          # 재사용 모듈은 ../착한식당/docs에 있다 — 흡수 확인은 그쪽 check_docs.py가 한다
+ABSORB = {}          # 재사용 모듈은 ../공통지식/모듈에 있다 — 흡수 확인은 착한식당 check_docs.py가 한다
 # 코드 이름처럼 보이지만 코드가 아닌 것(예시 문자열 등)
 NOT_CODE = {'ROCOCO', 'KTX', 'CU', 'IC', 'JC', 'KT', 'SK', 'GS', 'LG', 'OIL'}
 # 실행 중에 생기는 파일(분기 갱신 때 만들어짐) — 지금 없어도 문서에 적을 수 있다
@@ -35,7 +35,7 @@ def rel(p):
     try:
         return q.relative_to(ROOT.resolve()).as_posix()
     except ValueError:
-        return str(q)                      # 프로젝트 밖(착한식당 모듈 문서 등)은 절대 경로로
+        return str(q)                      # 프로젝트 밖(공통지식 모듈 문서 등)은 절대 경로로
 def read(p): return Path(p).read_text(encoding='utf-8')
 
 tracked = set(subprocess.run(['git', 'ls-files', '-z'], cwd=ROOT, capture_output=True).stdout.decode('utf-8').split('\0'))
