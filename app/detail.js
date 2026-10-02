@@ -61,9 +61,9 @@ async function sigunguHome(rec) {
      사용자가 가장 혼란스럽다. 같은 시도 안에서 이름과 다른 것은 **개편이므로 코드를 믿는다.** */
   if (byCode && byCode.시도 && p[0] && p[0] !== byCode.시도) {
     const byName = Object.values(govSites).find((v) => v.시도 === p[0] && p.slice(1, 4).includes(v.시군구));
-    if (byName) return { 기관: byName.기관, 홈페이지: byName.홈페이지, 비고: byName.비고 || '' };
+    if (byName) return byName;
   }
-  return byCode ? { 기관: byCode.기관, 홈페이지: byCode.홈페이지, 비고: byCode.비고 || '' } : null;
+  return byCode || null;      // 칸을 추려 돌려주면 나중에 칸이 늘 때 조용히 빠진다(대표전화가 그랬다)
 }
 
 function openDetail(rec, m) {
@@ -116,7 +116,8 @@ function openDetail(rec, m) {
     </div>
     <div class="dsec"><h3>관리기관</h3>
       <div class="dorg"><b>${esc(rec.o || '표기 없음')}</b>
-        ${tel ? `<a class="btn ghost" href="tel:${tel}"><svg><use href="#i-tel"/></svg>${esc(rec.tel)}</a>` : '<span class="dsub">출처에 전화번호가 없습니다</span>'}</div>
+        ${tel ? `<a class="btn ghost" href="tel:${tel}"><svg><use href="#i-tel"/></svg>${esc(rec.tel)}</a>`
+          : '<span class="dsub">출처에 전화번호가 없습니다</span><span id="d-govtel"></span>'}</div>
       <div class="dsub">지금 열려 있는지, 시설이 그대로인지는 <b>원천데이터 관리기관</b>이 가장 정확합니다.</div>
     </div>
     <div class="dsec"><h3>이 정보는</h3>
@@ -133,5 +134,12 @@ ${rec.dy ? ' · ' : ''}번호 ${esc(rec.id)}${rec.ids ? ` · 합친 등록 ${rec
     const el = $('#d-gov');
     if (g && el) el.outerHTML = `<a href="${g.홈페이지}" target="_blank" rel="noopener">${esc(g.기관)} 홈페이지</a>`
       + (g.비고 ? `<span class="dsub"> ${esc(g.비고)}</span>` : '');
+    /* 출처에 시설 전화가 없으면 **구청 대표번호**를 대신 보여 준다(전화 없는 카드의 60.6%가 여기 해당).
+       **시설 전화인 척하지 않는다** — 누구 번호인지 이름을 붙이고, 대표번호라고 밝힌다.
+       그 화장실 담당자로 알고 걸면 안 되기 때문이다(공통지식 기준자료, 장학금 세션이 모음). */
+    const t2 = $('#d-govtel');
+    if (g && g.대표전화 && t2) t2.outerHTML =
+      `<a class="btn ghost" href="tel:${String(g.대표전화).replace(/[^0-9+-]/g, '')}"><svg><use href="#i-tel"/></svg>${esc(g.기관)} 대표 ${esc(g.대표전화)}</a>`
+      + '<span class="dsub">시설 전화가 아니라 <b>구청 대표번호</b>입니다 — 담당 부서로 연결해 달라고 하세요.</span>';
   });
 }

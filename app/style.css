@@ -243,7 +243,10 @@ html[data-size] .card .n{white-space:normal;display:-webkit-box;-webkit-line-cla
 .dbtns{display:flex;flex-direction:column;gap:8px}
 .dbtns .btn{text-decoration:none;min-height:48px}
 .dsub{font-size:0.75rem;color:var(--sub);margin-top:8px;line-height:1.6}
-.dorg{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;padding:12px}
+/* 좁은 화면에서 줄바꿈 — 전화가 없는 카드에는 '구청 대표번호' 버튼과 설명이 더 붙어
+   한 줄로는 320px를 넘는다(2026-10-02, 실제로 179px 넘쳤다). 설명은 한 줄을 통째로 쓴다. */
+.dorg{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border:1px solid var(--line);border-radius:14px;padding:12px}
+.dorg>.dsub{flex-basis:100%}
 .dorg .btn{width:auto;text-decoration:none;min-height:44px;padding:10px 14px}
 .dfix{background:var(--soft);border-radius:12px;padding:12px;margin-top:10px;font-size:0.8125rem;line-height:1.7}
 .dfix a{color:var(--brand)}

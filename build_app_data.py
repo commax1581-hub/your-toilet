@@ -241,9 +241,15 @@ def main():
     shared = ROOT.parent / '공통지식' / '기준자료' / '행정구역' / '시군구_누리집.json'
     gov = ROOT / 'data' / 'gov_sites.json'
     if shared.exists():
+        # **앱이 쓰는 칸만 추린다.** 공통 표에는 다른 프로젝트가 쓰는 칸(주소·우편번호 — 2차 대사용)도
+        # 들어 있는데, 그대로 복사하면 사용자 기기로 내려가는 파일만 커진다(267곳 44KB).
+        쓰는칸 = ('시도', '시군구', '기관', '홈페이지', '비고', '대표전화')
+        누리집 = json.loads(shared.read_text(encoding='utf-8'))['누리집']
+        추림 = {k: {c: v[c] for c in 쓰는칸 if v.get(c)} for k, v in 누리집.items()}
         (ROOT / 'data' / 'gov_sites.json').write_text(
-            json.dumps(json.loads(shared.read_text(encoding='utf-8'))['누리집'], ensure_ascii=False, indent=1), encoding='utf-8')
-        print(f'  시·구청 누리집: 공통지식 기준자료에서 가져옴')
+            json.dumps(추림, ensure_ascii=False, indent=1), encoding='utf-8')
+        전화 = sum(1 for v in 추림.values() if v.get('대표전화'))
+        print(f'  시·구청 누리집: 공통지식 기준자료에서 {len(추림)}곳(대표전화 {전화}곳) · 앱이 쓰는 칸만')
     if gov.exists():
         OUT.mkdir(parents=True, exist_ok=True)
         shutil.copy2(gov, OUT / 'gov_sites.json')
