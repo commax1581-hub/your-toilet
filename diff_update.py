@@ -125,7 +125,13 @@ def run(prev_dir, cur_file, out_dir):
 def apply_review(d):
     """확인 목록에서 '이어받기'로 결정된 짝: 새 관리번호가 이전 관리번호의 영구번호를 쓴다"""
     reg = json.loads(REG.read_text(encoding='utf-8'))
-    rv = pd.read_csv(d / 'review.csv', dtype=str, encoding='utf-8-sig').fillna('')
+    # **짝이 0건이면 review.csv에 머리글조차 없다**(BOM+줄바꿈뿐) → 그대로 읽으면 pandas가 죽는다.
+    # 2026-10-24 **첫 실제 반영**에서 드러났다(T36). 9/25는 리허설이라 이 길을 한 번도 지나지 않았다.
+    f = d / 'review.csv'
+    if not f.exists() or not f.read_text(encoding='utf-8-sig').strip():
+        print('이어받기 0건 반영(확인 목록이 비어 있다 — 삭제+신규 짝이 없었다)')
+        return
+    rv = pd.read_csv(f, dtype=str, encoding='utf-8-sig').fillna('')
     n = 0
     # 어느 줄이 '이어받기'이고 옛·새 번호가 무엇인지 **읽기는 공통**(update_rules.inherit_pairs).
     # 화장실 옛 칸 이름(이전관리번호·새관리번호)도 그쪽이 읽어 준다.
