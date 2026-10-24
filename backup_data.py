@@ -44,7 +44,10 @@ GZ_CACHE = ['data/processed/kakao_cache.json', 'data/processed/address_cache.jso
 # 제안 폴더에서 **사람이 결정한 작은 것만** (큰 두 파일은 기준본과 같은 내용이라 뺀다)
 PROPOSE_KEEP = {'report.md', 'summary.json', 'quality.json', 'changes.csv', 'review.csv',
                 'swapped_ids.csv', 'moved_coords.csv', 'new_bad_coords.csv', 'unread_hours.csv', 'sample_check.csv'}
-KEY_FILES = ['.env']
+# **키가 실제로 있는 곳을 모두 본다.** 이 프로젝트에는 `.env`가 없고 키는 착한식당 쪽에 있다
+# (addr_util.ENV_FILES도 같은 곳을 읽는다). 전에는 `.env` 하나만 봐서 **0개로 검사하고 통과**했다 —
+# 빈 검사는 아무것도 증명하지 않는다(2026-10-24에 드러남).
+KEY_FILES = ['.env', '../착한식당/.env', '../착한식당/API키.txt']
 KEEP_WEEKS = 8
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -77,14 +80,17 @@ def prune_snapshots():
 
 def key_values():
     """API 키 문자열 — 백업에 섞여 들어가면 비공개 저장소라도 위험하다"""
-    vals = []
+    vals, 본파일 = [], 0
     for f in KEY_FILES:
         p = ROOT / f
         if p.exists():
+            본파일 += 1
             for line in p.read_text(encoding='utf-8', errors='ignore').splitlines():
                 v = line.split('=', 1)[-1].strip().strip('"\'')
                 if len(v) >= 16:
                     vals.append(v.encode())
+    if not vals:                       # 빈 검사는 통과가 아니다 — 키 파일을 못 찾았다는 뜻일 수 있다
+        print(f'  ※ 키 문자열을 하나도 못 찾았다(본 파일 {본파일}개) — 검사가 헛돌고 있는지 본다')
     return vals
 
 
