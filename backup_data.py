@@ -20,7 +20,7 @@
 실행: python backup_data.py [--no-push] [--prune] [--cache]
 백업 폴더: 프로젝트 옆 '화장실-data-backup' (비공개 GitHub 저장소와 연결)
 """
-import glob, gzip, re, shutil, subprocess, sys, urllib.error, urllib.request
+import glob, gzip, os, re, shutil, subprocess, sys, urllib.error, urllib.request
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -121,12 +121,22 @@ def cache_due(force):
 
 
 def put_gz(src, dst):
-    """압축해서 담는다. 내용이 그대로면 건드리지 않는다(쓸데없는 커밋 방지)"""
+    """압축해서 담는다. 내용이 그대로면 건드리지 않는다(쓸데없는 커밋 방지).
+
+    **진짜 이름에 바로 쓰지 않는다** — `.part`에 쓰고 **풀어서 확인한 뒤** `os.replace`로 바꿔 넣는다.
+    중간에 죽으면 `.part`만 남고 **지난 정상본은 그대로** 있다(장학금 2026-10-28 사고: 두 번째 백업이
+    실패하며 같은 날짜의 정상본을 깨진 파일로 덮었다).
+    """
     dst.parent.mkdir(parents=True, exist_ok=True)
     data = gzip.compress(src.read_bytes(), 6)
     if dst.exists() and dst.stat().st_size == len(data):
         return False
-    dst.write_bytes(data)
+    part = dst.with_name(dst.name + '.part')
+    part.write_bytes(data)
+    with gzip.open(part, 'rb') as f:                 # 풀리는지 확인하고 바꿔 넣는다
+        while f.read(1 << 20):
+            pass
+    os.replace(part, dst)
     return True
 
 
@@ -172,7 +182,12 @@ def main():
         dst = DEST / f.relative_to(ROOT)
         dst.parent.mkdir(parents=True, exist_ok=True)
         if not dst.exists() or dst.stat().st_size != f.stat().st_size or dst.stat().st_mtime < f.stat().st_mtime:
-            shutil.copy2(f, dst)
+            part = dst.with_name(dst.name + '.part')      # 다 쓰고 크기를 맞춰 본 뒤 바꿔 넣는다
+            shutil.copy2(f, part)
+            if part.stat().st_size != f.stat().st_size:
+                part.unlink(missing_ok=True)
+                raise SystemExit(f'복사가 모자란다: {f.name} — 중단(지난 백업은 그대로 둔다)')
+            os.replace(part, dst)
             copied += 1
     zipped = 0
     for f in gz:

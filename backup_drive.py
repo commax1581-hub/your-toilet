@@ -16,6 +16,7 @@
 실행: python backup_drive.py      (갱신 때마다. G: 동기화 폴더에 쓰면 드라이브가 올린다)
 """
 import gzip
+import os
 import shutil
 import subprocess
 import sys
@@ -46,8 +47,14 @@ if 샌것:
     raise SystemExit(1)
 print(f'키 {len(keys)}개로 검사 · 담을 파일 {len(볼것)}개 · 키 든 파일 0개')
 
+# **다 만든 뒤에 바꿔 넣는다.** 날짜 폴더에 바로 쓰면 같은 날 두 번째 실행이 실패할 때
+# 그날의 정상본을 깨진 파일로 덮는다(장학금 2026-10-28 사고). → `.part` 폴더에 만들고,
+# 검사를 통과한 뒤에만 진짜 이름으로 바꾼다. 옛 벌 지우기도 **성공한 뒤에만** 한다.
+만드는곳 = DRIVE / (오늘 + '.part')
+if 만드는곳.exists():
+    shutil.rmtree(만드는곳)
 for d in ('핵심', '원천', '저장소'):
-    (날짜 / d).mkdir(parents=True, exist_ok=True)
+    (만드는곳 / d).mkdir(parents=True, exist_ok=True)
 
 # ── 1. 핵심 — 큰 것만 압축
 for f in 핵심파일:
@@ -55,21 +62,41 @@ for f in 핵심파일:
     if not p.exists():
         continue
     if p.stat().st_size > 512 * 1024:
-        with p.open('rb') as i, gzip.open(날짜 / '핵심' / (p.name + '.gz'), 'wb', compresslevel=9) as o:
+        with p.open('rb') as i, gzip.open(만드는곳 / '핵심' / (p.name + '.gz'), 'wb', compresslevel=9) as o:
             shutil.copyfileobj(i, o)
     else:
-        shutil.copy2(p, 날짜 / '핵심' / p.name)
+        shutil.copy2(p, 만드는곳 / '핵심' / p.name)
 
 # ── 2. 원천 — 그날의 기준본(원천 API는 현재분만 주므로 다시 못 받는다)
-with tarfile.open(날짜 / '원천' / f'snapshot_{snap.name}.tar.gz', 'w:gz') as t:
+with tarfile.open(만드는곳 / '원천' / f'snapshot_{snap.name}.tar.gz', 'w:gz') as t:
     for x in sorted(snap.iterdir()):
         t.add(x, arcname=f'{snap.name}/{x.name}')
 
 # ── 3. 저장소 — 커밋된 것 전부(앱 소스·문서·앱 데이터)
-subprocess.run(['git', 'bundle', 'create', str(날짜 / '저장소' / '화장실.bundle'), '--all'],
+subprocess.run(['git', 'bundle', 'create', str(만드는곳 / '저장소' / '화장실.bundle'), '--all'],
                cwd=R, check=True, capture_output=True)
 
-# ── 4. 복구 안내 + 보관 4벌
+# ── 3-1. 검사 — 풀리는지·열리는지 본 뒤에만 진짜 이름으로 바꾼다
+for g in (만드는곳 / '핵심').glob('*.gz'):
+    with gzip.open(g, 'rb') as f:
+        while f.read(1 << 20):
+            pass
+for tgz in (만드는곳 / '원천').glob('*.tar.gz'):
+    with tarfile.open(tgz) as f:
+        if not f.getmembers():
+            raise SystemExit(f'빈 묶음: {tgz.name} — 중단(지난 백업은 그대로 둔다)')
+묶음 = 만드는곳 / '저장소' / '화장실.bundle'
+subprocess.run(['git', 'bundle', 'verify', str(묶음)], cwd=R, check=True, capture_output=True)
+print('검사 통과 — 풀리고 열린다')
+
+옛것 = DRIVE / (오늘 + '.old')
+if 날짜.exists():
+    os.replace(날짜, 옛것)
+os.replace(만드는곳, 날짜)
+if 옛것.exists():
+    shutil.rmtree(옛것)
+
+# ── 4. 복구 안내 + 보관 4벌(여기까지 왔으면 이번 벌은 온전하다)
 벌 = sorted([p for p in DRIVE.iterdir() if p.is_dir()], reverse=True) if DRIVE.exists() else []
 for 옛 in 벌[4:]:
     shutil.rmtree(옛)

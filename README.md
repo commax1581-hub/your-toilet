@@ -81,6 +81,7 @@ python bump_version.py                             # 그리고 commit → push (
 ```
 python backup_data.py [--prune]   # ① GitHub 비공개 저장소로. 핵심은 매번 · 캐시는 월 1회(.gz) · 중복은 담지 않음
 python backup_drive.py            # ② 구글 드라이브로(두 번째 바구니). 다시 만들 수 없는 것만 · 날짜 폴더 4벌 · 복구안내.md 자동
+#   둘 다 .part에 먼저 쓰고 풀어서 확인한 뒤 바꿔 넣는다(T37) — 실패한 백업이 정상본을 덮지 않게
 python check_links.py             # 외부 링크 생존(시군구 홈페이지 267곳 + 고정 링크)
 python build_gov_links.py --verify   # 누리집이 정말 그 구청인지(연 1회) — 살아 있다고 맞는 건 아니다(T33)
 python check_docs.py              # 문서끼리·문서와 코드가 어긋나지 않았는지
